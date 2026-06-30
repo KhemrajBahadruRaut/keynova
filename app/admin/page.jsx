@@ -4,6 +4,9 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+
+const API = process.env.NEXT_PUBLIC_API_BASE;
+
 export default function AdminLogin() {
   const router = useRouter();
 
@@ -19,7 +22,7 @@ export default function AdminLogin() {
 
     try {
   const res = await axios.post(
-    "http://localhost/keynova/admin/admin_login.php",
+    `${API}/admin/admin_login.php`,
     { email, password },
     { headers: { "Content-Type": "application/json" } },
   );
