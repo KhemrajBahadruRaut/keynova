@@ -45,7 +45,9 @@ const API = process.env.NEXT_PUBLIC_API_BASE;
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"properties" | "requests" | "inquiries"> ("properties");
+  const [activeTab, setActiveTab] = useState<
+    "properties" | "requests" | "inquiries"
+  >("properties");
   const [properties, setProperties] = useState<Property[]>([]);
   const [docRequests, setDocRequests] = useState<DocumentRequest[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -90,6 +92,13 @@ export default function AdminDashboard() {
     }, 600);
     return () => clearTimeout(timer);
   }, [form.address]);
+  useEffect(() => {
+  const interval = setInterval(() => {
+    loadData();
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -141,9 +150,12 @@ export default function AdminDashboard() {
     setDocuments([]);
     setFormMsg({ type: "", text: "" });
     setShowForm(true);
+    setExistingImages([]);
+    setExistingDocuments([]);
+    setShowForm(true);
   };
 
-  const openEditForm = (p: Property) => {
+  const openEditForm = async (p: Property) => {
     setEditProperty(p);
     setForm({
       title: p.title,
@@ -163,6 +175,28 @@ export default function AdminDashboard() {
     setAgentPhoto(null);
     setDocuments([]);
     setFormMsg({ type: "", text: "" });
+
+    // Fetch full property details including images/documents
+    const token = localStorage.getItem("admin_token");
+    try {
+      const res = await fetch(`${API}/property/get_property.php?id=${p.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await res.json();
+      if (d.status === "success") {
+        setExistingImages(
+          Array.isArray(d.data.images)
+            ? d.data.images.filter((img: string) => img && img.trim() !== "")
+            : [],
+        );
+        setExistingDocuments(
+          Array.isArray(d.data.documents) ? d.data.documents : [],
+        );
+      }
+    } catch (err) {
+      console.error("Failed to load existing images/documents", err);
+    }
+
     setShowForm(true);
   };
 
@@ -225,6 +259,43 @@ export default function AdminDashboard() {
     });
     loadData();
   };
+  const handleDeleteExistingImage = async (filename: string) => {
+    if (!confirm("Remove this image?")) return;
+    const token = localStorage.getItem("admin_token");
+    try {
+      await fetch(`${API}/property/delete_property_image.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ property_id: editProperty?.id, filename }),
+      });
+      setExistingImages((prev) => prev.filter((img) => img !== filename));
+    } catch (err) {
+      console.error("Failed to delete image", err);
+    }
+  };
+
+  const handleDeleteExistingDocument = async (filename: string) => {
+    if (!confirm("Remove this document?")) return;
+    const token = localStorage.getItem("admin_token");
+    try {
+      await fetch(`${API}/property/delete_property_document.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ property_id: editProperty?.id, filename }),
+      });
+      setExistingDocuments((prev) =>
+        prev.filter((doc) => doc.file !== filename),
+      );
+    } catch (err) {
+      console.error("Failed to delete document", err);
+    }
+  };
 
   const updateDocStatus = async (id: number, status: string) => {
     const token = localStorage.getItem("admin_token");
@@ -239,6 +310,16 @@ export default function AdminDashboard() {
     loadData();
   };
 
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = Array.from(e.target.files || []);
+    setImages((prev) => [...prev, ...newFiles]);
+    e.target.value = ""; // reset so picking the same file again still fires onChange
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const tabs = [
     { key: "properties", label: "Properties", count: properties.length },
     {
@@ -248,6 +329,11 @@ export default function AdminDashboard() {
     },
     { key: "inquiries", label: "Inquiries", count: inquiries.length },
   ] as const;
+
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [existingDocuments, setExistingDocuments] = useState<
+    { name: string; file: string }[]
+  >([]);
 
   return (
     <div className="min-h-screen bg-[#f7f6f3]">
@@ -786,25 +872,94 @@ export default function AdminDashboard() {
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Property Images
                     </label>
+
+                    {editProperty && existingImages.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {existingImages.map((img) => (
+                          <div
+                            key={img}
+                            className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
+                          >
+                            <img
+                              src={`${API}/uploads/${img}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteExistingImage(img)}
+                              className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <input
                       type="file"
                       accept="image/*"
                       multiple
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
-                      onChange={(e) =>
-                        setImages(Array.from(e.target.files || []))
-                      }
+                      onChange={handleAddImages}
                     />
                     {images.length > 0 && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {images.length} image(s) selected
-                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {images.map((file, i) => (
+                          <div
+                            key={i}
+                            className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
+                          >
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(i)}
+                              className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                        <p className="w-full text-xs text-gray-400 mt-1">
+                          {images.length} new image(s) to upload
+                        </p>
+                      </div>
                     )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Secure Documents (PDF)
                     </label>
+
+                    {editProperty && existingDocuments.length > 0 && (
+                      <ul className="space-y-1 mb-3">
+                        {existingDocuments.map((doc) => (
+                          <li
+                            key={doc.file}
+                            className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded-lg"
+                          >
+                            <span className="text-gray-700 truncate">
+                              📄 {doc.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteExistingDocument(doc.file)
+                              }
+                              className="text-red-500 hover:text-red-700 text-xs font-medium"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
@@ -816,7 +971,7 @@ export default function AdminDashboard() {
                     />
                     {documents.length > 0 && (
                       <p className="text-xs text-gray-400 mt-1">
-                        {documents.length} document(s) selected
+                        {documents.length} new document(s) to upload
                       </p>
                     )}
                   </div>

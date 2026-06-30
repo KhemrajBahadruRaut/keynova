@@ -50,30 +50,58 @@ export default function PropertyListingPage() {
   const [contactSending, setContactSending] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
+  fetch(`${API}/property/get_property.php?id=${id}`)
+    .then((r) => r.json())
+    .then((d) => {
+      console.log("PROPERTY RESPONSE:", d);
+      if (d.status === "success") {
+        const item = Array.isArray(d.data) ? d.data[0] : d.data;
+        if (typeof item.highlights === "string") {
+          item.highlights = item.highlights
+            .split("\n")
+            .map((h: string) => h.trim())
+            .filter(Boolean);
+        } else if (!Array.isArray(item.highlights)) {
+          item.highlights = [];
+        }
+        // Filter out blank/missing image filenames
+        item.images = Array.isArray(item.images)
+          ? item.images.filter((img: string) => img && img.trim() !== "")
+          : [];
+        setProperty(item);
+      }
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.log("FETCH ERROR:", err);
+      setLoading(false);
+    });
+}, [id]);
+
+useEffect(() => {
+  const interval = setInterval(() => {
     fetch(`${API}/property/get_property.php?id=${id}`)
       .then((r) => r.json())
       .then((d) => {
-        console.log("PROPERTY RESPONSE:", d);
         if (d.status === "success") {
           const item = Array.isArray(d.data) ? d.data[0] : d.data;
           if (typeof item.highlights === "string") {
-            item.highlights = item.highlights
-              .split("\n")
-              .map((h: string) => h.trim())
-              .filter(Boolean);
+            item.highlights = item.highlights.split("\n").map((h: string) => h.trim()).filter(Boolean);
           } else if (!Array.isArray(item.highlights)) {
             item.highlights = [];
           }
+          item.images = Array.isArray(item.images)
+            ? item.images.filter((img: string) => img && img.trim() !== "")
+            : [];
           setProperty(item);
         }
-        setLoading(false);
       })
-      .catch((err) => {
-        console.log("FETCH ERROR:", err);
-        setLoading(false);
-      });
-  }, [id]);
+      .catch((err) => console.log("POLL ERROR:", err));
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [id]);
 
   const handleDocRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,8 +211,7 @@ export default function PropertyListingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-
-            {/* ============ OVERVIEW TAB ============ */}
+            {/* OVERVIEW TAB */}
             {activeTab === "overview" && (
               <>
                 {/* Main Image */}
@@ -203,10 +230,10 @@ export default function PropertyListingPage() {
                           <button
                             key={i}
                             onClick={() => setActiveImage(i)}
-                            className={`shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                            className={`shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                               activeImage === i
-                                ? "border-[#c8862a]"
-                                : "border-transparent"
+                                ? "border-[#c8862a] opacity-100 scale-105"
+                                : "border-transparent opacity-50 hover:opacity-80"
                             }`}
                           >
                             <img
@@ -237,7 +264,9 @@ export default function PropertyListingPage() {
                         key={label}
                         className="flex justify-between py-3 text-sm"
                       >
-                        <span className="font-medium text-gray-700">{label}</span>
+                        <span className="font-medium text-gray-700">
+                          {label}
+                        </span>
                         <span className="text-gray-900">{value}</span>
                       </div>
                     ))}
@@ -276,7 +305,7 @@ export default function PropertyListingPage() {
               </>
             )}
 
-            {/* ============ DOCUMENTS TAB ============ */}
+            {/* DOCUMENTS TAB */}
             {activeTab === "documents" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
@@ -307,7 +336,7 @@ export default function PropertyListingPage() {
               </div>
             )}
 
-            {/* ============ PHOTOS TAB ============ */}
+            {/*PHOTOS TAB */}
             {activeTab === "photos" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
@@ -340,7 +369,6 @@ export default function PropertyListingPage() {
               </div>
             )}
 
-            {/* ============ MAP TAB ============ */}
             {activeTab === "map" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
@@ -356,7 +384,7 @@ export default function PropertyListingPage() {
                       loading="lazy"
                       allowFullScreen
                       src={`https://www.google.com/maps?q=${encodeURIComponent(
-                        property.address
+                        property.address,
                       )}&output=embed`}
                     />
                   </div>
@@ -425,7 +453,7 @@ export default function PropertyListingPage() {
               </h3>
               {contactSuccess ? (
                 <p className="text-green-600 text-sm text-center flex gap-2 justify-center items-center border rounded-3xl py-2">
-                  <Check/> Inquiry sent successfully!
+                  <Check /> Inquiry sent successfully!
                 </p>
               ) : (
                 <form onSubmit={handleContact} className="space-y-3">
