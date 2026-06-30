@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
+import { Check } from "lucide-react";
 
 interface Property {
   id: number;
@@ -51,11 +51,10 @@ export default function PropertyListingPage() {
   const [contactSuccess, setContactSuccess] = useState(false);
 
   useEffect(() => {
-fetch(`${API}/property/get_property.php?id=${id}`)
+    fetch(`${API}/property/get_property.php?id=${id}`)
       .then((r) => r.json())
       .then((d) => {
         console.log("PROPERTY RESPONSE:", d);
-        // 👇 is this part here?
         if (d.status === "success") {
           const item = Array.isArray(d.data) ? d.data[0] : d.data;
           if (typeof item.highlights === "string") {
@@ -184,95 +183,193 @@ fetch(`${API}/property/get_property.php?id=${id}`)
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Main Image */}
-            {property.images?.length > 0 && (
-              <div>
-                <div className="rounded-xl overflow-hidden bg-gray-200 h-80 relative">
-                  <img
-                    src={`${API}/uploads/${property.images[activeImage]}`}
-                    alt="Property"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {property.images.length > 1 && (
-                  <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
-                    {property.images.map((img, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveImage(i)}
-                        className={`shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                          activeImage === i
-                            ? "border-[#c8862a]"
-                            : "border-transparent"
-                        }`}
+
+            {/* ============ OVERVIEW TAB ============ */}
+            {activeTab === "overview" && (
+              <>
+                {/* Main Image */}
+                {property.images?.length > 0 && (
+                  <div>
+                    <div className="rounded-xl overflow-hidden bg-gray-200 h-80 relative">
+                      <img
+                        src={`${API}/uploads/${property.images[activeImage]}`}
+                        alt="Property"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {property.images.length > 1 && (
+                      <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+                        {property.images.map((img, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setActiveImage(i)}
+                            className={`shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                              activeImage === i
+                                ? "border-[#c8862a]"
+                                : "border-transparent"
+                            }`}
+                          >
+                            <img
+                              src={`${API}/uploads/${img}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Property Details */}
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                    Property Details
+                  </h2>
+                  <div className="divide-y divide-gray-100">
+                    {[
+                      { label: "Sale Price", value: property.price },
+                      { label: "Building Size", value: property.building_size },
+                      { label: "Units", value: property.units },
+                      { label: "Year Built", value: property.year_built },
+                    ].map(({ label, value }) => (
+                      <div
+                        key={label}
+                        className="flex justify-between py-3 text-sm"
                       >
-                        <img
-                          src={`${API}/uploads/${img}`}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
+                        <span className="font-medium text-gray-700">{label}</span>
+                        <span className="text-gray-900">{value}</span>
+                      </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Description */}
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold text-[#c8862a] mb-3">
+                    Property Description
+                  </h2>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    {property.description}
+                  </p>
+                </div>
+
+                {/* Highlights */}
+                {property.highlights?.length > 0 && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-[#c8862a] mb-3">
+                      Highlights
+                    </h2>
+                    <ul className="space-y-2">
+                      {property.highlights.map((h, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-sm text-gray-700"
+                        >
+                          <span className="mt-1 w-2 h-2 rounded-full bg-[#c8862a] shrink-0" />
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ============ DOCUMENTS TAB ============ */}
+            {activeTab === "documents" && (
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                  Documents
+                </h2>
+                {property.documents?.length > 0 ? (
+                  <ul className="divide-y divide-gray-100">
+                    {property.documents.map((doc, i) => (
+                      <li
+                        key={i}
+                        className="flex justify-between items-center py-3 text-sm"
+                      >
+                        <span className="text-gray-700">📄 {doc.name}</span>
+                        <button
+                          onClick={() => setShowDocModal(true)}
+                          className="text-[#c8862a] hover:underline font-medium"
+                        >
+                          Request Access
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No documents have been added for this property yet.
+                  </p>
                 )}
               </div>
             )}
 
-            {/* Property Details */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
-                Property Details
-              </h2>
-              <div className="divide-y divide-gray-100">
-                {[
-                  { label: "Sale Price", value: property.price },
-                  { label: "Building Size", value: property.building_size },
-                  { label: "Units", value: property.units },
-                  { label: "Year Built", value: property.year_built },
-                ].map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="flex justify-between py-3 text-sm"
-                  >
-                    <span className="font-medium text-gray-700">{label}</span>
-                    <span className="text-gray-900">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#c8862a] mb-3">
-                Property Description
-              </h2>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                {property.description}
-              </p>
-            </div>
-
-            {/* Highlights */}
-            {property.highlights?.length > 0 && (
+            {/* ============ PHOTOS TAB ============ */}
+            {activeTab === "photos" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#c8862a] mb-3">
-                  Highlights
+                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                  Photos
                 </h2>
-                <ul className="space-y-2">
-                  {property.highlights.map((h, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-sm text-gray-700"
-                    >
-                      <span className="mt-1 w-2 h-2 rounded-full bg-[#c8862a] shrink-0" />
-                      {h}
-                    </li>
-                  ))}
-                </ul>
+                {property.images?.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {property.images.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setActiveImage(i);
+                          setActiveTab("overview");
+                        }}
+                        className="rounded-lg overflow-hidden h-32 bg-gray-200"
+                      >
+                        <img
+                          src={`${API}/uploads/${img}`}
+                          alt=""
+                          className="w-full h-full object-cover hover:scale-105 transition-transform"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No photos available for this property.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* ============ MAP TAB ============ */}
+            {activeTab === "map" && (
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                  Location
+                </h2>
+                {property.address ? (
+                  <div className="rounded-lg overflow-hidden h-96">
+                    <iframe
+                      title="Property location"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      src={`https://www.google.com/maps?q=${encodeURIComponent(
+                        property.address
+                      )}&output=embed`}
+                    />
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No address available to show on the map.
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          {/* Right Column */}
+          {/* Right Column (always visible regardless of tab) */}
           <div className="space-y-5">
             {/* Access Secure Documents */}
             <div className="bg-[#c8862a] rounded-xl p-5 text-white">
@@ -327,8 +424,8 @@ fetch(`${API}/property/get_property.php?id=${id}`)
                 Request More Info
               </h3>
               {contactSuccess ? (
-                <p className="text-green-600 text-sm text-center py-4">
-                  ✅ Inquiry sent successfully!
+                <p className="text-green-600 text-sm text-center flex gap-2 justify-center items-center border rounded-3xl py-2">
+                  <Check/> Inquiry sent successfully!
                 </p>
               ) : (
                 <form onSubmit={handleContact} className="space-y-3">
