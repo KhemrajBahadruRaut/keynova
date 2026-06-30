@@ -297,19 +297,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const updateDocStatus = async (id: number, status: string) => {
-    const token = localStorage.getItem("admin_token");
-    await fetch(`${API}/property/update_doc_request.php`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ id, status }),
-    });
-    loadData();
-  };
-
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
     setImages((prev) => [...prev, ...newFiles]);
@@ -325,7 +312,7 @@ export default function AdminDashboard() {
     {
       key: "requests",
       label: "Doc Requests",
-      count: docRequests.filter((d) => d.status === "pending").length,
+      count: docRequests.filter((d) => d.status !== "verified").length,
     },
     { key: "inquiries", label: "Inquiries", count: inquiries.length },
   ] as const;
@@ -359,8 +346,8 @@ export default function AdminDashboard() {
           {[
             { label: "Total Properties", value: properties.length, icon: "🏢" },
             {
-              label: "Pending Doc Requests",
-              value: docRequests.filter((d) => d.status === "pending").length,
+              label: "Verified Doc Requests",
+              value: docRequests.filter((d) => d.status === "verified").length,
               icon: "📄",
             },
             { label: "Total Inquiries", value: inquiries.length, icon: "✉️" },
@@ -481,12 +468,17 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Doc Requests Tab */}
+            {/* Doc Requests Tab (read-only log — access is gated by email code verification, not admin approval) */}
             {activeTab === "requests" && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">
                   Document Access Requests
                 </h2>
+                <p className="text-xs text-gray-400 mb-5">
+                  Read-only log. Visitors unlock documents themselves by
+                  verifying the code sent to their email — no action needed
+                  here.
+                </p>
                 {docRequests.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
                     No document requests yet.
@@ -511,9 +503,6 @@ export default function AdminDashboard() {
                           <th className="pb-3 font-medium text-gray-600">
                             Status
                           </th>
-                          <th className="pb-3 font-medium text-gray-600">
-                            Action
-                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -532,37 +521,15 @@ export default function AdminDashboard() {
                             <td className="py-3">
                               <span
                                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  r.status === "approved"
+                                  r.status === "verified"
                                     ? "bg-green-100 text-green-700"
-                                    : r.status === "rejected"
-                                      ? "bg-red-100 text-red-600"
-                                      : "bg-yellow-100 text-yellow-700"
+                                    : "bg-yellow-100 text-yellow-700"
                                 }`}
                               >
-                                {r.status}
+                                {r.status === "verified"
+                                  ? "Verified"
+                                  : "Pending"}
                               </span>
-                            </td>
-                            <td className="py-3">
-                              {r.status === "pending" && (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() =>
-                                      updateDocStatus(r.id, "approved")
-                                    }
-                                    className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100"
-                                  >
-                                    Approve
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      updateDocStatus(r.id, "rejected")
-                                    }
-                                    className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
-                              )}
                             </td>
                           </tr>
                         ))}
