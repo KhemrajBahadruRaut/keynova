@@ -260,7 +260,7 @@ export default function ListingsPage() {
       </div>
 
       {/* List + Map */}
-      <div className="flex-1 max-w-[1600px] w-full mx-auto flex flex-col lg:flex-row">
+      <div className="flex max-w-300 w-full mx-auto flex-col lg:flex-row">
         {/* List */}
         <div className="lg:w-105 xl:w-120 shrink-0 border-r border-gray-200 bg-white overflow-y-auto max-h-[calc(100vh-150px)]">
           {pageItems.length === 0 ? (
