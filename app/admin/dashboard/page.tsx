@@ -54,7 +54,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editProperty, setEditProperty] = useState<Property | null>(null);
-  const [previewAddress, setPreviewAddress] = useState("");
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [existingDocuments, setExistingDocuments] = useState<
+    { name: string; file: string }[]
+  >([]);
 
   // Form state
   const [form, setForm] = useState({
@@ -71,11 +74,68 @@ export default function AdminDashboard() {
     agent_phone: "",
     agent_email: "",
   });
+
+  // Geocoding state — resolved silently in the background
+  const [geocodedLat, setGeocodedLat] = useState<number | null>(null);
+  const [geocodedLng, setGeocodedLng] = useState<number | null>(null);
+  const [geocodeStatus, setGeocodeStatus] = useState<
+    "idle" | "loading" | "ok" | "fail"
+  >("idle");
+
   const [images, setImages] = useState<File[]>([]);
   const [agentPhoto, setAgentPhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const [formLoading, setFormLoading] = useState(false);
   const [formMsg, setFormMsg] = useState({ type: "", text: "" });
+
+  // ── Auto-geocode whenever address changes ──────────────────────────────────
+  useEffect(() => {
+    const address = form.address.trim();
+    if (address.length < 8) {
+      setGeocodedLat(null);
+      setGeocodedLng(null);
+      setGeocodeStatus("idle");
+      return;
+    }
+
+    setGeocodeStatus("loading");
+    const timer = setTimeout(async () => {
+      try {
+        const url =
+          "https://nominatim.openstreetmap.org/search?" +
+          new URLSearchParams({
+            q: address,
+            format: "json",
+            limit: "1",
+            addressdetails: "0",
+          });
+
+        const res = await fetch(url, {
+          headers: {
+            "User-Agent": "PropertyListingsApp/1.0",
+          },
+        });
+        const data = await res.json();
+
+        if (data && data.length > 0) {
+          setGeocodedLat(parseFloat(data[0].lat));
+          setGeocodedLng(parseFloat(data[0].lon));
+          setGeocodeStatus("ok");
+        } else {
+          setGeocodedLat(null);
+          setGeocodedLng(null);
+          setGeocodeStatus("fail");
+        }
+      } catch {
+        setGeocodedLat(null);
+        setGeocodedLng(null);
+        setGeocodeStatus("fail");
+      }
+    }, 800); // debounce 800 ms
+
+    return () => clearTimeout(timer);
+  }, [form.address]);
+  // ──────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -87,18 +147,11 @@ export default function AdminDashboard() {
   }, [router]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setPreviewAddress(form.address.trim());
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [form.address]);
-  useEffect(() => {
-  const interval = setInterval(() => {
-    loadData();
-  }, 5000);
-
-  return () => clearInterval(interval);
-}, []);
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -129,8 +182,7 @@ export default function AdminDashboard() {
     router.push("/admin");
   };
 
-  const openCreateForm = () => {
-    setEditProperty(null);
+  const resetForm = () => {
     setForm({
       title: "",
       address: "",
@@ -149,14 +201,22 @@ export default function AdminDashboard() {
     setAgentPhoto(null);
     setDocuments([]);
     setFormMsg({ type: "", text: "" });
-    setShowForm(true);
     setExistingImages([]);
     setExistingDocuments([]);
+    setGeocodedLat(null);
+    setGeocodedLng(null);
+    setGeocodeStatus("idle");
+  };
+
+  const openCreateForm = () => {
+    setEditProperty(null);
+    resetForm();
     setShowForm(true);
   };
 
   const openEditForm = async (p: Property) => {
     setEditProperty(p);
+    resetForm();
     setForm({
       title: p.title,
       address: p.address,
@@ -171,12 +231,7 @@ export default function AdminDashboard() {
       agent_phone: p.agent_phone,
       agent_email: p.agent_email,
     });
-    setImages([]);
-    setAgentPhoto(null);
-    setDocuments([]);
-    setFormMsg({ type: "", text: "" });
 
-    // Fetch full property details including images/documents
     const token = localStorage.getItem("admin_token");
     try {
       const res = await fetch(`${API}/property/get_property.php?id=${p.id}`, {
@@ -184,14 +239,21 @@ export default function AdminDashboard() {
       });
       const d = await res.json();
       if (d.status === "success") {
+        const item = Array.isArray(d.data) ? d.data[0] : d.data;
         setExistingImages(
-          Array.isArray(d.data.images)
-            ? d.data.images.filter((img: string) => img && img.trim() !== "")
-            : [],
+          Array.isArray(item.images)
+            ? item.images.filter((img: string) => img && img.trim() !== "")
+            : []
         );
         setExistingDocuments(
-          Array.isArray(d.data.documents) ? d.data.documents : [],
+          Array.isArray(item.documents) ? item.documents : []
         );
+        // Pre-fill geocoords if already stored on the property
+        if (item.lat && item.lng) {
+          setGeocodedLat(parseFloat(item.lat));
+          setGeocodedLng(parseFloat(item.lng));
+          setGeocodeStatus("ok");
+        }
       }
     } catch (err) {
       console.error("Failed to load existing images/documents", err);
@@ -209,6 +271,12 @@ export default function AdminDashboard() {
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
     if (editProperty) fd.append("id", String(editProperty.id));
+
+    // ── Attach geocoords so the backend can store them ──────────────────────
+    if (geocodedLat !== null) fd.append("lat", String(geocodedLat));
+    if (geocodedLng !== null) fd.append("lng", String(geocodedLng));
+    // ────────────────────────────────────────────────────────────────────────
+
     images.forEach((f) => fd.append("images[]", f));
     documents.forEach((f) => fd.append("documents[]", f));
     if (agentPhoto) fd.append("agent_photo", agentPhoto);
@@ -259,6 +327,7 @@ export default function AdminDashboard() {
     });
     loadData();
   };
+
   const handleDeleteExistingImage = async (filename: string) => {
     if (!confirm("Remove this image?")) return;
     const token = localStorage.getItem("admin_token");
@@ -290,7 +359,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ property_id: editProperty?.id, filename }),
       });
       setExistingDocuments((prev) =>
-        prev.filter((doc) => doc.file !== filename),
+        prev.filter((doc) => doc.file !== filename)
       );
     } catch (err) {
       console.error("Failed to delete document", err);
@@ -300,7 +369,7 @@ export default function AdminDashboard() {
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
     setImages((prev) => [...prev, ...newFiles]);
-    e.target.value = ""; // reset so picking the same file again still fires onChange
+    e.target.value = "";
   };
 
   const removeImage = (index: number) => {
@@ -317,10 +386,30 @@ export default function AdminDashboard() {
     { key: "inquiries", label: "Inquiries", count: inquiries.length },
   ] as const;
 
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [existingDocuments, setExistingDocuments] = useState<
-    { name: string; file: string }[]
-  >([]);
+  // Geocode status badge shown below the address field
+  const geocodeBadge = () => {
+    if (form.address.trim().length < 8) return null;
+    if (geocodeStatus === "loading")
+      return (
+        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+          <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+          Locating address…
+        </p>
+      );
+    if (geocodeStatus === "ok")
+      return (
+        <p className="text-xs text-green-600 mt-1">
+          ✓ Location found — pin will appear on map
+        </p>
+      );
+    if (geocodeStatus === "fail")
+      return (
+        <p className="text-xs text-amber-500 mt-1">
+          ⚠ Address not found on map — property will still be saved
+        </p>
+      );
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f6f3]">
@@ -381,7 +470,11 @@ export default function AdminDashboard() {
                 {label}
                 {count > 0 && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${activeTab === key ? "bg-[#c8862a] text-white" : "bg-gray-100 text-gray-600"}`}
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      activeTab === key
+                        ? "bg-[#c8862a] text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
                   >
                     {count}
                   </span>
@@ -468,7 +561,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Doc Requests Tab (read-only log — access is gated by email code verification, not admin approval) */}
+            {/* Doc Requests Tab */}
             {activeTab === "requests" && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">
@@ -488,21 +581,11 @@ export default function AdminDashboard() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left border-b border-gray-100">
-                          <th className="pb-3 font-medium text-gray-600">
-                            Name
-                          </th>
-                          <th className="pb-3 font-medium text-gray-600">
-                            Email
-                          </th>
-                          <th className="pb-3 font-medium text-gray-600">
-                            Property
-                          </th>
-                          <th className="pb-3 font-medium text-gray-600">
-                            Date
-                          </th>
-                          <th className="pb-3 font-medium text-gray-600">
-                            Status
-                          </th>
+                          <th className="pb-3 font-medium text-gray-600">Name</th>
+                          <th className="pb-3 font-medium text-gray-600">Email</th>
+                          <th className="pb-3 font-medium text-gray-600">Property</th>
+                          <th className="pb-3 font-medium text-gray-600">Date</th>
+                          <th className="pb-3 font-medium text-gray-600">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -526,9 +609,7 @@ export default function AdminDashboard() {
                                     : "bg-yellow-100 text-yellow-700"
                                 }`}
                               >
-                                {r.status === "verified"
-                                  ? "Verified"
-                                  : "Pending"}
+                                {r.status === "verified" ? "Verified" : "Pending"}
                               </span>
                             </td>
                           </tr>
@@ -612,7 +693,11 @@ export default function AdminDashboard() {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {formMsg.text && (
                 <div
-                  className={`px-4 py-3 rounded-lg text-sm ${formMsg.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
+                  className={`px-4 py-3 rounded-lg text-sm ${
+                    formMsg.type === "success"
+                      ? "bg-green-50 text-green-700"
+                      : "bg-red-50 text-red-600"
+                  }`}
                 >
                   {formMsg.text}
                 </div>
@@ -638,6 +723,7 @@ export default function AdminDashboard() {
                       placeholder="South End Plaza"
                     />
                   </div>
+
                   <div className="md:col-span-2">
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Address *
@@ -649,23 +735,29 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setForm({ ...form, address: e.target.value })
                       }
-                      placeholder="310 S Main St | Thomaston, CT 06787"
+                      placeholder="310 S Main St, Thomaston, CT 06787"
                     />
-                    {previewAddress.length > 5 && (
-                      <div className="mt-2 rounded-lg overflow-hidden h-48 border border-gray-200">
-                        <iframe
-                          title="Address preview"
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0 }}
-                          loading="lazy"
-                          src={`https://www.google.com/maps?q=${encodeURIComponent(
-                            previewAddress,
-                          )}&output=embed`}
-                        />
-                      </div>
-                    )}
+
+                    {/* Geocode status badge */}
+                    {geocodeBadge()}
+
+                    {/* Map preview — only shown once geocode succeeds */}
+                    {geocodeStatus === "ok" &&
+                      geocodedLat &&
+                      geocodedLng && (
+                        <div className="mt-2 rounded-lg overflow-hidden h-40 border border-gray-200">
+                          <iframe
+                            title="Address preview"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            src={`https://www.google.com/maps?q=${geocodedLat},${geocodedLng}&z=14&output=embed`}
+                          />
+                        </div>
+                      )}
                   </div>
+
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Sale Price *
@@ -839,7 +931,6 @@ export default function AdminDashboard() {
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Property Images
                     </label>
-
                     {editProperty && existingImages.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
                         {existingImages.map((img) => (
@@ -863,7 +954,6 @@ export default function AdminDashboard() {
                         ))}
                       </div>
                     )}
-
                     <input
                       type="file"
                       accept="image/*"
@@ -898,11 +988,11 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
+
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Secure Documents (PDF)
                     </label>
-
                     {editProperty && existingDocuments.length > 0 && (
                       <ul className="space-y-1 mb-3">
                         {existingDocuments.map((doc) => (
@@ -926,7 +1016,6 @@ export default function AdminDashboard() {
                         ))}
                       </ul>
                     )}
-
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
