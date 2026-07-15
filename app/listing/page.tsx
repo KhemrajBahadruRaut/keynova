@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 const ListingsMap = dynamic(() => import("./ListingsMap"), { ssr: false });
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { validateNonNegativeNumber } from "@/lib/validation";
 
 interface Property {
   id: number;
@@ -43,6 +44,39 @@ export default function ListingsPage() {
   const [page, setPage] = useState(1);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
+  const minUnitsError = validateNonNegativeNumber(
+    minUnits,
+    "Minimum units",
+    true,
+  );
+  const maxUnitsError = validateNonNegativeNumber(
+    maxUnits,
+    "Maximum units",
+    true,
+  );
+  const unitsRangeError =
+    !minUnitsError &&
+    !maxUnitsError &&
+    minUnits !== "" &&
+    maxUnits !== "" &&
+    Number(minUnits) > Number(maxUnits)
+      ? "Minimum units cannot exceed maximum units."
+      : "";
+
+  const minSizeError = validateNonNegativeNumber(minSize, "Minimum size");
+  const maxSizeError = validateNonNegativeNumber(maxSize, "Maximum size");
+  const sizeRangeError =
+    !minSizeError &&
+    !maxSizeError &&
+    minSize !== "" &&
+    maxSize !== "" &&
+    Number(minSize) > Number(maxSize)
+      ? "Minimum size cannot exceed maximum size."
+      : "";
+
+  const unitsError = minUnitsError || maxUnitsError || unitsRangeError;
+  const sizeError = minSizeError || maxSizeError || sizeRangeError;
+
   useEffect(() => {
     fetch(`${API}/property/get_properties.php`)
       .then((r) => r.json())
@@ -77,13 +111,13 @@ export default function ListingsPage() {
 
     const toNum = (v: string) => parseFloat((v || "").replace(/[^0-9.]/g, ""));
 
-    if (minUnits)
+    if (minUnits && !unitsError)
       list = list.filter((p) => toNum(p.units) >= parseFloat(minUnits));
-    if (maxUnits)
+    if (maxUnits && !unitsError)
       list = list.filter((p) => toNum(p.units) <= parseFloat(maxUnits));
-    if (minSize)
+    if (minSize && !sizeError)
       list = list.filter((p) => toNum(p.building_size) >= parseFloat(minSize));
-    if (maxSize)
+    if (maxSize && !sizeError)
       list = list.filter((p) => toNum(p.building_size) <= parseFloat(maxSize));
 
     if (sortBy === "price_high") {
@@ -96,7 +130,18 @@ export default function ListingsPage() {
     // "date_updated" — assume API already returns properties in that order
 
     return list;
-  }, [properties, search, type, minUnits, maxUnits, minSize, maxSize, sortBy]);
+  }, [
+    properties,
+    search,
+    type,
+    minUnits,
+    maxUnits,
+    minSize,
+    maxSize,
+    sortBy,
+    unitsError,
+    sizeError,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -110,10 +155,6 @@ export default function ListingsPage() {
     setMaxSize("");
     setPage(1);
   };
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, type, minUnits, maxUnits, minSize, maxSize]);
 
   // Build a simple Google Maps embed URL. If we have lat/lng for the
   // hovered or first property, center on it; otherwise just show a
@@ -149,24 +190,36 @@ export default function ListingsPage() {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-end gap-4">
           <div className="flex flex-col">
-            <label className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
+            <label htmlFor="listing-search" className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
               SEARCH
             </label>
             <input
+              id="listing-search"
+              name="search"
+              type="search"
+              maxLength={120}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="Search by address, city, state, or zip"
               className="w-72 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
+            <label htmlFor="listing-type" className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
               TYPES
             </label>
             <select
+              id="listing-type"
+              name="property_type"
               value={type}
-              onChange={(e) => setType(e.target.value)}
+              onChange={(e) => {
+                setType(e.target.value);
+                setPage(1);
+              }}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a] bg-white"
             >
               <option>All Property Types</option>
@@ -182,19 +235,54 @@ export default function ListingsPage() {
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="minimum-units"
+                name="min_units"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
                 value={minUnits}
-                onChange={(e) => setMinUnits(e.target.value)}
+                onChange={(e) => {
+                  setMinUnits(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Min"
-                className="w-20 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                className={`w-20 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  unitsError
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-gray-200 focus:ring-[#c8862a]"
+                }`}
+                aria-invalid={Boolean(unitsError)}
+                aria-describedby="units-filter-error"
+                aria-label="Minimum number of units"
               />
               <span className="text-gray-400 text-xs">to</span>
               <input
+                id="maximum-units"
+                name="max_units"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
                 value={maxUnits}
-                onChange={(e) => setMaxUnits(e.target.value)}
+                onChange={(e) => {
+                  setMaxUnits(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Max"
-                className="w-20 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                className={`w-20 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  unitsError
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-gray-200 focus:ring-[#c8862a]"
+                }`}
+                aria-invalid={Boolean(unitsError)}
+                aria-describedby="units-filter-error"
+                aria-label="Maximum number of units"
               />
             </div>
+            <p id="units-filter-error" className="mt-1 max-w-44 text-xs text-red-600" aria-live="polite">
+              {unitsError}
+            </p>
           </div>
 
           <div className="flex flex-col">
@@ -203,19 +291,54 @@ export default function ListingsPage() {
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="minimum-size"
+                name="min_size"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
                 value={minSize}
-                onChange={(e) => setMinSize(e.target.value)}
+                onChange={(e) => {
+                  setMinSize(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Min SF"
-                className="w-24 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                className={`w-24 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  sizeError
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-gray-200 focus:ring-[#c8862a]"
+                }`}
+                aria-invalid={Boolean(sizeError)}
+                aria-describedby="size-filter-error"
+                aria-label="Minimum building size"
               />
               <span className="text-gray-400 text-xs">to</span>
               <input
+                id="maximum-size"
+                name="max_size"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
                 value={maxSize}
-                onChange={(e) => setMaxSize(e.target.value)}
+                onChange={(e) => {
+                  setMaxSize(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Max SF"
-                className="w-24 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                className={`w-24 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  sizeError
+                    ? "border-red-500 focus:ring-red-200"
+                    : "border-gray-200 focus:ring-[#c8862a]"
+                }`}
+                aria-invalid={Boolean(sizeError)}
+                aria-describedby="size-filter-error"
+                aria-label="Maximum building size"
               />
             </div>
+            <p id="size-filter-error" className="mt-1 max-w-52 text-xs text-red-600" aria-live="polite">
+              {sizeError}
+            </p>
           </div>
 
           <div className="ml-auto flex gap-2">
@@ -244,8 +367,10 @@ export default function ListingsPage() {
                 )} RESULTS OUT OF ${filtered.length} LISTINGS`}
           </p>
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span>Sort:</span>
+            <label htmlFor="listing-sort">Sort:</label>
             <select
+              id="listing-sort"
+              name="sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none"

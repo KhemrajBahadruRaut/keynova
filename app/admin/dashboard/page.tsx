@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  hasValidationErrors,
+  validateBuildingSize,
+  validateEmail,
+  validatePhone,
+  validatePrice,
+  validateText,
+  validateUnits,
+  validateYearBuilt,
+} from "@/lib/validation";
 
 interface Property {
   id: number;
@@ -41,6 +51,98 @@ interface Inquiry {
   created_at: string;
 }
 
+type PropertyForm = {
+  title: string;
+  address: string;
+  price: string;
+  building_size: string;
+  units: string;
+  year_built: string;
+  description: string;
+  highlights: string;
+  agent_name: string;
+  agent_title: string;
+  agent_phone: string;
+  agent_email: string;
+};
+
+type PropertyFormField = keyof PropertyForm;
+
+const INITIAL_PROPERTY_FORM: PropertyForm = {
+  title: "",
+  address: "",
+  price: "",
+  building_size: "",
+  units: "",
+  year_built: "",
+  description: "",
+  highlights: "",
+  agent_name: "",
+  agent_title: "",
+  agent_phone: "",
+  agent_email: "",
+};
+
+const PROPERTY_FORM_FIELDS = Object.keys(
+  INITIAL_PROPERTY_FORM,
+) as PropertyFormField[];
+
+const EMPTY_FILE_ERRORS = { images: "", agentPhoto: "", documents: "" };
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_DOCUMENT_SIZE = 20 * 1024 * 1024;
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
+const DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx"];
+
+function getPropertyFormErrors(form: PropertyForm) {
+  return {
+    title: validateText(form.title, "Property title", {
+      required: true,
+      min: 3,
+      max: 120,
+    }),
+    address: validateText(form.address, "Address", {
+      required: true,
+      min: 8,
+      max: 250,
+    }),
+    price: validatePrice(form.price),
+    building_size: validateBuildingSize(form.building_size),
+    units: validateUnits(form.units),
+    year_built: validateYearBuilt(form.year_built),
+    description: validateText(form.description, "Description", { max: 5000 }),
+    highlights: validateText(form.highlights, "Highlights", { max: 3000 }),
+    agent_name: validateText(form.agent_name, "Agent name", {
+      min: 2,
+      max: 80,
+    }),
+    agent_title: validateText(form.agent_title, "Agent title", { max: 100 }),
+    agent_phone: validatePhone(form.agent_phone),
+    agent_email: validateEmail(form.agent_email, false),
+  };
+}
+
+function getFileExtension(file: File) {
+  return file.name.split(".").pop()?.toLowerCase() || "";
+}
+
+function validateImageFile(file: File) {
+  if (!IMAGE_EXTENSIONS.includes(getFileExtension(file))) {
+    return "Use a JPG, PNG, WebP, or GIF image.";
+  }
+  if (file.size > MAX_IMAGE_SIZE) return "Each image must be 10 MB or smaller.";
+  return "";
+}
+
+function validateDocumentFile(file: File) {
+  if (!DOCUMENT_EXTENSIONS.includes(getFileExtension(file))) {
+    return "Use a PDF, DOC, or DOCX document.";
+  }
+  if (file.size > MAX_DOCUMENT_SIZE) {
+    return "Each document must be 20 MB or smaller.";
+  }
+  return "";
+}
+
 const API = process.env.NEXT_PUBLIC_API_BASE;
 
 export default function AdminDashboard() {
@@ -60,20 +162,10 @@ export default function AdminDashboard() {
   >([]);
 
   // Form state
-  const [form, setForm] = useState({
-    title: "",
-    address: "",
-    price: "",
-    building_size: "",
-    units: "",
-    year_built: "",
-    description: "",
-    highlights: "",
-    agent_name: "",
-    agent_title: "",
-    agent_phone: "",
-    agent_email: "",
-  });
+  const [form, setForm] = useState<PropertyForm>(INITIAL_PROPERTY_FORM);
+  const [touchedFields, setTouchedFields] = useState<
+    Partial<Record<PropertyFormField, boolean>>
+  >({});
 
   // Geocoding state — resolved silently in the background
   const [geocodedLat, setGeocodedLat] = useState<number | null>(null);
@@ -85,21 +177,23 @@ export default function AdminDashboard() {
   const [images, setImages] = useState<File[]>([]);
   const [agentPhoto, setAgentPhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
+  const [fileErrors, setFileErrors] = useState(EMPTY_FILE_ERRORS);
   const [formLoading, setFormLoading] = useState(false);
   const [formMsg, setFormMsg] = useState({ type: "", text: "" });
+
+  const formErrors = getPropertyFormErrors(form);
+  const formHasErrors =
+    hasValidationErrors(formErrors) || hasValidationErrors(fileErrors);
 
   // ── Auto-geocode whenever address changes ──────────────────────────────────
   useEffect(() => {
     const address = form.address.trim();
     if (address.length < 8) {
-      setGeocodedLat(null);
-      setGeocodedLng(null);
-      setGeocodeStatus("idle");
       return;
     }
 
-    setGeocodeStatus("loading");
     const timer = setTimeout(async () => {
+      setGeocodeStatus("loading");
       try {
         const url =
           "https://nominatim.openstreetmap.org/search?" +
@@ -153,7 +247,7 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const loadData = async () => {
+  async function loadData() {
     setLoading(true);
     const token = localStorage.getItem("admin_token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -183,30 +277,48 @@ export default function AdminDashboard() {
   };
 
   const resetForm = () => {
-    setForm({
-      title: "",
-      address: "",
-      price: "",
-      building_size: "",
-      units: "",
-      year_built: "",
-      description: "",
-      highlights: "",
-      agent_name: "",
-      agent_title: "",
-      agent_phone: "",
-      agent_email: "",
-    });
+    setForm(INITIAL_PROPERTY_FORM);
+    setTouchedFields({});
     setImages([]);
     setAgentPhoto(null);
     setDocuments([]);
+    setFileErrors(EMPTY_FILE_ERRORS);
     setFormMsg({ type: "", text: "" });
     setExistingImages([]);
     setExistingDocuments([]);
     setGeocodedLat(null);
     setGeocodedLng(null);
     setGeocodeStatus("idle");
+  }
+
+  const updateFormField = (field: PropertyFormField, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setTouchedFields((current) => ({ ...current, [field]: true }));
+    setFormMsg({ type: "", text: "" });
+    if (field === "address" && value.trim().length < 8) {
+      setGeocodedLat(null);
+      setGeocodedLng(null);
+      setGeocodeStatus("idle");
+    } else if (field === "address") {
+      setGeocodeStatus("loading");
+    }
   };
+
+  const markFieldTouched = (field: PropertyFormField) => {
+    setTouchedFields((current) => ({ ...current, [field]: true }));
+  };
+
+  const fieldError = (field: PropertyFormField) =>
+    touchedFields[field] ? formErrors[field] : "";
+
+  const fieldClass = (field: PropertyFormField, resize = false) =>
+    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+      resize ? "resize-none " : ""
+    }${
+      fieldError(field)
+        ? "border-red-500 focus:ring-red-200"
+        : "border-gray-200 focus:ring-[#c8862a]"
+    }`;
 
   const openCreateForm = () => {
     setEditProperty(null);
@@ -264,12 +376,26 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formHasErrors) {
+      setTouchedFields(
+        Object.fromEntries(
+          PROPERTY_FORM_FIELDS.map((field) => [field, true]),
+        ) as Record<PropertyFormField, boolean>,
+      );
+      setFormMsg({
+        type: "error",
+        text: "Please correct the highlighted fields before saving.",
+      });
+      return;
+    }
+
     setFormLoading(true);
     setFormMsg({ type: "", text: "" });
     const token = localStorage.getItem("admin_token");
 
     const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    Object.entries(form).forEach(([k, v]) => fd.append(k, v.trim()));
     if (editProperty) fd.append("id", String(editProperty.id));
 
     // ── Attach geocoords so the backend can store them ──────────────────────
@@ -368,12 +494,50 @@ export default function AdminDashboard() {
 
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
-    setImages((prev) => [...prev, ...newFiles]);
+    const nextImages = [...images, ...newFiles];
+    const validationError = newFiles.map(validateImageFile).find(Boolean) || "";
+
+    if (nextImages.length > 20) {
+      setFileErrors((current) => ({
+        ...current,
+        images: "Upload no more than 20 new images at a time.",
+      }));
+    } else if (validationError) {
+      setFileErrors((current) => ({
+        ...current,
+        images: validationError,
+      }));
+    } else {
+      setImages(nextImages);
+      setFileErrors((current) => ({ ...current, images: "" }));
+    }
     e.target.value = "";
+  };
+
+  const handleAgentPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    const validationError = file ? validateImageFile(file) : "";
+    setAgentPhoto(file);
+    setFileErrors((current) => ({
+      ...current,
+      agentPhoto: validationError,
+    }));
+  };
+
+  const handleDocuments = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextDocuments = Array.from(e.target.files || []);
+    const validationError =
+      nextDocuments.map(validateDocumentFile).find(Boolean) || "";
+    setDocuments(nextDocuments);
+    setFileErrors((current) => ({
+      ...current,
+      documents: validationError,
+    }));
   };
 
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+    setFileErrors((current) => ({ ...current, images: "" }));
   };
 
   const tabs = [
@@ -690,9 +854,14 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-5"
+              noValidate
+            >
               {formMsg.text && (
                 <div
+                  role={formMsg.type === "error" ? "alert" : "status"}
                   className={`px-4 py-3 rounded-lg text-sm ${
                     formMsg.type === "success"
                       ? "bg-green-50 text-green-700"
@@ -710,36 +879,66 @@ export default function AdminDashboard() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-title" className="block text-xs font-medium text-gray-600 mb-1">
                       Property Title *
                     </label>
                     <input
+                      id="property-title"
+                      name="title"
                       required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      minLength={3}
+                      maxLength={120}
+                      className={fieldClass("title")}
                       value={form.title}
-                      onChange={(e) =>
-                        setForm({ ...form, title: e.target.value })
-                      }
+                      onChange={(e) => updateFormField("title", e.target.value)}
+                      onBlur={() => markFieldTouched("title")}
+                      aria-invalid={Boolean(fieldError("title"))}
+                      aria-describedby="property-title-error"
                       placeholder="South End Plaza"
                     />
+                    <p
+                      id="property-title-error"
+                      className="mt-1 min-h-4 text-xs text-red-600"
+                      aria-live="polite"
+                    >
+                      {fieldError("title")}
+                    </p>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-address" className="block text-xs font-medium text-gray-600 mb-1">
                       Address *
                     </label>
                     <input
+                      id="property-address"
+                      name="address"
                       required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      minLength={8}
+                      maxLength={250}
+                      autoComplete="street-address"
+                      className={fieldClass("address")}
                       value={form.address}
                       onChange={(e) =>
-                        setForm({ ...form, address: e.target.value })
+                        updateFormField("address", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("address")}
+                      aria-invalid={Boolean(fieldError("address"))}
+                      aria-describedby="property-address-error property-geocode-status"
                       placeholder="310 S Main St, Thomaston, CT 06787"
                     />
 
+                    <p
+                      id="property-address-error"
+                      className="mt-1 min-h-4 text-xs text-red-600"
+                      aria-live="polite"
+                    >
+                      {fieldError("address")}
+                    </p>
+
                     {/* Geocode status badge */}
-                    {geocodeBadge()}
+                    <div id="property-geocode-status" aria-live="polite">
+                      {geocodeBadge()}
+                    </div>
 
                     {/* Map preview — only shown once geocode succeeds */}
                     {geocodeStatus === "ok" &&
@@ -759,91 +958,172 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-price" className="block text-xs font-medium text-gray-600 mb-1">
                       Sale Price *
                     </label>
                     <input
+                      id="property-price"
+                      name="price"
                       required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      inputMode="decimal"
+                      maxLength={24}
+                      pattern="\$?[\d,]+(\.\d{1,2})?"
+                      className={fieldClass("price")}
                       value={form.price}
-                      onChange={(e) =>
-                        setForm({ ...form, price: e.target.value })
-                      }
+                      onChange={(e) => updateFormField("price", e.target.value)}
+                      onBlur={() => markFieldTouched("price")}
+                      aria-invalid={Boolean(fieldError("price"))}
+                      aria-describedby="property-price-error"
                       placeholder="$2,450,000"
                     />
+                    <p
+                      id="property-price-error"
+                      className="mt-1 min-h-4 text-xs text-red-600"
+                      aria-live="polite"
+                    >
+                      {fieldError("price")}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-building-size" className="block text-xs font-medium text-gray-600 mb-1">
                       Building Size
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      id="property-building-size"
+                      name="building_size"
+                      inputMode="decimal"
+                      maxLength={24}
+                      className={fieldClass("building_size")}
                       value={form.building_size}
                       onChange={(e) =>
-                        setForm({ ...form, building_size: e.target.value })
+                        updateFormField("building_size", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("building_size")}
+                      aria-invalid={Boolean(fieldError("building_size"))}
+                      aria-describedby="property-building-size-error"
                       placeholder="14,614 SF"
                     />
+                    <p
+                      id="property-building-size-error"
+                      className="mt-1 min-h-4 text-xs text-red-600"
+                      aria-live="polite"
+                    >
+                      {fieldError("building_size")}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-units" className="block text-xs font-medium text-gray-600 mb-1">
                       Units
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      id="property-units"
+                      name="units"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      className={fieldClass("units")}
                       value={form.units}
-                      onChange={(e) =>
-                        setForm({ ...form, units: e.target.value })
-                      }
+                      onChange={(e) => updateFormField("units", e.target.value)}
+                      onBlur={() => markFieldTouched("units")}
+                      aria-invalid={Boolean(fieldError("units"))}
+                      aria-describedby="property-units-error"
                       placeholder="17"
                     />
+                    <p
+                      id="property-units-error"
+                      className="mt-1 min-h-4 text-xs text-red-600"
+                      aria-live="polite"
+                    >
+                      {fieldError("units")}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-year-built" className="block text-xs font-medium text-gray-600 mb-1">
                       Year Built
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      id="property-year-built"
+                      name="year_built"
+                      inputMode="numeric"
+                      pattern="[0-9]{4}"
+                      maxLength={4}
+                      className={fieldClass("year_built")}
                       value={form.year_built}
                       onChange={(e) =>
-                        setForm({ ...form, year_built: e.target.value })
+                        updateFormField("year_built", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("year_built")}
+                      aria-invalid={Boolean(fieldError("year_built"))}
+                      aria-describedby="property-year-built-error"
                       placeholder="1971"
                     />
+                    <p
+                      id="property-year-built-error"
+                      className="mt-1 min-h-4 text-xs text-red-600"
+                      aria-live="polite"
+                    >
+                      {fieldError("year_built")}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Description & Highlights */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label htmlFor="property-description" className="block text-xs font-medium text-gray-600 mb-1">
                   Property Description
                 </label>
                 <textarea
+                  id="property-description"
+                  name="description"
                   rows={4}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a] resize-none"
+                  maxLength={5000}
+                  className={fieldClass("description", true)}
                   value={form.description}
                   onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
+                    updateFormField("description", e.target.value)
                   }
+                  onBlur={() => markFieldTouched("description")}
+                  aria-invalid={Boolean(fieldError("description"))}
+                  aria-describedby="property-description-error"
                   placeholder="Describe the property…"
                 />
+                <p
+                  id="property-description-error"
+                  className="mt-1 min-h-4 text-xs text-red-600"
+                  aria-live="polite"
+                >
+                  {fieldError("description")}
+                </p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label htmlFor="property-highlights" className="block text-xs font-medium text-gray-600 mb-1">
                   Highlights (one per line)
                 </label>
                 <textarea
+                  id="property-highlights"
+                  name="highlights"
                   rows={4}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a] resize-none"
+                  maxLength={3000}
+                  className={fieldClass("highlights", true)}
                   value={form.highlights}
                   onChange={(e) =>
-                    setForm({ ...form, highlights: e.target.value })
+                    updateFormField("highlights", e.target.value)
                   }
+                  onBlur={() => markFieldTouched("highlights")}
+                  aria-invalid={Boolean(fieldError("highlights"))}
+                  aria-describedby="property-highlights-error"
                   placeholder={
                     "Residential Rents Below Achievable Levels\nCommercial Lease-Up and Mark-to-Market"
                   }
                 />
+                <p
+                  id="property-highlights-error"
+                  className="mt-1 min-h-4 text-xs text-red-600"
+                  aria-live="polite"
+                >
+                  {fieldError("highlights")}
+                </p>
               </div>
 
               {/* Agent Info */}
@@ -853,70 +1133,116 @@ export default function AdminDashboard() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="agent-name" className="block text-xs font-medium text-gray-600 mb-1">
                       Agent Name
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      id="agent-name"
+                      name="agent_name"
+                      autoComplete="name"
+                      maxLength={80}
+                      className={fieldClass("agent_name")}
                       value={form.agent_name}
                       onChange={(e) =>
-                        setForm({ ...form, agent_name: e.target.value })
+                        updateFormField("agent_name", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("agent_name")}
+                      aria-invalid={Boolean(fieldError("agent_name"))}
+                      aria-describedby="agent-name-error"
                       placeholder="Brad Balletto"
                     />
+                    <p id="agent-name-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fieldError("agent_name")}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="agent-title" className="block text-xs font-medium text-gray-600 mb-1">
                       Title
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      id="agent-title"
+                      name="agent_title"
+                      maxLength={100}
+                      className={fieldClass("agent_title")}
                       value={form.agent_title}
                       onChange={(e) =>
-                        setForm({ ...form, agent_title: e.target.value })
+                        updateFormField("agent_title", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("agent_title")}
+                      aria-invalid={Boolean(fieldError("agent_title"))}
+                      aria-describedby="agent-title-error"
                       placeholder="Managing Director"
                     />
+                    <p id="agent-title-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fieldError("agent_title")}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="agent-phone" className="block text-xs font-medium text-gray-600 mb-1">
                       Phone
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      id="agent-phone"
+                      name="agent_phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      maxLength={30}
+                      className={fieldClass("agent_phone")}
                       value={form.agent_phone}
                       onChange={(e) =>
-                        setForm({ ...form, agent_phone: e.target.value })
+                        updateFormField("agent_phone", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("agent_phone")}
+                      aria-invalid={Boolean(fieldError("agent_phone"))}
+                      aria-describedby="agent-phone-error"
                       placeholder="860.420.9775"
                     />
+                    <p id="agent-phone-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fieldError("agent_phone")}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="agent-email" className="block text-xs font-medium text-gray-600 mb-1">
                       Email
                     </label>
                     <input
+                      id="agent-email"
+                      name="agent_email"
                       type="email"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                      autoComplete="email"
+                      maxLength={254}
+                      className={fieldClass("agent_email")}
                       value={form.agent_email}
                       onChange={(e) =>
-                        setForm({ ...form, agent_email: e.target.value })
+                        updateFormField("agent_email", e.target.value)
                       }
+                      onBlur={() => markFieldTouched("agent_email")}
+                      aria-invalid={Boolean(fieldError("agent_email"))}
+                      aria-describedby="agent-email-error"
                       placeholder="agent@firm.com"
                     />
+                    <p id="agent-email-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fieldError("agent_email")}
+                    </p>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="agent-photo" className="block text-xs font-medium text-gray-600 mb-1">
                       Agent Photo
                     </label>
                     <input
+                      id="agent-photo"
+                      name="agent_photo"
                       type="file"
-                      accept="image/*"
+                      accept=".jpg,.jpeg,.png,.webp,.gif"
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
-                      onChange={(e) =>
-                        setAgentPhoto(e.target.files?.[0] || null)
-                      }
+                      onChange={handleAgentPhoto}
+                      aria-invalid={Boolean(fileErrors.agentPhoto)}
+                      aria-describedby="agent-photo-error"
                     />
+                    <p id="agent-photo-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fileErrors.agentPhoto}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -928,7 +1254,7 @@ export default function AdminDashboard() {
                 </h4>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label htmlFor="property-images" className="block text-xs font-medium text-gray-600 mb-1">
                       Property Images
                     </label>
                     {editProperty && existingImages.length > 0 && (
@@ -955,12 +1281,19 @@ export default function AdminDashboard() {
                       </div>
                     )}
                     <input
+                      id="property-images"
+                      name="images"
                       type="file"
-                      accept="image/*"
+                      accept=".jpg,.jpeg,.png,.webp,.gif"
                       multiple
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
                       onChange={handleAddImages}
+                      aria-invalid={Boolean(fileErrors.images)}
+                      aria-describedby="property-images-error"
                     />
+                    <p id="property-images-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fileErrors.images}
+                    </p>
                     {images.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {images.map((file, i) => (
@@ -990,8 +1323,8 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Secure Documents (PDF)
+                    <label htmlFor="property-documents" className="block text-xs font-medium text-gray-600 mb-1">
+                      Secure Documents
                     </label>
                     {editProperty && existingDocuments.length > 0 && (
                       <ul className="space-y-1 mb-3">
@@ -1017,14 +1350,19 @@ export default function AdminDashboard() {
                       </ul>
                     )}
                     <input
+                      id="property-documents"
+                      name="documents"
                       type="file"
                       accept=".pdf,.doc,.docx"
                       multiple
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
-                      onChange={(e) =>
-                        setDocuments(Array.from(e.target.files || []))
-                      }
+                      onChange={handleDocuments}
+                      aria-invalid={Boolean(fileErrors.documents)}
+                      aria-describedby="property-documents-error"
                     />
+                    <p id="property-documents-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                      {fileErrors.documents}
+                    </p>
                     {documents.length > 0 && (
                       <p className="text-xs text-gray-400 mt-1">
                         {documents.length} new document(s) to upload
@@ -1044,8 +1382,8 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  disabled={formLoading}
-                  className="flex-1 py-2.5 bg-[#c8862a] text-white rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:opacity-60"
+                  disabled={formLoading || formHasErrors}
+                  className="flex-1 py-2.5 bg-[#c8862a] text-white rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {formLoading
                     ? "Saving…"

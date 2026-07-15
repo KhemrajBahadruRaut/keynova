@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Check } from "lucide-react";
+import {
+  hasValidationErrors,
+  validateEmail,
+  validatePhone,
+  validateText,
+  validateVerificationCode,
+} from "@/lib/validation";
 
 interface Property {
   id: number;
@@ -23,6 +30,16 @@ interface Property {
   agent_photo: string;
 }
 
+type ContactForm = {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+};
+
+type ContactField = keyof ContactForm;
+type DocumentField = "name" | "email" | "code";
+
 const API = process.env.NEXT_PUBLIC_API_BASE;
 
 export default function PropertyListingPage() {
@@ -39,10 +56,13 @@ export default function PropertyListingPage() {
   const [docCode, setDocCode] = useState("");
   const [docSubmitting, setDocSubmitting] = useState(false);
   const [docError, setDocError] = useState("");
+  const [docTouched, setDocTouched] = useState<
+    Partial<Record<DocumentField, boolean>>
+  >({});
 
   const [unlockedEmail, setUnlockedEmail] = useState<string | null>(null);
 
-  const [contact, setContact] = useState({
+  const [contact, setContact] = useState<ContactForm>({
     name: "",
     email: "",
     phone: "",
@@ -50,29 +70,77 @@ export default function PropertyListingPage() {
   });
   const [contactSending, setContactSending] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [contactTouched, setContactTouched] = useState<
+    Partial<Record<ContactField, boolean>>
+  >({});
+
+  const contactErrors = {
+    name: validateText(contact.name, "Name", {
+      required: true,
+      min: 2,
+      max: 80,
+    }),
+    email: validateEmail(contact.email),
+    phone: validatePhone(contact.phone),
+    message: validateText(contact.message, "Message", { max: 2000 }),
+  };
+
+  const documentErrors = {
+    name: validateText(docName, "Full name", {
+      required: true,
+      min: 2,
+      max: 80,
+    }),
+    email: validateEmail(docEmail),
+    code: validateVerificationCode(docCode),
+  };
+
+  const updateContact = (field: ContactField, value: string) => {
+    setContact((current) => ({ ...current, [field]: value }));
+    setContactTouched((current) => ({ ...current, [field]: true }));
+    setContactError("");
+  };
+
+  const contactFieldError = (field: ContactField) =>
+    contactTouched[field] ? contactErrors[field] : "";
+
+  const documentFieldError = (field: DocumentField) =>
+    docTouched[field] ? documentErrors[field] : "";
+
+  const validatedFieldClass = (error: string, extra = "") =>
+    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${extra} ${
+      error
+        ? "border-red-500 focus:ring-red-200"
+        : "border-gray-200 focus:ring-[#c8862a]"
+    }`;
 
   // Storage key scoped to this specific property
   const storageKey = `doc_unlock_property_${id}`;
 
   // On mount: check if this property was already unlocked previously
   useEffect(() => {
-    if (!id) return;
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Optional: expire the unlock after 30 days so it's not forever
-        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-        if (parsed.email && Date.now() - parsed.unlockedAt < THIRTY_DAYS) {
-          setUnlockedEmail(parsed.email);
-        } else {
-          localStorage.removeItem(storageKey);
+    const timer = window.setTimeout(() => {
+      if (!id) return;
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // Optional: expire the unlock after 30 days so it's not forever
+          const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+          if (parsed.email && Date.now() - parsed.unlockedAt < THIRTY_DAYS) {
+            setUnlockedEmail(parsed.email);
+          } else {
+            localStorage.removeItem(storageKey);
+          }
         }
+      } catch {
+        // ignore corrupted storage
       }
-    } catch {
-      // ignore corrupted storage
-    }
-  }, [id]);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [id, storageKey]);
 
   useEffect(() => {
     fetch(`${API}/property/get_property.php?id=${id}`)
@@ -124,6 +192,16 @@ export default function PropertyListingPage() {
 
   const handleDocRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    const requestErrors = {
+      name: documentErrors.name,
+      email: documentErrors.email,
+    };
+    if (hasValidationErrors(requestErrors)) {
+      setDocTouched((current) => ({ ...current, name: true, email: true }));
+      setDocError("Please correct the highlighted fields.");
+      return;
+    }
+
     setDocSubmitting(true);
     setDocError("");
     try {
@@ -132,8 +210,8 @@ export default function PropertyListingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           property_id: id,
-          name: docName,
-          email: docEmail,
+          name: docName.trim(),
+          email: docEmail.trim(),
         }),
       });
       const d = await res.json();
@@ -150,6 +228,11 @@ export default function PropertyListingPage() {
 
   const handleDocVerify = async (e: React.FormEvent) => {
   e.preventDefault();
+  if (documentErrors.code) {
+    setDocTouched((current) => ({ ...current, code: true }));
+    setDocError("Enter the 6-digit verification code.");
+    return;
+  }
   setDocSubmitting(true);
   setDocError("");
   try {
@@ -174,6 +257,7 @@ export default function PropertyListingPage() {
       setShowDocModal(false);
       setDocStep("request");
       setDocCode("");
+      setDocTouched({});
 
       // Auto-open the first document in a new tab right after unlocking
       if (property && property.documents && property.documents.length > 0) {
@@ -199,19 +283,40 @@ export default function PropertyListingPage() {
     setDocStep("request");
     setDocError("");
     setDocCode("");
+    setDocTouched({});
   };
 
   const handleContact = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (hasValidationErrors(contactErrors)) {
+      setContactTouched({ name: true, email: true, phone: true, message: true });
+      setContactError("Please correct the highlighted fields.");
+      return;
+    }
+
     setContactSending(true);
-    await fetch(`${API}/property/contact_inquiry.php`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...contact, property_id: id }),
-    });
-    setContactSending(false);
-    setContactSuccess(true);
-    setContact({ name: "", email: "", phone: "", message: "" });
+    setContactError("");
+    try {
+      const response = await fetch(`${API}/property/contact_inquiry.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contact.name.trim(),
+          email: contact.email.trim(),
+          phone: contact.phone.trim(),
+          message: contact.message.trim(),
+          property_id: id,
+        }),
+      });
+      if (!response.ok) throw new Error("Request failed");
+      setContactSuccess(true);
+      setContact({ name: "", email: "", phone: "", message: "" });
+      setContactTouched({});
+    } catch {
+      setContactError("Unable to send your inquiry. Please try again.");
+    } finally {
+      setContactSending(false);
+    }
   };
 
   if (loading) {
@@ -487,39 +592,110 @@ export default function PropertyListingPage() {
                   <Check /> Inquiry sent successfully!
                 </p>
               ) : (
-                <form onSubmit={handleContact} className="space-y-3">
+                <form onSubmit={handleContact} className="space-y-3" noValidate>
+                  {contactError && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {contactError}
+                    </p>
+                  )}
+                  <label htmlFor="contact-name" className="sr-only">
+                    Full name
+                  </label>
                   <input
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                    id="contact-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    minLength={2}
+                    maxLength={80}
+                    className={validatedFieldClass(contactFieldError("name"))}
                     placeholder="John Smith"
                     value={contact.name}
-                    onChange={(e) => setContact({ ...contact, name: e.target.value })}
+                    onChange={(e) => updateContact("name", e.target.value)}
+                    onBlur={() =>
+                      setContactTouched((current) => ({ ...current, name: true }))
+                    }
+                    aria-invalid={Boolean(contactFieldError("name"))}
+                    aria-describedby="contact-name-error"
                     required
                   />
+                  <p id="contact-name-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                    {contactFieldError("name")}
+                  </p>
+                  <label htmlFor="contact-email" className="sr-only">
+                    Email address
+                  </label>
                   <input
+                    id="contact-email"
+                    name="email"
                     type="email"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                    autoComplete="email"
+                    maxLength={254}
+                    className={validatedFieldClass(contactFieldError("email"))}
                     placeholder="john@example.com"
                     value={contact.email}
-                    onChange={(e) => setContact({ ...contact, email: e.target.value })}
+                    onChange={(e) => updateContact("email", e.target.value)}
+                    onBlur={() =>
+                      setContactTouched((current) => ({ ...current, email: true }))
+                    }
+                    aria-invalid={Boolean(contactFieldError("email"))}
+                    aria-describedby="contact-email-error"
                     required
                   />
+                  <p id="contact-email-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                    {contactFieldError("email")}
+                  </p>
+                  <label htmlFor="contact-phone" className="sr-only">
+                    Phone number
+                  </label>
                   <input
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                    id="contact-phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    maxLength={30}
+                    className={validatedFieldClass(contactFieldError("phone"))}
                     placeholder="(111) 111-1111"
                     value={contact.phone}
-                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                    onChange={(e) => updateContact("phone", e.target.value)}
+                    onBlur={() =>
+                      setContactTouched((current) => ({ ...current, phone: true }))
+                    }
+                    aria-invalid={Boolean(contactFieldError("phone"))}
+                    aria-describedby="contact-phone-error"
                   />
+                  <p id="contact-phone-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                    {contactFieldError("phone")}
+                  </p>
+                  <label htmlFor="contact-message" className="sr-only">
+                    Message
+                  </label>
                   <textarea
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a] resize-none"
+                    id="contact-message"
+                    name="message"
+                    className={validatedFieldClass(
+                      contactFieldError("message"),
+                      "resize-none",
+                    )}
                     rows={3}
+                    maxLength={2000}
                     placeholder="Enter message text..."
                     value={contact.message}
-                    onChange={(e) => setContact({ ...contact, message: e.target.value })}
+                    onChange={(e) => updateContact("message", e.target.value)}
+                    onBlur={() =>
+                      setContactTouched((current) => ({ ...current, message: true }))
+                    }
+                    aria-invalid={Boolean(contactFieldError("message"))}
+                    aria-describedby="contact-message-error"
                   />
+                  <p id="contact-message-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                    {contactFieldError("message")}
+                  </p>
                   <button
                     type="submit"
-                    disabled={contactSending}
-                    className="w-full bg-[#c8862a] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:opacity-60"
+                    disabled={contactSending || hasValidationErrors(contactErrors)}
+                    className="w-full bg-[#c8862a] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {contactSending ? "Sending…" : "Submit"}
                   </button>
@@ -539,39 +715,75 @@ export default function PropertyListingPage() {
             </div>
 
             {docStep === "request" && (
-              <form onSubmit={handleDocRequest} className="space-y-4">
+              <form onSubmit={handleDocRequest} className="space-y-4" noValidate>
                 <p className="text-sm text-gray-500">
-                  Enter your details and we'll email you a verification code to unlock the documents for this property.
+                  Enter your details and we&apos;ll email you a verification code to unlock the documents for this property.
                 </p>
                 {docError && (
-                  <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg">{docError}</p>
+                  <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg" role="alert">{docError}</p>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                  <label htmlFor="document-name" className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
                   <input
+                    id="document-name"
+                    name="name"
                     type="text"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                    autoComplete="name"
+                    minLength={2}
+                    maxLength={80}
+                    className={validatedFieldClass(documentFieldError("name"))}
                     placeholder="John Smith"
                     value={docName}
-                    onChange={(e) => setDocName(e.target.value)}
+                    onChange={(e) => {
+                      setDocName(e.target.value);
+                      setDocTouched((current) => ({ ...current, name: true }));
+                      setDocError("");
+                    }}
+                    onBlur={() =>
+                      setDocTouched((current) => ({ ...current, name: true }))
+                    }
+                    aria-invalid={Boolean(documentFieldError("name"))}
+                    aria-describedby="document-name-error"
                     required
                   />
+                  <p id="document-name-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                    {documentFieldError("name")}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+                  <label htmlFor="document-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
                   <input
+                    id="document-email"
+                    name="email"
                     type="email"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                    autoComplete="email"
+                    maxLength={254}
+                    className={validatedFieldClass(documentFieldError("email"))}
                     placeholder="john@example.com"
                     value={docEmail}
-                    onChange={(e) => setDocEmail(e.target.value)}
+                    onChange={(e) => {
+                      setDocEmail(e.target.value);
+                      setDocTouched((current) => ({ ...current, email: true }));
+                      setDocError("");
+                    }}
+                    onBlur={() =>
+                      setDocTouched((current) => ({ ...current, email: true }))
+                    }
+                    aria-invalid={Boolean(documentFieldError("email"))}
+                    aria-describedby="document-email-error"
                     required
                   />
+                  <p id="document-email-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                    {documentFieldError("email")}
+                  </p>
                 </div>
                 <button
                   type="submit"
-                  disabled={docSubmitting}
-                  className="w-full bg-[#c8862a] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:opacity-60"
+                  disabled={
+                    docSubmitting ||
+                    Boolean(documentErrors.name || documentErrors.email)
+                  }
+                  className="w-full bg-[#c8862a] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {docSubmitting ? "Sending code…" : "Send Verification Code"}
                 </button>
@@ -579,29 +791,49 @@ export default function PropertyListingPage() {
             )}
 
             {docStep === "verify" && (
-              <form onSubmit={handleDocVerify} className="space-y-4">
+              <form onSubmit={handleDocVerify} className="space-y-4" noValidate>
                 <p className="text-sm text-gray-500">
                   We sent a verification code to <span className="font-medium text-gray-800">{docEmail}</span>. Enter it below to unlock the documents.
                 </p>
                 {docError && (
-                  <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg">{docError}</p>
+                  <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg" role="alert">{docError}</p>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Verification Code</label>
+                  <label htmlFor="document-code" className="block text-xs font-medium text-gray-700 mb-1">Verification Code</label>
                   <input
+                    id="document-code"
+                    name="code"
                     type="text"
                     inputMode="numeric"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm tracking-[0.3em] text-center font-semibold focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    className={validatedFieldClass(
+                      documentFieldError("code"),
+                      "tracking-[0.3em] text-center font-semibold",
+                    )}
                     placeholder="••••••"
                     value={docCode}
-                    onChange={(e) => setDocCode(e.target.value)}
+                    onChange={(e) => {
+                      setDocCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                      setDocTouched((current) => ({ ...current, code: true }));
+                      setDocError("");
+                    }}
+                    onBlur={() =>
+                      setDocTouched((current) => ({ ...current, code: true }))
+                    }
+                    aria-invalid={Boolean(documentFieldError("code"))}
+                    aria-describedby="document-code-error"
                     required
                   />
+                  <p id="document-code-error" className="mt-1 min-h-4 text-xs text-red-600 text-center" aria-live="polite">
+                    {documentFieldError("code")}
+                  </p>
                 </div>
                 <button
                   type="submit"
-                  disabled={docSubmitting}
-                  className="w-full bg-[#c8862a] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:opacity-60"
+                  disabled={docSubmitting || Boolean(documentErrors.code)}
+                  className="w-full bg-[#c8862a] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {docSubmitting ? "Verifying…" : "Verify & Unlock"}
                 </button>
@@ -610,6 +842,11 @@ export default function PropertyListingPage() {
                   onClick={() => {
                     setDocStep("request");
                     setDocError("");
+                    setDocCode("");
+                    setDocTouched((current) => ({
+                      ...current,
+                      code: false,
+                    }));
                   }}
                   className="w-full text-xs text-gray-400 hover:text-gray-600"
                 >
