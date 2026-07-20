@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   hasValidationErrors,
   validateEmail,
   validatePassword,
 } from "@/lib/validation";
-
-const API = process.env.NEXT_PUBLIC_API_BASE;
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -23,6 +20,18 @@ export default function AdminLogin() {
     email: validateEmail(email),
     password: validatePassword(password),
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/auth/session", {
+      cache: "no-store",
+      signal: controller.signal,
+    }).then((response) => {
+      if (response.ok) router.replace("/admin/dashboard");
+    }).catch(() => {});
+
+    return () => controller.abort();
+  }, [router]);
 
   const updateField = (field, value) => {
     if (field === "email") setEmail(value);
@@ -44,20 +53,21 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      const response = await axios.post(
-        `${API}/admin/admin_login.php`,
-        { email: email.trim(), password },
-        { headers: { "Content-Type": "application/json" } },
-      );
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const data = await response.json();
 
-      if (response.data.status === "success") {
-        localStorage.setItem("admin_token", response.data.token);
-        router.push("/admin/dashboard");
+      if (response.ok && data.status === "success") {
+        router.replace("/admin/dashboard");
+        router.refresh();
       } else {
-        setError(response.data.message);
+        setError(data.message || "Invalid email or password.");
       }
     } catch {
-      setError("Backend not reachable");
+      setError("Authentication service is unavailable.");
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -29,6 +29,8 @@ interface Property {
   agent_phone: string;
   agent_email: string;
   created_at: string;
+  show_on_listing: boolean;
+  show_off_market: boolean;
 }
 
 interface DocumentRequest {
@@ -144,6 +146,7 @@ function validateDocumentFile(file: File) {
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
+const ADMIN_API = "/api/admin";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -163,6 +166,8 @@ export default function AdminDashboard() {
 
   // Form state
   const [form, setForm] = useState<PropertyForm>(INITIAL_PROPERTY_FORM);
+  const [showOnListing, setShowOnListing] = useState(true);
+  const [showOffMarket, setShowOffMarket] = useState(false);
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<PropertyFormField, boolean>>
   >({});
@@ -183,7 +188,9 @@ export default function AdminDashboard() {
 
   const formErrors = getPropertyFormErrors(form);
   const formHasErrors =
-    hasValidationErrors(formErrors) || hasValidationErrors(fileErrors);
+    hasValidationErrors(formErrors) ||
+    hasValidationErrors(fileErrors) ||
+    (!showOnListing && !showOffMarket);
 
   // ── Auto-geocode whenever address changes ──────────────────────────────────
   useEffect(() => {
@@ -231,32 +238,18 @@ export default function AdminDashboard() {
   }, [form.address]);
   // ──────────────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
-      router.push("/admin");
-      return;
-    }
-    loadData();
-  }, [router]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadData();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function loadData() {
-    setLoading(true);
-    const token = localStorage.getItem("admin_token");
-    const headers = { Authorization: `Bearer ${token}` };
+  const loadData = useCallback(async () => {
     try {
       const [pRes, dRes, iRes] = await Promise.all([
-        fetch(`${API}/property/get_properties.php`, { headers }),
-        fetch(`${API}/property/get_doc_requests.php`, { headers }),
-        fetch(`${API}/property/get_inquiries.php`, { headers }),
+        fetch(`${ADMIN_API}/property/get_properties.php?destination=all`, { cache: "no-store" }),
+        fetch(`${ADMIN_API}/property/get_doc_requests.php`, { cache: "no-store" }),
+        fetch(`${ADMIN_API}/property/get_inquiries.php`, { cache: "no-store" }),
       ]);
+      if ([pRes, dRes, iRes].some((response) => response.status === 401)) {
+        router.replace("/admin");
+        router.refresh();
+        return;
+      }
       const [pData, dData, iData] = await Promise.all([
         pRes.json(),
         dRes.json(),
@@ -267,17 +260,33 @@ export default function AdminDashboard() {
       if (iData.status === "success") setInquiries(iData.data || []);
     } catch (e) {
       console.error(e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    router.push("/admin");
+  useEffect(() => {
+    const timer = window.setTimeout(() => loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [loadData]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/admin");
+    router.refresh();
   };
 
   const resetForm = () => {
     setForm(INITIAL_PROPERTY_FORM);
+    setShowOnListing(true);
+    setShowOffMarket(false);
     setTouchedFields({});
     setImages([]);
     setAgentPhoto(null);
@@ -289,7 +298,7 @@ export default function AdminDashboard() {
     setGeocodedLat(null);
     setGeocodedLng(null);
     setGeocodeStatus("idle");
-  }
+  };
 
   const updateFormField = (field: PropertyFormField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -343,12 +352,19 @@ export default function AdminDashboard() {
       agent_phone: p.agent_phone,
       agent_email: p.agent_email,
     });
+    setShowOnListing(p.show_on_listing);
+    setShowOffMarket(p.show_off_market);
 
-    const token = localStorage.getItem("admin_token");
     try {
-      const res = await fetch(`${API}/property/get_property.php?id=${p.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${ADMIN_API}/property/get_property.php?id=${p.id}`,
+        { cache: "no-store" },
+      );
+      if (res.status === 401) {
+        router.replace("/admin");
+        router.refresh();
+        return;
+      }
       const d = await res.json();
       if (d.status === "success") {
         const item = Array.isArray(d.data) ? d.data[0] : d.data;
@@ -360,6 +376,8 @@ export default function AdminDashboard() {
         setExistingDocuments(
           Array.isArray(item.documents) ? item.documents : []
         );
+        setShowOnListing(Boolean(item.show_on_listing));
+        setShowOffMarket(Boolean(item.show_off_market));
         // Pre-fill geocoords if already stored on the property
         if (item.lat && item.lng) {
           setGeocodedLat(parseFloat(item.lat));
@@ -392,10 +410,11 @@ export default function AdminDashboard() {
 
     setFormLoading(true);
     setFormMsg({ type: "", text: "" });
-    const token = localStorage.getItem("admin_token");
 
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v.trim()));
+    fd.append("show_on_listing", showOnListing ? "1" : "0");
+    fd.append("show_off_market", showOffMarket ? "1" : "0");
     if (editProperty) fd.append("id", String(editProperty.id));
 
     // ── Attach geocoords so the backend can store them ──────────────────────
@@ -408,15 +427,19 @@ export default function AdminDashboard() {
     if (agentPhoto) fd.append("agent_photo", agentPhoto);
 
     const url = editProperty
-      ? `${API}/property/update_property.php`
-      : `${API}/property/create_property.php`;
+      ? `${ADMIN_API}/property/update_property.php`
+      : `${ADMIN_API}/property/create_property.php`;
 
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
+      if (res.status === 401) {
+        router.replace("/admin");
+        router.refresh();
+        return;
+      }
       const d = await res.json();
       if (d.status === "success") {
         setFormMsg({
@@ -442,30 +465,32 @@ export default function AdminDashboard() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this property?")) return;
-    const token = localStorage.getItem("admin_token");
-    await fetch(`${API}/property/delete_property.php`, {
+    const response = await fetch(`${ADMIN_API}/property/delete_property.php`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
+    if (response.status === 401) {
+      router.replace("/admin");
+      router.refresh();
+      return;
+    }
     loadData();
   };
 
   const handleDeleteExistingImage = async (filename: string) => {
     if (!confirm("Remove this image?")) return;
-    const token = localStorage.getItem("admin_token");
     try {
-      await fetch(`${API}/property/delete_property_image.php`, {
+      const response = await fetch(`${ADMIN_API}/property/delete_property_image.php`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ property_id: editProperty?.id, filename }),
       });
+      if (response.status === 401) {
+        router.replace("/admin");
+        router.refresh();
+        return;
+      }
       setExistingImages((prev) => prev.filter((img) => img !== filename));
     } catch (err) {
       console.error("Failed to delete image", err);
@@ -474,16 +499,17 @@ export default function AdminDashboard() {
 
   const handleDeleteExistingDocument = async (filename: string) => {
     if (!confirm("Remove this document?")) return;
-    const token = localStorage.getItem("admin_token");
     try {
-      await fetch(`${API}/property/delete_property_document.php`, {
+      const response = await fetch(`${ADMIN_API}/property/delete_property_document.php`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ property_id: editProperty?.id, filename }),
       });
+      if (response.status === 401) {
+        router.replace("/admin");
+        router.refresh();
+        return;
+      }
       setExistingDocuments((prev) =>
         prev.filter((doc) => doc.file !== filename)
       );
@@ -871,6 +897,74 @@ export default function AdminDashboard() {
                   {formMsg.text}
                 </div>
               )}
+
+              <fieldset>
+                <legend className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  Publish To *
+                </legend>
+                <p className="mt-1 text-xs text-gray-500">
+                  Select one page or both pages for this property.
+                </p>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                      showOnListing
+                        ? "border-[#c8862a] bg-orange-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="show_on_listing"
+                      checked={showOnListing}
+                      onChange={(event) => {
+                        setShowOnListing(event.target.checked);
+                        setFormMsg({ type: "", text: "" });
+                      }}
+                      className="mt-0.5 h-4 w-4 accent-[#c8862a]"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-gray-900">
+                        Property Listing
+                      </span>
+                      <span className="block text-xs text-gray-500">
+                        Show on the main listings page.
+                      </span>
+                    </span>
+                  </label>
+                  <label
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                      showOffMarket
+                        ? "border-[#c8862a] bg-orange-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="show_off_market"
+                      checked={showOffMarket}
+                      onChange={(event) => {
+                        setShowOffMarket(event.target.checked);
+                        setFormMsg({ type: "", text: "" });
+                      }}
+                      className="mt-0.5 h-4 w-4 accent-[#c8862a]"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-gray-900">
+                        Off Market
+                      </span>
+                      <span className="block text-xs text-gray-500">
+                        Show on the Off Market page.
+                      </span>
+                    </span>
+                  </label>
+                </div>
+                {!showOnListing && !showOffMarket && (
+                  <p className="mt-2 text-xs text-red-600" role="alert">
+                    Select at least one page.
+                  </p>
+                )}
+              </fieldset>
 
               {/* Property Info */}
               <div>

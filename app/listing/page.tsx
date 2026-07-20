@@ -1,9 +1,10 @@
 "use client";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 const ListingsMap = dynamic(() => import("./ListingsMap"), { ssr: false });
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { validateNonNegativeNumber } from "@/lib/validation";
 
 interface Property {
@@ -29,7 +30,11 @@ const API = process.env.NEXT_PUBLIC_API_BASE;
 const PAGE_SIZE = 30;
 
 export default function ListingsPage() {
+  const pathname = usePathname();
   const router = useRouter();
+  const isOffMarket = pathname === "/off-market";
+  const destination = isOffMarket ? "off_market" : "listing";
+  const pageTitle = isOffMarket ? "Off Market" : "Property Listings";
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,14 +83,14 @@ export default function ListingsPage() {
   const sizeError = minSizeError || maxSizeError || sizeRangeError;
 
   useEffect(() => {
-    fetch(`${API}/property/get_properties.php`)
+    fetch(`${API}/property/get_properties.php?destination=${destination}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.status === "success") setProperties(d.data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [destination]);
 
   const propertyTypes = useMemo(() => {
     const set = new Set<string>();
@@ -186,6 +191,46 @@ export default function ListingsPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f6f3] flex flex-col">
+      <div className="border-b border-gray-200 bg-white px-6 py-5">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
+              Explore Properties
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-gray-900">
+              {pageTitle}
+            </h1>
+          </div>
+          <nav
+            aria-label="Property pages"
+            className="flex w-fit rounded-xl bg-[#f7f6f3] p-1"
+          >
+            <Link
+              href="/listing"
+              aria-current={!isOffMarket ? "page" : undefined}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                !isOffMarket
+                  ? "bg-white text-[#c8862a] shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Property Listing
+            </Link>
+            <Link
+              href="/off-market"
+              aria-current={isOffMarket ? "page" : undefined}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                isOffMarket
+                  ? "bg-white text-[#c8862a] shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Off Market
+            </Link>
+          </nav>
+        </div>
+      </div>
+
       {/* Filter bar */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-end gap-4">
@@ -392,7 +437,9 @@ export default function ListingsPage() {
             <div className="text-center py-20 px-4">
               <div className="text-5xl mb-4">🏢</div>
               <p className="text-gray-500 text-sm">
-                No properties match your filters.
+                {isOffMarket
+                  ? "No off-market properties match your filters."
+                  : "No properties match your filters."}
               </p>
             </div>
           ) : (
