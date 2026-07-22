@@ -127,20 +127,30 @@ function getFileExtension(file: File) {
   return file.name.split(".").pop()?.toLowerCase() || "";
 }
 
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 function validateImageFile(file: File) {
   if (!IMAGE_EXTENSIONS.includes(getFileExtension(file))) {
-    return "Use a JPG, PNG, WebP, or GIF image.";
+    return `"${file.name}" was rejected. Use a JPG, PNG, WebP, or GIF image.`;
   }
-  if (file.size > MAX_IMAGE_SIZE) return "Each image must be 10 MB or smaller.";
+  if (file.size > MAX_IMAGE_SIZE) {
+    return `"${file.name}" is ${formatFileSize(file.size)}. Images must be 10 MB or smaller.`;
+  }
   return "";
 }
 
 function validateDocumentFile(file: File) {
   if (!DOCUMENT_EXTENSIONS.includes(getFileExtension(file))) {
-    return "Use a PDF, DOC, or DOCX document.";
+    return `"${file.name}" was rejected. Use a PDF, DOC, or DOCX document.`;
   }
   if (file.size > MAX_DOCUMENT_SIZE) {
-    return "Each document must be 20 MB or smaller.";
+    return `"${file.name}" is ${formatFileSize(file.size)}. Documents must be 20 MB or smaller.`;
   }
   return "";
 }
@@ -535,7 +545,7 @@ export default function AdminDashboard() {
     if (nextImages.length > 20) {
       setFileErrors((current) => ({
         ...current,
-        images: "Upload no more than 20 new images at a time.",
+        images: `Files were rejected. You selected ${nextImages.length} images; the maximum is 20.`,
       }));
     } else if (validationError) {
       setFileErrors((current) => ({
@@ -552,10 +562,21 @@ export default function AdminDashboard() {
   const handleAgentPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     const validationError = file ? validateImageFile(file) : "";
+
+    if (validationError) {
+      setAgentPhoto(null);
+      setFileErrors((current) => ({
+        ...current,
+        agentPhoto: validationError,
+      }));
+      e.target.value = "";
+      return;
+    }
+
     setAgentPhoto(file);
     setFileErrors((current) => ({
       ...current,
-      agentPhoto: validationError,
+      agentPhoto: "",
     }));
   };
 
@@ -563,10 +584,21 @@ export default function AdminDashboard() {
     const nextDocuments = Array.from(e.target.files || []);
     const validationError =
       nextDocuments.map(validateDocumentFile).find(Boolean) || "";
+
+    if (validationError) {
+      setDocuments([]);
+      setFileErrors((current) => ({
+        ...current,
+        documents: validationError,
+      }));
+      e.target.value = "";
+      return;
+    }
+
     setDocuments(nextDocuments);
     setFileErrors((current) => ({
       ...current,
-      documents: validationError,
+      documents: "",
     }));
   };
 
@@ -1351,6 +1383,9 @@ export default function AdminDashboard() {
                     <label htmlFor="agent-photo" className="block text-xs font-medium text-gray-600 mb-1">
                       Agent Photo
                     </label>
+                    <p id="agent-photo-help" className="mb-2 text-xs text-gray-500">
+                      JPG, PNG, WebP, or GIF. Maximum file size: 10 MB.
+                    </p>
                     <input
                       id="agent-photo"
                       name="agent_photo"
@@ -1358,12 +1393,23 @@ export default function AdminDashboard() {
                       accept=".jpg,.jpeg,.png,.webp,.gif"
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
                       onChange={handleAgentPhoto}
+                      onClick={() =>
+                        setFileErrors((current) => ({
+                          ...current,
+                          agentPhoto: "",
+                        }))
+                      }
                       aria-invalid={Boolean(fileErrors.agentPhoto)}
-                      aria-describedby="agent-photo-error"
+                      aria-describedby="agent-photo-help agent-photo-error"
                     />
                     <p id="agent-photo-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
                       {fileErrors.agentPhoto}
                     </p>
+                    {agentPhoto && (
+                      <p className="mt-1 text-xs text-green-700">
+                        Selected: {agentPhoto.name} ({formatFileSize(agentPhoto.size)})
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1378,6 +1424,9 @@ export default function AdminDashboard() {
                     <label htmlFor="property-images" className="block text-xs font-medium text-gray-600 mb-1">
                       Property Images
                     </label>
+                    <p id="property-images-help" className="mb-2 text-xs text-gray-500">
+                      JPG, PNG, WebP, or GIF. Maximum 20 images and 10 MB per image.
+                    </p>
                     {editProperty && existingImages.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
                         {existingImages.map((img) => (
@@ -1409,8 +1458,14 @@ export default function AdminDashboard() {
                       multiple
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
                       onChange={handleAddImages}
+                      onClick={() =>
+                        setFileErrors((current) => ({
+                          ...current,
+                          images: "",
+                        }))
+                      }
                       aria-invalid={Boolean(fileErrors.images)}
-                      aria-describedby="property-images-error"
+                      aria-describedby="property-images-help property-images-error"
                     />
                     <p id="property-images-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
                       {fileErrors.images}
@@ -1427,6 +1482,9 @@ export default function AdminDashboard() {
                               alt=""
                               className="w-full h-full object-cover"
                             />
+                            <span className="absolute inset-x-0 bottom-0 bg-black/65 px-1 py-0.5 text-center text-[9px] text-white">
+                              {formatFileSize(file.size)}
+                            </span>
                             <button
                               type="button"
                               onClick={() => removeImage(i)}
@@ -1437,7 +1495,9 @@ export default function AdminDashboard() {
                           </div>
                         ))}
                         <p className="w-full text-xs text-gray-400 mt-1">
-                          {images.length} new image(s) to upload
+                          {images.length} new image(s), {formatFileSize(
+                            images.reduce((total, file) => total + file.size, 0),
+                          )} total
                         </p>
                       </div>
                     )}
@@ -1447,6 +1507,9 @@ export default function AdminDashboard() {
                     <label htmlFor="property-documents" className="block text-xs font-medium text-gray-600 mb-1">
                       Secure Documents
                     </label>
+                    <p id="property-documents-help" className="mb-2 text-xs text-gray-500">
+                      PDF, DOC, or DOCX. Maximum file size: 20 MB per document.
+                    </p>
                     {editProperty && existingDocuments.length > 0 && (
                       <ul className="space-y-1 mb-3">
                         {existingDocuments.map((doc) => (
@@ -1478,16 +1541,32 @@ export default function AdminDashboard() {
                       multiple
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
                       onChange={handleDocuments}
+                      onClick={() =>
+                        setFileErrors((current) => ({
+                          ...current,
+                          documents: "",
+                        }))
+                      }
                       aria-invalid={Boolean(fileErrors.documents)}
-                      aria-describedby="property-documents-error"
+                      aria-describedby="property-documents-help property-documents-error"
                     />
                     <p id="property-documents-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
                       {fileErrors.documents}
                     </p>
                     {documents.length > 0 && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {documents.length} new document(s) to upload
-                      </p>
+                      <ul className="mt-2 space-y-1 text-xs text-gray-600">
+                        {documents.map((file) => (
+                          <li
+                            key={`${file.name}-${file.lastModified}`}
+                            className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-2 py-1.5"
+                          >
+                            <span className="min-w-0 truncate">{file.name}</span>
+                            <span className="shrink-0 text-gray-400">
+                              {formatFileSize(file.size)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 </div>
