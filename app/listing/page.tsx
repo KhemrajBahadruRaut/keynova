@@ -201,33 +201,6 @@ export default function ListingsPage() {
               {pageTitle}
             </h1>
           </div>
-          <nav
-            aria-label="Property pages"
-            className="flex w-fit rounded-xl bg-[#f7f6f3] p-1"
-          >
-            <Link
-              href="/listing"
-              aria-current={!isOffMarket ? "page" : undefined}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                !isOffMarket
-                  ? "bg-white text-[#c8862a] shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Property Listing
-            </Link>
-            <Link
-              href="/off-market"
-              aria-current={isOffMarket ? "page" : undefined}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                isOffMarket
-                  ? "bg-white text-[#c8862a] shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Off Market
-            </Link>
-          </nav>
         </div>
       </div>
 
