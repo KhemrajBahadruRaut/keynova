@@ -192,7 +192,17 @@ export default function AdminDashboard() {
     hasValidationErrors(fileErrors) ||
     (!showOnListing && !showOffMarket);
 
-  // ── Auto-geocode whenever address changes ──────────────────────────────────
+  useEffect(() => {
+    if (!formMsg.text) return;
+
+    const timer = window.setTimeout(() => {
+      setFormMsg({ type: "", text: "" });
+    }, 4500);
+
+    return () => window.clearTimeout(timer);
+  }, [formMsg.text, formMsg.type]);
+
+  // ── Auto-geocode whenever address changes ─────────────────────────────────
   useEffect(() => {
     const address = form.address.trim();
     if (address.length < 8) {
@@ -449,7 +459,6 @@ export default function AdminDashboard() {
         loadData();
         setTimeout(() => {
           setShowForm(false);
-          setFormMsg({ type: "", text: "" });
         }, 1500);
       } else {
         setFormMsg({
@@ -603,6 +612,37 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f6f3]">
+      {formMsg.text && (
+        <div
+          role={formMsg.type === "error" ? "alert" : "status"}
+          aria-live={formMsg.type === "error" ? "assertive" : "polite"}
+          aria-atomic="true"
+          className={`fixed right-4 top-4 z-100 flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 rounded-xl border px-4 py-3 shadow-lg sm:right-6 sm:top-6 ${
+            formMsg.type === "success"
+              ? "border-green-200 bg-green-50 text-green-800"
+              : "border-red-200 bg-red-50 text-red-700"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
+              formMsg.type === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
+          >
+            {formMsg.type === "success" ? "\u2713" : "!"}
+          </span>
+          <p className="min-w-0 flex-1 text-sm font-medium">{formMsg.text}</p>
+          <button
+            type="button"
+            onClick={() => setFormMsg({ type: "", text: "" })}
+            className="shrink-0 rounded p-0.5 text-current/70 hover:bg-black/5 hover:text-current focus:outline-none focus:ring-2 focus:ring-current/30"
+            aria-label="Dismiss notification"
+          >
+            <span aria-hidden="true">{"\u00d7"}</span>
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
         <div className="flex items-center gap-3">
@@ -885,19 +925,6 @@ export default function AdminDashboard() {
               className="p-6 space-y-5"
               noValidate
             >
-              {formMsg.text && (
-                <div
-                  role={formMsg.type === "error" ? "alert" : "status"}
-                  className={`px-4 py-3 rounded-lg text-sm ${
-                    formMsg.type === "success"
-                      ? "bg-green-50 text-green-700"
-                      : "bg-red-50 text-red-600"
-                  }`}
-                >
-                  {formMsg.text}
-                </div>
-              )}
-
               <fieldset>
                 <legend className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Publish To *
