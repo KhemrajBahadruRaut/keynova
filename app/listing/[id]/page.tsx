@@ -525,8 +525,7 @@ export default function PropertyListingPage() {
                         {isUnlocked ? (
                           <a
                             href={`${API}/uploads/${doc.file}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            target="_top"
                             className="text-white bg-[#c8862a] hover:bg-[#b5721f] transition-colors px-3 py-1.5 rounded-lg font-medium"
                           >
                             Download
