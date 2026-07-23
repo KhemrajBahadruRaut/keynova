@@ -174,7 +174,10 @@ export default function PropertyListingPage() {
           if (d.status === "success") {
             const item = Array.isArray(d.data) ? d.data[0] : d.data;
             if (typeof item.highlights === "string") {
-              item.highlights = item.highlights.split("\n").map((h: string) => h.trim()).filter(Boolean);
+              item.highlights = item.highlights
+                .split("\n")
+                .map((h: string) => h.trim())
+                .filter(Boolean);
             } else if (!Array.isArray(item.highlights)) {
               item.highlights = [];
             }
@@ -227,56 +230,56 @@ export default function PropertyListingPage() {
   };
 
   const handleDocVerify = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (documentErrors.code) {
-    setDocTouched((current) => ({ ...current, code: true }));
-    setDocError("Enter the 6-digit verification code.");
-    return;
-  }
-  setDocSubmitting(true);
-  setDocError("");
-  try {
-    const res = await fetch(`${API}/property/verify_document_code.php`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        property_id: id,
-        email: docEmail,
-        code: docCode,
-      }),
-    });
-    const d = await res.json();
-    if (d.status === "success") {
-      setUnlockedEmail(docEmail);
-      try {
-        localStorage.setItem(
-          storageKey,
-          JSON.stringify({ email: docEmail, unlockedAt: Date.now() })
-        );
-      } catch {}
-      setShowDocModal(false);
-      setDocStep("request");
-      setDocCode("");
-      setDocTouched({});
-
-      // Auto-open the first document in a new tab right after unlocking
-      if (property && property.documents && property.documents.length > 0) {
-  window.open(
-    `${API}/uploads/${property.documents[0].file}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-}
-      // Jump them to the Documents tab so they see all files, not just the one that opened
-      setActiveTab("documents");
-    } else {
-      setDocError(d.message || "Invalid or expired code. Try again.");
+    e.preventDefault();
+    if (documentErrors.code) {
+      setDocTouched((current) => ({ ...current, code: true }));
+      setDocError("Enter the 6-digit verification code.");
+      return;
     }
-  } catch {
-    setDocError("Network error. Try again.");
-  }
-  setDocSubmitting(false);
-};
+    setDocSubmitting(true);
+    setDocError("");
+    try {
+      const res = await fetch(`${API}/property/verify_document_code.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          property_id: id,
+          email: docEmail,
+          code: docCode,
+        }),
+      });
+      const d = await res.json();
+      if (d.status === "success") {
+        setUnlockedEmail(docEmail);
+        try {
+          localStorage.setItem(
+            storageKey,
+            JSON.stringify({ email: docEmail, unlockedAt: Date.now() }),
+          );
+        } catch {}
+        setShowDocModal(false);
+        setDocStep("request");
+        setDocCode("");
+        setDocTouched({});
+
+        // Auto-open the first document in a new tab right after unlocking
+        // if (property && property.documents && property.documents.length > 0) {
+        //   window.open(
+        //     `${API}/uploads/${property.documents[0].file}`,
+        //     "_blank",
+        //     "noopener,noreferrer",
+        //   );
+        // }
+        // Jump them to the Documents tab so they see all files, not just the one that opened
+        setActiveTab("documents");
+      } else {
+        setDocError(d.message || "Invalid or expired code. Try again.");
+      }
+    } catch {
+      setDocError("Network error. Try again.");
+    }
+    setDocSubmitting(false);
+  };
 
   const closeDocModal = () => {
     setShowDocModal(false);
@@ -289,7 +292,12 @@ export default function PropertyListingPage() {
   const handleContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (hasValidationErrors(contactErrors)) {
-      setContactTouched({ name: true, email: true, phone: true, message: true });
+      setContactTouched({
+        name: true,
+        email: true,
+        phone: true,
+        message: true,
+      });
       setContactError("Please correct the highlighted fields.");
       return;
     }
@@ -355,12 +363,18 @@ export default function PropertyListingPage() {
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 gap-2">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {property.title}
+            </h1>
             <p className="text-gray-500 mt-1">{property.address}</p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold text-gray-900">{property.price}</div>
-            <div className="text-sm text-gray-500 uppercase tracking-wide">Sale Price</div>
+            <div className="text-3xl font-bold text-gray-900">
+              {property.price}
+            </div>
+            <div className="text-sm text-gray-500 uppercase tracking-wide">
+              Sale Price
+            </div>
           </div>
         </div>
 
@@ -405,7 +419,11 @@ export default function PropertyListingPage() {
                                 : "border-transparent opacity-50 hover:opacity-80"
                             }`}
                           >
-                            <img src={`${API}/uploads/${img}`} alt="" className="w-full h-full object-cover" />
+                            <img
+                              src={`${API}/uploads/${img}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
                           </button>
                         ))}
                       </div>
@@ -414,7 +432,9 @@ export default function PropertyListingPage() {
                 )}
 
                 <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h2 className="text-lg font-semibold text-[#c8862a] mb-4">Property Details</h2>
+                  <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                    Property Details
+                  </h2>
                   <div className="divide-y divide-gray-100">
                     {[
                       { label: "Sale Price", value: property.price },
@@ -422,8 +442,13 @@ export default function PropertyListingPage() {
                       { label: "Units", value: property.units },
                       { label: "Year Built", value: property.year_built },
                     ].map(({ label, value }) => (
-                      <div key={label} className="flex justify-between py-3 text-sm">
-                        <span className="font-medium text-gray-700">{label}</span>
+                      <div
+                        key={label}
+                        className="flex justify-between py-3 text-sm"
+                      >
+                        <span className="font-medium text-gray-700">
+                          {label}
+                        </span>
                         <span className="text-gray-900">{value}</span>
                       </div>
                     ))}
@@ -431,16 +456,25 @@ export default function PropertyListingPage() {
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h2 className="text-lg font-semibold text-[#c8862a] mb-3">Property Description</h2>
-                  <p className="text-gray-700 text-sm leading-relaxed">{property.description}</p>
+                  <h2 className="text-lg font-semibold text-[#c8862a] mb-3">
+                    Property Description
+                  </h2>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    {property.description}
+                  </p>
                 </div>
 
                 {property.highlights?.length > 0 && (
                   <div className="bg-white rounded-xl p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-[#c8862a] mb-3">Highlights</h2>
+                    <h2 className="text-lg font-semibold text-[#c8862a] mb-3">
+                      Highlights
+                    </h2>
                     <ul className="space-y-2">
                       {property.highlights.map((h, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-sm text-gray-700"
+                        >
                           <span className="mt-1 w-2 h-2 rounded-full bg-[#c8862a] shrink-0" />
                           {h}
                         </li>
@@ -454,7 +488,9 @@ export default function PropertyListingPage() {
             {activeTab === "documents" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-[#c8862a]">Documents</h2>
+                  <h2 className="text-lg font-semibold text-[#c8862a]">
+                    Documents
+                  </h2>
                   {isUnlocked && (
                     <span className="flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
                       <Check size={14} /> Verified as {unlockedEmail}
@@ -464,9 +500,12 @@ export default function PropertyListingPage() {
                 {property.documents?.length > 0 ? (
                   <ul className="divide-y divide-gray-100">
                     {property.documents.map((doc, i) => (
-                      <li key={i} className="flex justify-between items-center py-3 text-sm">
+                      <li
+                        key={i}
+                        className="flex justify-between items-center py-3 text-sm"
+                      >
                         <span className="text-gray-700">📄 {doc.name}</span>
-                        {isUnlocked ? (
+                        {/* {isUnlocked ? (
                           <button
                             onClick={() =>
                               window.open(`${API}/uploads/${doc.file}`, "_blank", "noopener,noreferrer")
@@ -482,19 +521,40 @@ export default function PropertyListingPage() {
                           >
                             🔒 Request Access
                           </button>
+                        )} */}
+                        {isUnlocked ? (
+                          <a
+                            href={`${API}/uploads/${doc.file}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-white bg-[#c8862a] hover:bg-[#b5721f] transition-colors px-3 py-1.5 rounded-lg font-medium"
+                          >
+                            Download
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => setShowDocModal(true)}
+                            className="text-[#c8862a] hover:underline font-medium"
+                          >
+                            🔒 Request Access
+                          </button>
                         )}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">No documents have been added for this property yet.</p>
+                  <p className="text-sm text-gray-500">
+                    No documents have been added for this property yet.
+                  </p>
                 )}
               </div>
             )}
 
             {activeTab === "photos" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">Photos</h2>
+                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                  Photos
+                </h2>
                 {property.images?.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {property.images.map((img, i) => (
@@ -515,14 +575,18 @@ export default function PropertyListingPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No photos available for this property.</p>
+                  <p className="text-sm text-gray-500">
+                    No photos available for this property.
+                  </p>
                 )}
               </div>
             )}
 
             {activeTab === "map" && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">Location</h2>
+                <h2 className="text-lg font-semibold text-[#c8862a] mb-4">
+                  Location
+                </h2>
                 {property.address ? (
                   <div className="rounded-lg overflow-hidden h-96">
                     <iframe
@@ -536,7 +600,9 @@ export default function PropertyListingPage() {
                     />
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No address available to show on the map.</p>
+                  <p className="text-sm text-gray-500">
+                    No address available to show on the map.
+                  </p>
                 )}
               </div>
             )}
@@ -547,7 +613,9 @@ export default function PropertyListingPage() {
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">{isUnlocked ? "🔓" : "🔒"}</span>
                 <h3 className="font-semibold">
-                  {isUnlocked ? "Documents Unlocked" : "Access Secure Documents"}
+                  {isUnlocked
+                    ? "Documents Unlocked"
+                    : "Access Secure Documents"}
                 </h3>
               </div>
 
@@ -555,16 +623,30 @@ export default function PropertyListingPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
                     {property.agent_photo ? (
-                      <img src={`${API}/uploads/${property.agent_photo}`} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={`${API}/uploads/${property.agent_photo}`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">👤</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">
+                        👤
+                      </div>
                     )}
                   </div>
                   <div>
-                    <div className="font-semibold text-sm">{property.agent_name}</div>
-                    <div className="text-xs text-[#c8862a]">{property.agent_title}</div>
-                    <div className="text-xs text-gray-500">{property.agent_phone}</div>
-                    <div className="text-xs text-[#c8862a]">{property.agent_email}</div>
+                    <div className="font-semibold text-sm">
+                      {property.agent_name}
+                    </div>
+                    <div className="text-xs text-[#c8862a]">
+                      {property.agent_title}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {property.agent_phone}
+                    </div>
+                    <div className="text-xs text-[#c8862a]">
+                      {property.agent_email}
+                    </div>
                   </div>
                 </div>
                 {isUnlocked ? (
@@ -586,7 +668,9 @@ export default function PropertyListingPage() {
             </div>
 
             <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4">Request More Info</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Request More Info
+              </h3>
               {contactSuccess ? (
                 <p className="text-green-600 text-sm text-center flex gap-2 justify-center items-center border rounded-3xl py-2">
                   <Check /> Inquiry sent successfully!
@@ -613,13 +697,20 @@ export default function PropertyListingPage() {
                     value={contact.name}
                     onChange={(e) => updateContact("name", e.target.value)}
                     onBlur={() =>
-                      setContactTouched((current) => ({ ...current, name: true }))
+                      setContactTouched((current) => ({
+                        ...current,
+                        name: true,
+                      }))
                     }
                     aria-invalid={Boolean(contactFieldError("name"))}
                     aria-describedby="contact-name-error"
                     required
                   />
-                  <p id="contact-name-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p
+                    id="contact-name-error"
+                    className="min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
                     {contactFieldError("name")}
                   </p>
                   <label htmlFor="contact-email" className="sr-only">
@@ -636,13 +727,20 @@ export default function PropertyListingPage() {
                     value={contact.email}
                     onChange={(e) => updateContact("email", e.target.value)}
                     onBlur={() =>
-                      setContactTouched((current) => ({ ...current, email: true }))
+                      setContactTouched((current) => ({
+                        ...current,
+                        email: true,
+                      }))
                     }
                     aria-invalid={Boolean(contactFieldError("email"))}
                     aria-describedby="contact-email-error"
                     required
                   />
-                  <p id="contact-email-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p
+                    id="contact-email-error"
+                    className="min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
                     {contactFieldError("email")}
                   </p>
                   <label htmlFor="contact-phone" className="sr-only">
@@ -660,12 +758,19 @@ export default function PropertyListingPage() {
                     value={contact.phone}
                     onChange={(e) => updateContact("phone", e.target.value)}
                     onBlur={() =>
-                      setContactTouched((current) => ({ ...current, phone: true }))
+                      setContactTouched((current) => ({
+                        ...current,
+                        phone: true,
+                      }))
                     }
                     aria-invalid={Boolean(contactFieldError("phone"))}
                     aria-describedby="contact-phone-error"
                   />
-                  <p id="contact-phone-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p
+                    id="contact-phone-error"
+                    className="min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
                     {contactFieldError("phone")}
                   </p>
                   <label htmlFor="contact-message" className="sr-only">
@@ -684,17 +789,26 @@ export default function PropertyListingPage() {
                     value={contact.message}
                     onChange={(e) => updateContact("message", e.target.value)}
                     onBlur={() =>
-                      setContactTouched((current) => ({ ...current, message: true }))
+                      setContactTouched((current) => ({
+                        ...current,
+                        message: true,
+                      }))
                     }
                     aria-invalid={Boolean(contactFieldError("message"))}
                     aria-describedby="contact-message-error"
                   />
-                  <p id="contact-message-error" className="min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p
+                    id="contact-message-error"
+                    className="min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
                     {contactFieldError("message")}
                   </p>
                   <button
                     type="submit"
-                    disabled={contactSending || hasValidationErrors(contactErrors)}
+                    disabled={
+                      contactSending || hasValidationErrors(contactErrors)
+                    }
                     className="w-full bg-[#c8862a] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#b5721f] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {contactSending ? "Sending…" : "Submit"}
@@ -710,20 +824,42 @@ export default function PropertyListingPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-semibold text-gray-900">🔒 Access Secure Documents</h3>
-              <button onClick={closeDocModal} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+              <h3 className="text-lg font-semibold text-gray-900">
+                🔒 Access Secure Documents
+              </h3>
+              <button
+                onClick={closeDocModal}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ✕
+              </button>
             </div>
 
             {docStep === "request" && (
-              <form onSubmit={handleDocRequest} className="space-y-4" noValidate>
+              <form
+                onSubmit={handleDocRequest}
+                className="space-y-4"
+                noValidate
+              >
                 <p className="text-sm text-gray-500">
-                  Enter your details and we&apos;ll email you a verification code to unlock the documents for this property.
+                  Enter your details and we&apos;ll email you a verification
+                  code to unlock the documents for this property.
                 </p>
                 {docError && (
-                  <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg" role="alert">{docError}</p>
+                  <p
+                    className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg"
+                    role="alert"
+                  >
+                    {docError}
+                  </p>
                 )}
                 <div>
-                  <label htmlFor="document-name" className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                  <label
+                    htmlFor="document-name"
+                    className="block text-xs font-medium text-gray-700 mb-1"
+                  >
+                    Full Name
+                  </label>
                   <input
                     id="document-name"
                     name="name"
@@ -746,12 +882,21 @@ export default function PropertyListingPage() {
                     aria-describedby="document-name-error"
                     required
                   />
-                  <p id="document-name-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p
+                    id="document-name-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
                     {documentFieldError("name")}
                   </p>
                 </div>
                 <div>
-                  <label htmlFor="document-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+                  <label
+                    htmlFor="document-email"
+                    className="block text-xs font-medium text-gray-700 mb-1"
+                  >
+                    Email Address
+                  </label>
                   <input
                     id="document-email"
                     name="email"
@@ -773,7 +918,11 @@ export default function PropertyListingPage() {
                     aria-describedby="document-email-error"
                     required
                   />
-                  <p id="document-email-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p
+                    id="document-email-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
                     {documentFieldError("email")}
                   </p>
                 </div>
@@ -793,13 +942,25 @@ export default function PropertyListingPage() {
             {docStep === "verify" && (
               <form onSubmit={handleDocVerify} className="space-y-4" noValidate>
                 <p className="text-sm text-gray-500">
-                  We sent a verification code to <span className="font-medium text-gray-800">{docEmail}</span>. Enter it below to unlock the documents.
+                  We sent a verification code to{" "}
+                  <span className="font-medium text-gray-800">{docEmail}</span>.
+                  Enter it below to unlock the documents.
                 </p>
                 {docError && (
-                  <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg" role="alert">{docError}</p>
+                  <p
+                    className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg"
+                    role="alert"
+                  >
+                    {docError}
+                  </p>
                 )}
                 <div>
-                  <label htmlFor="document-code" className="block text-xs font-medium text-gray-700 mb-1">Verification Code</label>
+                  <label
+                    htmlFor="document-code"
+                    className="block text-xs font-medium text-gray-700 mb-1"
+                  >
+                    Verification Code
+                  </label>
                   <input
                     id="document-code"
                     name="code"
@@ -826,7 +987,11 @@ export default function PropertyListingPage() {
                     aria-describedby="document-code-error"
                     required
                   />
-                  <p id="document-code-error" className="mt-1 min-h-4 text-xs text-red-600 text-center" aria-live="polite">
+                  <p
+                    id="document-code-error"
+                    className="mt-1 min-h-4 text-xs text-red-600 text-center"
+                    aria-live="polite"
+                  >
                     {documentFieldError("code")}
                   </p>
                 </div>
