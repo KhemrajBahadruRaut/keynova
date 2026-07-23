@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl } from "@/lib/auth/backend";
 import { deleteAdminSession, getAdminSession } from "@/lib/auth/session";
 
+export const maxDuration = 60;
+
+const MAX_PROXY_BODY_BYTES = Math.floor(4.25 * 1024 * 1024);
+
 const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "property/get_properties.php",
   "property/get_doc_requests.php",
@@ -52,6 +56,18 @@ async function proxyAdminRequest(
     );
   }
 
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > MAX_PROXY_BODY_BYTES) {
+    return NextResponse.json(
+      {
+        status: "error",
+        message:
+          "The upload is too large for Vercel. Use files no larger than 4 MB.",
+      },
+      { status: 413, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const headers = new Headers({
     Accept: "application/json",
     Authorization: `Bearer ${session.backendToken}`,
@@ -67,7 +83,7 @@ async function proxyAdminRequest(
         headers,
         body: request.method === "GET" ? undefined : await request.arrayBuffer(),
         cache: "no-store",
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(55_000),
       },
     );
     const responseBody = await backendResponse.arrayBuffer();

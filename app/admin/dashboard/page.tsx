@@ -70,6 +70,18 @@ type PropertyForm = {
 
 type PropertyFormField = keyof PropertyForm;
 
+type PropertyMutationResponse = {
+  status?: string;
+  message?: string;
+  id?: number | string;
+};
+
+type PropertyAttachment = {
+  field: "images[]" | "documents[]" | "agent_photo";
+  file: File;
+  kind: "image" | "document" | "agentPhoto";
+};
+
 const INITIAL_PROPERTY_FORM: PropertyForm = {
   title: "",
   address: "",
@@ -90,8 +102,11 @@ const PROPERTY_FORM_FIELDS = Object.keys(
 ) as PropertyFormField[];
 
 const EMPTY_FILE_ERRORS = { images: "", agentPhoto: "", documents: "" };
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const MAX_DOCUMENT_SIZE = 20 * 1024 * 1024;
+// Vercel Functions reject request bodies above 4.5 MB. Attachments are sent
+// one at a time, and this leaves room for multipart fields and boundaries.
+const MAX_PROXIED_FILE_SIZE = 4 * 1024 * 1024;
+const MAX_IMAGE_SIZE = MAX_PROXIED_FILE_SIZE;
+const MAX_DOCUMENT_SIZE = MAX_PROXIED_FILE_SIZE;
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx"];
 
@@ -140,7 +155,7 @@ function validateImageFile(file: File) {
     return `"${file.name}" was rejected. Use a JPG, PNG, WebP, or GIF image.`;
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    return `"${file.name}" is ${formatFileSize(file.size)}. Images must be 10 MB or smaller.`;
+    return `"${file.name}" is ${formatFileSize(file.size)}. Images must be 4 MB or smaller.`;
   }
   return "";
 }
@@ -150,9 +165,64 @@ function validateDocumentFile(file: File) {
     return `"${file.name}" was rejected. Use a PDF, DOC, or DOCX document.`;
   }
   if (file.size > MAX_DOCUMENT_SIZE) {
-    return `"${file.name}" is ${formatFileSize(file.size)}. Documents must be 20 MB or smaller.`;
+    return `"${file.name}" is ${formatFileSize(file.size)}. Documents must be 4 MB or smaller.`;
   }
   return "";
+}
+
+function createPropertyFormData({
+  form,
+  showOnListing,
+  showOffMarket,
+  propertyId,
+  lat,
+  lng,
+  attachment,
+}: {
+  form: PropertyForm;
+  showOnListing: boolean;
+  showOffMarket: boolean;
+  propertyId?: number;
+  lat: number | null;
+  lng: number | null;
+  attachment?: PropertyAttachment;
+}) {
+  const formData = new FormData();
+  Object.entries(form).forEach(([key, value]) =>
+    formData.append(key, value.trim()),
+  );
+  formData.append("show_on_listing", showOnListing ? "1" : "0");
+  formData.append("show_off_market", showOffMarket ? "1" : "0");
+  if (propertyId !== undefined) formData.append("id", String(propertyId));
+  if (lat !== null) formData.append("lat", String(lat));
+  if (lng !== null) formData.append("lng", String(lng));
+  if (attachment) formData.append(attachment.field, attachment.file);
+  return formData;
+}
+
+async function readPropertyMutationResponse(response: Response) {
+  const responseText = await response.text();
+  let data: PropertyMutationResponse = {};
+
+  try {
+    data = JSON.parse(responseText) as PropertyMutationResponse;
+  } catch {
+    // Vercel's payload-limit response is plain text rather than JSON.
+  }
+
+  if (response.status === 413) {
+    return {
+      status: "error",
+      message:
+        "The upload is too large for Vercel. Use files no larger than 4 MB.",
+    } satisfies PropertyMutationResponse;
+  }
+
+  if (!data.message && !response.ok) {
+    data.message = `The server returned an error (${response.status}).`;
+  }
+
+  return data;
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
@@ -412,6 +482,22 @@ export default function AdminDashboard() {
     setShowForm(true);
   };
 
+  const submitPropertyForm = async (url: string, body: FormData) => {
+    const response = await fetch(url, { method: "POST", body });
+    if (response.status === 401) {
+      router.replace("/admin");
+      router.refresh();
+      return null;
+    }
+
+    const data = await readPropertyMutationResponse(response);
+    if (!response.ok || data.status !== "success") {
+      throw new Error(data.message || "The property could not be saved.");
+    }
+
+    return data;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -431,55 +517,123 @@ export default function AdminDashboard() {
     setFormLoading(true);
     setFormMsg({ type: "", text: "" });
 
-    const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => fd.append(k, v.trim()));
-    fd.append("show_on_listing", showOnListing ? "1" : "0");
-    fd.append("show_off_market", showOffMarket ? "1" : "0");
-    if (editProperty) fd.append("id", String(editProperty.id));
-
-    // ── Attach geocoords so the backend can store them ──────────────────────
-    if (geocodedLat !== null) fd.append("lat", String(geocodedLat));
-    if (geocodedLng !== null) fd.append("lng", String(geocodedLng));
-    // ────────────────────────────────────────────────────────────────────────
-
-    images.forEach((f) => fd.append("images[]", f));
-    documents.forEach((f) => fd.append("documents[]", f));
-    if (agentPhoto) fd.append("agent_photo", agentPhoto);
-
-    const url = editProperty
+    const initialUrl = editProperty
       ? `${ADMIN_API}/property/update_property.php`
       : `${ADMIN_API}/property/create_property.php`;
+    const attachments: PropertyAttachment[] = [
+      ...(agentPhoto
+        ? [
+            {
+              field: "agent_photo" as const,
+              file: agentPhoto,
+              kind: "agentPhoto" as const,
+            },
+          ]
+        : []),
+      ...images.map((file) => ({
+        field: "images[]" as const,
+        file,
+        kind: "image" as const,
+      })),
+      ...documents.map((file) => ({
+        field: "documents[]" as const,
+        file,
+        kind: "document" as const,
+      })),
+    ];
+    let propertyId = editProperty?.id;
+    let propertySaved = false;
 
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        body: fd,
+      const initialResult = await submitPropertyForm(
+        initialUrl,
+        createPropertyFormData({
+          form,
+          showOnListing,
+          showOffMarket,
+          propertyId,
+          lat: geocodedLat,
+          lng: geocodedLng,
+        }),
+      );
+      if (!initialResult) return;
+      propertySaved = true;
+
+      if (propertyId === undefined) {
+        propertyId = Number(initialResult.id);
+        if (!Number.isSafeInteger(propertyId) || propertyId <= 0) {
+          throw new Error("The backend did not return the new property ID.");
+        }
+      }
+
+      for (const attachment of attachments) {
+        try {
+          const attachmentResult = await submitPropertyForm(
+            `${ADMIN_API}/property/update_property.php`,
+            createPropertyFormData({
+              form,
+              showOnListing,
+              showOffMarket,
+              propertyId,
+              lat: geocodedLat,
+              lng: geocodedLng,
+              attachment,
+            }),
+          );
+          if (!attachmentResult) return;
+        } catch (error) {
+          const reason =
+            error instanceof Error ? error.message : "Please try again.";
+          throw new Error(
+            `"${attachment.file.name}" could not be uploaded. ${reason}`,
+          );
+        }
+
+        if (attachment.kind === "image") {
+          setImages((current) =>
+            current.filter((file) => file !== attachment.file),
+          );
+        } else if (attachment.kind === "document") {
+          setDocuments((current) =>
+            current.filter((file) => file !== attachment.file),
+          );
+        } else {
+          setAgentPhoto(null);
+        }
+      }
+
+      setFormMsg({
+        type: "success",
+        text: editProperty ? "Property updated!" : "Property created!",
       });
-      if (res.status === 401) {
-        router.replace("/admin");
-        router.refresh();
-        return;
-      }
-      const d = await res.json();
-      if (d.status === "success") {
-        setFormMsg({
-          type: "success",
-          text: editProperty ? "Property updated!" : "Property created!",
-        });
-        loadData();
-        setTimeout(() => {
-          setShowForm(false);
-        }, 1500);
-      } else {
-        setFormMsg({
-          type: "error",
-          text: d.message || "Something went wrong.",
+      void loadData();
+      setTimeout(() => {
+        setShowForm(false);
+      }, 1500);
+    } catch (error) {
+      const reason =
+        error instanceof Error ? error.message : "Please try again.";
+
+      if (propertySaved && propertyId !== undefined && !editProperty) {
+        setEditProperty({
+          id: propertyId,
+          ...form,
+          created_at: new Date().toISOString(),
+          show_on_listing: showOnListing,
+          show_off_market: showOffMarket,
         });
       }
-    } catch {
-      setFormMsg({ type: "error", text: "Network error." });
+
+      if (propertySaved) void loadData();
+      setFormMsg({
+        type: "error",
+        text: propertySaved
+          ? `The property was saved, but ${reason} Press Save Property to retry the remaining file(s).`
+          : reason,
+      });
+    } finally {
+      setFormLoading(false);
     }
-    setFormLoading(false);
   };
 
   const handleDelete = async (id: number) => {
@@ -1384,7 +1538,7 @@ export default function AdminDashboard() {
                       Agent Photo
                     </label>
                     <p id="agent-photo-help" className="mb-2 text-xs text-gray-500">
-                      JPG, PNG, WebP, or GIF. Maximum file size: 10 MB.
+                      JPG, PNG, WebP, or GIF. Maximum file size: 4 MB.
                     </p>
                     <input
                       id="agent-photo"
@@ -1425,7 +1579,7 @@ export default function AdminDashboard() {
                       Property Images
                     </label>
                     <p id="property-images-help" className="mb-2 text-xs text-gray-500">
-                      JPG, PNG, WebP, or GIF. Maximum 20 images and 10 MB per image.
+                      JPG, PNG, WebP, or GIF. Maximum 20 images and 4 MB per image.
                     </p>
                     {editProperty && existingImages.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
@@ -1508,7 +1662,7 @@ export default function AdminDashboard() {
                       Secure Documents
                     </label>
                     <p id="property-documents-help" className="mb-2 text-xs text-gray-500">
-                      PDF, DOC, or DOCX. Maximum file size: 20 MB per document.
+                      PDF, DOC, or DOCX. Maximum file size: 4 MB per document.
                     </p>
                     {editProperty && existingDocuments.length > 0 && (
                       <ul className="space-y-1 mb-3">

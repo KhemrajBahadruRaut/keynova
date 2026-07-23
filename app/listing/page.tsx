@@ -191,7 +191,7 @@ export default function ListingsPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f6f3] flex flex-col">
-      <div className="border-b border-gray-200 bg-white px-6 py-5">
+      <div className="border-b border-gray-200 bg-white px-6 py-2">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
@@ -484,8 +484,7 @@ export default function ListingsPage() {
         </div>
 
         {/* Map */}
-        {/* Map */}
-        <div className="flex-1 min-h-100 lg:min-h-[calc(100vh-150px)] relative">
+        <div className="flex-1 min-h-100 relative">
           <ListingsMap
             properties={filtered}
             hoveredId={hoveredId}
