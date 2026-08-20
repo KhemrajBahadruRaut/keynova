@@ -14,6 +14,7 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "property/get_property.php",
   "property/create_property.php",
   "property/update_property.php",
+  "property/upload_property_document_chunk.php",
   "property/delete_property.php",
   "property/delete_property_image.php",
   "property/delete_property_document.php",

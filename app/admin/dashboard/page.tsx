@@ -77,9 +77,9 @@ type PropertyMutationResponse = {
 };
 
 type PropertyAttachment = {
-  field: "images[]" | "documents[]" | "agent_photo";
+  field: "images[]" | "agent_photo";
   file: File;
-  kind: "image" | "document" | "agentPhoto";
+  kind: "image" | "agentPhoto";
 };
 
 const INITIAL_PROPERTY_FORM: PropertyForm = {
@@ -106,7 +106,8 @@ const EMPTY_FILE_ERRORS = { images: "", agentPhoto: "", documents: "" };
 // one at a time, and this leaves room for multipart fields and boundaries.
 const MAX_PROXIED_FILE_SIZE = 4 * 1024 * 1024;
 const MAX_IMAGE_SIZE = MAX_PROXIED_FILE_SIZE;
-const MAX_DOCUMENT_SIZE = MAX_PROXIED_FILE_SIZE;
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
+const DOCUMENT_CHUNK_SIZE = Math.floor(1.5 * 1024 * 1024);
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx"];
 
@@ -165,7 +166,7 @@ function validateDocumentFile(file: File) {
     return `"${file.name}" was rejected. Use a PDF, DOC, or DOCX document.`;
   }
   if (file.size > MAX_DOCUMENT_SIZE) {
-    return `"${file.name}" is ${formatFileSize(file.size)}. Documents must be 4 MB or smaller.`;
+    return `"${file.name}" is ${formatFileSize(file.size)}. Documents must be 10 MB or smaller.`;
   }
   return "";
 }
@@ -535,11 +536,6 @@ export default function AdminDashboard() {
         file,
         kind: "image" as const,
       })),
-      ...documents.map((file) => ({
-        field: "documents[]" as const,
-        file,
-        kind: "document" as const,
-      })),
     ];
     let propertyId = editProperty?.id;
     let propertySaved = false;
@@ -593,13 +589,52 @@ export default function AdminDashboard() {
           setImages((current) =>
             current.filter((file) => file !== attachment.file),
           );
-        } else if (attachment.kind === "document") {
-          setDocuments((current) =>
-            current.filter((file) => file !== attachment.file),
-          );
         } else {
           setAgentPhoto(null);
         }
+      }
+
+      for (const document of documents) {
+        const uploadId = crypto.randomUUID();
+        const chunkCount = Math.ceil(document.size / DOCUMENT_CHUNK_SIZE);
+
+        try {
+          for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
+            const start = chunkIndex * DOCUMENT_CHUNK_SIZE;
+            const chunk = document.slice(
+              start,
+              Math.min(start + DOCUMENT_CHUNK_SIZE, document.size),
+            );
+            const chunkFormData = new FormData();
+            chunkFormData.append("property_id", String(propertyId));
+            chunkFormData.append("upload_id", uploadId);
+            chunkFormData.append("original_name", document.name);
+            chunkFormData.append("total_size", String(document.size));
+            chunkFormData.append("chunk_index", String(chunkIndex));
+            chunkFormData.append("chunk_count", String(chunkCount));
+            chunkFormData.append(
+              "chunk",
+              chunk,
+              `${document.name}.part${chunkIndex}`,
+            );
+
+            const chunkResult = await submitPropertyForm(
+              `${ADMIN_API}/property/upload_property_document_chunk.php`,
+              chunkFormData,
+            );
+            if (!chunkResult) return;
+          }
+        } catch (error) {
+          const reason =
+            error instanceof Error ? error.message : "Please try again.";
+          throw new Error(
+            `"${document.name}" could not be uploaded. ${reason}`,
+          );
+        }
+
+        setDocuments((current) =>
+          current.filter((file) => file !== document),
+        );
       }
 
       setFormMsg({
@@ -1662,7 +1697,7 @@ export default function AdminDashboard() {
                       Secure Documents
                     </label>
                     <p id="property-documents-help" className="mb-2 text-xs text-gray-500">
-                      PDF, DOC, or DOCX. Maximum file size: 4 MB per document.
+                      PDF, DOC, or DOCX. Maximum file size: 10 MB per document.
                     </p>
                     {editProperty && existingDocuments.length > 0 && (
                       <ul className="space-y-1 mb-3">
