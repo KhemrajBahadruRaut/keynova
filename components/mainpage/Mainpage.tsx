@@ -13,7 +13,6 @@ const Mainpage = () => {
   return (
     <div>
       <Hero/>
-      <AboutPreview/>
       <GrandLivingPage/>
       <ExclusiveListingsPage/>
       <TeamPage/>
