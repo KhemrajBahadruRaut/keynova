@@ -3,7 +3,7 @@ import { Phone, Mail, MapPin, KeyRound } from "lucide-react";
 
 const FooterPage: React.FC = () => {
   return (
-    <footer className="bg-[#0F3D5C] px-6 py-12 text-white">
+    <footer className="bg-[#003251] px-6 py-12 text-white">
       <div className="mx-auto grid max-w-4xl grid-cols-1 gap-10 sm:grid-cols-[auto_1px_1fr_1px_auto] sm:items-start">
         {/* Logo */}
         <div className="flex items-center gap-3">

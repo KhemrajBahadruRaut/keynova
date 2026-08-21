@@ -822,7 +822,7 @@ export default function PropertiesAdminClient() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
           Administration
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-[#0F3A5F] sm:text-3xl">
+        <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
           Properties
         </h1>
         <p className="mt-1 text-sm text-slate-500">
@@ -830,7 +830,7 @@ export default function PropertiesAdminClient() {
         </p>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#0F3A5F]/5">
+      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <div>
                 <div className="flex justify-between items-center mb-5">
@@ -839,7 +839,7 @@ export default function PropertiesAdminClient() {
                   </h2>
                   <button
                     onClick={openCreateForm}
-                    className="flex items-center gap-2 rounded-lg bg-[#0F3A5F] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c]"
+                    className="flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c]"
                   >
                     <Plus className="h-4 w-4" /> Add Property
                   </button>
@@ -871,7 +871,7 @@ export default function PropertiesAdminClient() {
                             {p.address}
                           </div>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-sm font-semibold text-[#0F3A5F]">
+                            <span className="text-sm font-semibold text-[#003251]">
                               {p.price}
                             </span>
                             <span className="text-xs text-gray-400">
@@ -916,7 +916,7 @@ export default function PropertiesAdminClient() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#071a2a]/70 p-4 backdrop-blur-sm">
           <div className="my-6 w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b-4 border-[#c8862a] bg-[#0F3A5F] px-6 py-5">
+            <div className="flex items-center justify-between border-b-4 border-[#c8862a] bg-[#003251] px-6 py-5">
               <h3 className="text-lg font-semibold text-white">
                 {editProperty ? "Edit Property" : "Add New Property"}
               </h3>
@@ -936,7 +936,7 @@ export default function PropertiesAdminClient() {
               noValidate
             >
               <fieldset>
-                <legend className="text-sm font-semibold uppercase tracking-wide text-[#0F3A5F]">
+                <legend className="text-sm font-semibold uppercase tracking-wide text-[#003251]">
                   Publish To *
                 </legend>
                 <p className="mt-1 text-xs text-gray-500">
@@ -958,7 +958,7 @@ export default function PropertiesAdminClient() {
                         setShowOnListing(event.target.checked);
                         setFormMsg({ type: "", text: "" });
                       }}
-                      className="mt-0.5 h-4 w-4 accent-[#0F3A5F]"
+                      className="mt-0.5 h-4 w-4 accent-[#003251]"
                     />
                     <span>
                       <span className="block text-sm font-medium text-gray-900">
@@ -984,7 +984,7 @@ export default function PropertiesAdminClient() {
                         setShowOffMarket(event.target.checked);
                         setFormMsg({ type: "", text: "" });
                       }}
-                      className="mt-0.5 h-4 w-4 accent-[#0F3A5F]"
+                      className="mt-0.5 h-4 w-4 accent-[#003251]"
                     />
                     <span>
                       <span className="block text-sm font-medium text-gray-900">
@@ -1561,7 +1561,7 @@ export default function PropertiesAdminClient() {
                 <button
                   type="submit"
                   disabled={formLoading || formHasErrors}
-                  className="flex-1 rounded-lg bg-[#0F3A5F] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex-1 rounded-lg bg-[#003251] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {formLoading
                     ? "Saving…"

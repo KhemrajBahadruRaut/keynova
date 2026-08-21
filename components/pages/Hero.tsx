@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { KeyRound } from "lucide-react";
 import Navbar from "../navbar/Navbar";
+import Link from "next/link";
 
 
 export default function Hero() {
@@ -25,9 +26,9 @@ export default function Hero() {
           <p className="text-white/90 text-lg mt-6">
             Simplifying your path to homeownership.
           </p>
-          <button className="mt-8 px-8 py-3 rounded-full border border-white text-white text-sm font-semibold tracking-wide hover:bg-white hover:text-[#0b2540] transition-colors">
+          <Link href="/about" className="mt-8 px-8 py-3 rounded-full border border-white text-white text-sm font-semibold tracking-wide hover:bg-white hover:text-[#003251] transition-colors">
             Start Your Journey
-          </button>
+          </Link>
         </div>
 
         {/* Carousel dots */}

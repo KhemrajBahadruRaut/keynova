@@ -23,7 +23,7 @@ interface DocumentAccessModalProps {
 
 const API = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "";
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-const ACCENT = "#0F3A5F";
+const ACCENT = "#003251";
 const ACCENT_HOVER = "#0c2f4d";
 
 export default function DocumentAccessModal({
@@ -100,7 +100,7 @@ export default function DocumentAccessModal({
     `w-full border-b bg-transparent pb-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none ${extra} ${
       fieldError(field)
         ? "border-red-500"
-        : "border-gray-300 focus:border-[#0F3A5F]"
+        : "border-gray-300 focus:border-[#003251]"
     }`;
 
   const closeModal = () => {

@@ -23,7 +23,7 @@ const HELP_OPTIONS = [
   "General inquiry",
 ];
 
-const ACCENT = "#0F3A5F";
+const ACCENT = "#003251";
 const ACCENT_HOVER = "#0c2f4d";
 
 interface ContactForm {
@@ -164,7 +164,7 @@ export default function LetsTalkPage() {
 
         {/* Form */}
         <div>
-          <h1 className="mb-8 text-center text-3xl font-bold text-[#0F3A5F] md:text-left">
+          <h1 className="mb-8 text-center text-3xl font-bold text-[#003251] md:text-left">
             Let&apos;s Talk
           </h1>
 
@@ -183,7 +183,7 @@ export default function LetsTalkPage() {
                 maxLength={100}
                 value={form.firstName}
                 onChange={(e) => updateField("firstName", e.target.value)}
-                className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#0F3A5F] focus:outline-none"
+                className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
               />
               <label htmlFor="contact-last-name" className="sr-only">
                 Last name
@@ -198,7 +198,7 @@ export default function LetsTalkPage() {
                 maxLength={100}
                 value={form.lastName}
                 onChange={(e) => updateField("lastName", e.target.value)}
-                className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#0F3A5F] focus:outline-none"
+                className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
               />
             </div>
 
@@ -215,7 +215,7 @@ export default function LetsTalkPage() {
               maxLength={254}
               value={form.email}
               onChange={(e) => updateField("email", e.target.value)}
-              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#0F3A5F] focus:outline-none"
+              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
             />
 
             <label htmlFor="contact-subject" className="sr-only">
@@ -230,7 +230,7 @@ export default function LetsTalkPage() {
               maxLength={180}
               value={form.subject}
               onChange={(e) => updateField("subject", e.target.value)}
-              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#0F3A5F] focus:outline-none"
+              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
             />
 
             <label htmlFor="contact-message" className="sr-only">
@@ -246,13 +246,13 @@ export default function LetsTalkPage() {
               value={form.message}
               onChange={(e) => updateField("message", e.target.value)}
               rows={3}
-              className="w-full resize-none border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#0F3A5F] focus:outline-none"
+              className="w-full resize-none border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
             />
 
             <div>
               <label
                 htmlFor="contact-help-with"
-                className="mb-2 block text-sm font-semibold text-[#0F3A5F]"
+                className="mb-2 block text-sm font-semibold text-[#003251]"
               >
                 What Can We Help With?
               </label>
@@ -263,7 +263,7 @@ export default function LetsTalkPage() {
                   required
                   value={form.helpWith}
                   onChange={(e) => updateField("helpWith", e.target.value)}
-                  className="w-full cursor-pointer border-b border-gray-400 bg-transparent pb-1.5 pr-8 text-sm text-gray-700 focus:border-[#0F3A5F] focus:outline-none"
+                  className="w-full cursor-pointer border-b border-gray-400 bg-transparent pb-1.5 pr-8 text-sm text-gray-700 focus:border-[#003251] focus:outline-none"
                   style={{
                     appearance: "none",
                     WebkitAppearance: "none",
@@ -279,7 +279,7 @@ export default function LetsTalkPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0F3A5F]" />
+                <ChevronDown className="pointer-events-none absolute right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-[#003251]" />
               </div>
             </div>
 
@@ -295,7 +295,7 @@ export default function LetsTalkPage() {
               maxLength={30}
               value={form.phone}
               onChange={(e) => updateField("phone", e.target.value)}
-              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#0F3A5F] focus:outline-none"
+              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
             />
 
             <label className="flex items-start gap-2 text-sm text-gray-700">
@@ -309,7 +309,7 @@ export default function LetsTalkPage() {
                   setAgreed(e.target.checked);
                   setFormStatus(null);
                 }}
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#0F3A5F]"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#003251]"
               />
               I agree to the terms &amp; conditions below
             </label>
@@ -320,7 +320,7 @@ export default function LetsTalkPage() {
               time or reply &apos;help&apos; for assistance. You can also click the
               unsubscribe link in the emails. Message and data rates may apply.
               Message frequency may vary.{" "}
-              <a href="#" className="text-[#0F3A5F] hover:underline">
+              <a href="#" className="text-[#003251] hover:underline">
                 Privacy Policy
               </a>
             </p>

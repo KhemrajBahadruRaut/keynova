@@ -106,11 +106,11 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
 
   return (
     <div className="min-h-screen bg-[#eef3f6] text-slate-800">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0b2540] shadow-lg shadow-[#071a2a]/10">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#003251] shadow-lg shadow-[#071a2a]/10">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href="/admin/dashboard/properties"
-            className="flex min-w-0 items-center gap-3 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a85f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b2540]"
+            className="flex min-w-0 items-center gap-3 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a85f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#003251]"
             aria-label="Go to property management"
           >
             <Image

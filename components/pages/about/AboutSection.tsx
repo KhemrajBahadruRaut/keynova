@@ -59,7 +59,7 @@ export function AboutPreview() {
   return (
     <section className="overflow-hidden bg-[#f4f1eb] px-6 py-20 sm:py-24 lg:px-10">
       <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
-        <div className="relative min-h-80 overflow-hidden rounded-4xl bg-[#0b2540] p-8 text-white sm:p-12">
+        <div className="relative min-h-80 overflow-hidden rounded-4xl bg-[#003251] p-8 text-white sm:p-12">
           <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border border-white/10" />
           <div className="absolute -bottom-24 -left-12 h-64 w-64 rounded-full bg-[#c8862a]/15" />
 
@@ -77,7 +77,7 @@ export function AboutPreview() {
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#a66b1c]">
             About KeyNova
           </p>
-          <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-[#0b2540] sm:text-5xl">
+          <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-[#003251] sm:text-5xl">
             Real estate, reengineered around you.
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
@@ -85,7 +85,7 @@ export function AboutPreview() {
           </p>
           <Link
             href="/about"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#0b2540] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#143c60]"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#003251] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#143c60]"
           >
             Discover our story
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
@@ -98,8 +98,8 @@ export function AboutPreview() {
 
 export default function AboutSection() {
   return (
-    <div className="bg-white text-[#0b2540]">
-      <section className="relative overflow-hidden bg-[#0b2540] px-6 pb-20 pt-36 text-white sm:pb-28 sm:pt-44 lg:px-10">
+    <div className="bg-white text-[#003251]">
+      <section className="relative overflow-hidden bg-[#003251] px-6 pb-20 pt-36 text-white sm:pb-28 sm:pt-44 lg:px-10">
         <div className="absolute -right-32 top-20 h-96 w-96 rounded-full border border-white/10" />
         <div className="absolute -right-12 top-40 h-72 w-72 rounded-full border border-[#c8862a]/30" />
         <div className="absolute bottom-0 left-0 h-32 w-1/3 bg-linear-to-r from-[#c8862a]/15 to-transparent" />
@@ -154,7 +154,7 @@ export default function AboutSection() {
                 className="group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:-translate-y-1 hover:border-[#c8862a]/40 hover:shadow-xl hover:shadow-slate-900/5 sm:p-8"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0b2540] text-white">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#003251] text-white">
                     <Icon aria-hidden="true" className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-semibold tracking-widest text-slate-400">
@@ -190,11 +190,11 @@ export default function AboutSection() {
                 className="flex items-center justify-between gap-5 border-b border-slate-100 px-6 py-5 last:border-b-0 sm:px-8"
               >
                 <div className="flex items-center gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b2540] text-xs font-semibold text-white">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#003251] text-xs font-semibold text-white">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <div>
-                    <p className="font-semibold text-[#0b2540]">{founder}</p>
+                    <p className="font-semibold text-[#003251]">{founder}</p>
                     <p className="mt-0.5 text-sm text-slate-500">Co-Founder</p>
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export default function AboutSection() {
       </section>
 
       <section className="px-6 py-20 sm:py-28 lg:px-10">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-4xl bg-[#0b2540] px-7 py-14 text-center text-white sm:px-14 sm:py-20">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-4xl bg-[#003251] px-7 py-14 text-center text-white sm:px-14 sm:py-20">
           <div className="absolute -left-20 -top-28 h-72 w-72 rounded-full bg-[#c8862a]/15" />
           <div className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full border border-white/10" />
           <div className="relative mx-auto max-w-4xl">
@@ -229,7 +229,7 @@ export default function AboutSection() {
               </Link>
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white hover:text-[#0b2540]"
+                className="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white hover:text-[#003251]"
               >
                 Start a conversation
               </Link>

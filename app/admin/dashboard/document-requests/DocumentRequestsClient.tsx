@@ -68,7 +68,7 @@ export default function DocumentRequestsClient() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
           Administration
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-[#0F3A5F] sm:text-3xl">
+        <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
           Document requests
         </h1>
         <p className="mt-1 text-sm text-slate-500">
@@ -76,7 +76,7 @@ export default function DocumentRequestsClient() {
         </p>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#0F3A5F]/5">
+      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-1 text-lg font-semibold text-gray-900">
             Document Access Requests

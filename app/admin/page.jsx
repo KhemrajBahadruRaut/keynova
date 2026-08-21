@@ -84,7 +84,7 @@ export default function AdminLogin() {
         className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl shadow-black/30"
         noValidate
       >
-        <div className="border-b-4 border-[#c8862a] bg-[#0b2540] px-8 py-7 text-center">
+        <div className="border-b-4 border-[#c8862a] bg-[#003251] px-8 py-7 text-center">
           <Image
             src="/logo/logofooter.png"
             width={282}
@@ -102,7 +102,7 @@ export default function AdminLogin() {
         </div>
 
         <div className="p-8">
-          <h1 className="text-center text-2xl font-bold text-[#0F3A5F]">
+          <h1 className="text-center text-2xl font-bold text-[#003251]">
             Welcome back
           </h1>
           <p className="mb-6 mt-2 text-center text-sm text-slate-500">
@@ -121,7 +121,7 @@ export default function AdminLogin() {
           <div className="mb-4">
             <label
               htmlFor="admin-email"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#0F3A5F]"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#003251]"
             >
               Admin Email
             </label>
@@ -158,7 +158,7 @@ export default function AdminLogin() {
           <div className="mb-5">
             <label
               htmlFor="admin-password"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#0F3A5F]"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#003251]"
             >
               Password
             </label>
@@ -197,7 +197,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading || hasValidationErrors(validationErrors)}
-            className="w-full rounded-lg bg-[#0F3A5F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>

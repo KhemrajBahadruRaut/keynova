@@ -100,7 +100,7 @@ function RangeInputs({
           onChange={(event) => onMinimumChange(event.target.value)}
           placeholder="Min"
           aria-label={`Minimum ${label.toLowerCase()}`}
-          className="w-24 rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-[#0F3A5F] focus:outline-none"
+          className="w-24 rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-[#003251] focus:outline-none"
         />
         <span className="text-xs text-gray-400">to</span>
         <input
@@ -111,7 +111,7 @@ function RangeInputs({
           onChange={(event) => onMaximumChange(event.target.value)}
           placeholder="Max"
           aria-label={`Maximum ${label.toLowerCase()}`}
-          className="w-24 rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-[#0F3A5F] focus:outline-none"
+          className="w-24 rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-[#003251] focus:outline-none"
         />
       </div>
     </div>
@@ -326,7 +326,7 @@ export default function PropertyCollectionPage({
           <span className="text-gray-500">{breadcrumb}</span>
         </nav>
 
-        <h1 className="mb-5 text-2xl font-bold text-[#0F3A5F] md:text-3xl">
+        <h1 className="mb-5 text-2xl font-bold text-[#003251] md:text-3xl">
           {title}
         </h1>
 
@@ -342,7 +342,7 @@ export default function PropertyCollectionPage({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by address, city or zip..."
               aria-label="Search properties"
-              className="w-full rounded-md border border-gray-300 py-2.5 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0F3A5F] focus:outline-none focus:ring-1 focus:ring-[#0F3A5F]"
+              className="w-full rounded-md border border-gray-300 py-2.5 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none focus:ring-1 focus:ring-[#003251]"
             />
           </div>
 
@@ -354,7 +354,7 @@ export default function PropertyCollectionPage({
               id={`${variant}-type`}
               value={propertyType}
               onChange={(event) => setPropertyType(event.target.value)}
-              className="mt-2 w-full rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-[#0F3A5F] focus:outline-none"
+              className="mt-2 w-full rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-[#003251] focus:outline-none"
             >
               <option value="">All property types</option>
               {typeOptions.map((option) => (
@@ -398,7 +398,7 @@ export default function PropertyCollectionPage({
           <button
             type="button"
             onClick={resetFilters}
-            className="rounded-md bg-[#0F3A5F] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0c2f4d]"
+            className="rounded-md bg-[#003251] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0c2f4d]"
           >
             Reset filters
           </button>
@@ -460,7 +460,7 @@ export default function PropertyCollectionPage({
                 aria-checked={showMap}
                 onClick={() => setShowMap((visible) => !visible)}
                 className={`relative h-5 w-9 rounded-full transition-colors ${
-                  showMap ? "bg-[#0F3A5F]" : "bg-gray-300"
+                  showMap ? "bg-[#003251]" : "bg-gray-300"
                 }`}
               >
                 <span
@@ -507,7 +507,7 @@ export default function PropertyCollectionPage({
                   <Link
                     key={property.id}
                     href={detailHref}
-                    className="group w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F3A5F] focus-visible:ring-offset-2"
+                    className="group w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251] focus-visible:ring-offset-2"
                   >
                     <div className="aspect-4/3 overflow-hidden rounded-lg bg-gray-100">
                       {imageUrl ? (
@@ -550,7 +550,7 @@ export default function PropertyCollectionPage({
                     <p className="mt-1 text-sm text-gray-700">
                       {property.address || property.title}
                     </p>
-                    <p className="mt-1 text-base font-semibold text-[#0F3A5F]">
+                    <p className="mt-1 text-base font-semibold text-[#003251]">
                       {displayPrice(property.price)}
                     </p>
                   </Link>

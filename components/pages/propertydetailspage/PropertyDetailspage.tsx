@@ -46,7 +46,7 @@ function FactColumn({ rows }: { rows: FactRow[] }) {
     <div className="space-y-2 text-sm">
       {rows.map((row) => (
         <p key={row.label} className="text-gray-600">
-          <span className="font-semibold text-[#0F3A5F]">{row.label}:</span>{" "}
+          <span className="font-semibold text-[#003251]">{row.label}:</span>{" "}
           {row.value}
         </p>
       ))}
@@ -57,12 +57,12 @@ function FactColumn({ rows }: { rows: FactRow[] }) {
 function FactsBlock({ heading, facts }: { heading: string; facts: FactsSection }) {
   return (
     <div>
-      <h3 className="mb-3 text-base font-semibold text-[#0F3A5F]">{heading}</h3>
+      <h3 className="mb-3 text-base font-semibold text-[#003251]">{heading}</h3>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <FactColumn rows={facts.primary} />
         <FactColumn rows={facts.secondary} />
         <div className="text-sm text-gray-600">
-          <span className="font-semibold text-[#0F3A5F]">Highlights:</span>{" "}
+          <span className="font-semibold text-[#003251]">Highlights:</span>{" "}
           {facts.highlights.join(", ")}
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function PropertyDetailsPage({
           <p className="text-gray-600">Select a property to view its details.</p>
           <Link
             href="/listing"
-            className="mt-3 inline-block text-sm font-medium text-[#0F3A5F] hover:underline"
+            className="mt-3 inline-block text-sm font-medium text-[#003251] hover:underline"
           >
             Browse property listings
           </Link>
@@ -246,7 +246,7 @@ export default function PropertyDetailsPage({
     return (
       <div className="flex min-h-screen items-center justify-center bg-white pt-30">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0F3A5F] border-t-transparent" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#003251] border-t-transparent" />
           <p className="text-sm text-gray-500">Loading property...</p>
         </div>
       </div>
@@ -260,7 +260,7 @@ export default function PropertyDetailsPage({
           <p className="text-gray-600">{error || "Property not found."}</p>
           <Link
             href={sourceInfo.href}
-            className="mt-3 inline-block text-sm font-medium text-[#0F3A5F] hover:underline"
+            className="mt-3 inline-block text-sm font-medium text-[#003251] hover:underline"
           >
             Back to {sourceInfo.label}
           </Link>
@@ -344,7 +344,7 @@ export default function PropertyDetailsPage({
                     type="button"
                     onClick={() => setActiveImage(index)}
                     className={`aspect-4/3 overflow-hidden rounded-md ring-offset-2 focus:outline-none ${
-                      activeImage === index ? "ring-2 ring-[#0F3A5F]" : ""
+                      activeImage === index ? "ring-2 ring-[#003251]" : ""
                     }`}
                   >
                     <img
@@ -357,7 +357,7 @@ export default function PropertyDetailsPage({
               </div>
             )}
 
-            <h1 className="mt-6 text-xl font-semibold text-[#0F3A5F]">
+            <h1 className="mt-6 text-xl font-semibold text-[#003251]">
               {property.title || property.address}
             </h1>
             {property.title && property.address && (
@@ -390,7 +390,7 @@ export default function PropertyDetailsPage({
             </div>
 
             <div className="mt-8">
-              <h2 className="mb-3 text-lg font-semibold text-[#0F3A5F]">Description</h2>
+              <h2 className="mb-3 text-lg font-semibold text-[#003251]">Description</h2>
               <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">
                 {showFullDescription ? description : descriptionPreview}
                 {!showFullDescription && hasMoreDescription ? "..." : ""}
@@ -399,7 +399,7 @@ export default function PropertyDetailsPage({
                 <button
                   type="button"
                   onClick={() => setShowFullDescription((visible) => !visible)}
-                  className="mt-2 text-sm font-medium text-[#0F3A5F] hover:underline"
+                  className="mt-2 text-sm font-medium text-[#003251] hover:underline"
                 >
                   {showFullDescription ? "Read less" : "Read more ..."}
                 </button>
@@ -416,12 +416,12 @@ export default function PropertyDetailsPage({
                   className="h-14 w-14 rounded-md object-cover"
                 />
               ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-md bg-gray-100 text-lg font-semibold text-[#0F3A5F]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-md bg-gray-100 text-lg font-semibold text-[#003251]">
                   {(property.agent_name || "K").charAt(0).toUpperCase()}
                 </div>
               )}
               <div>
-                <p className="text-sm font-semibold text-[#0F3A5F]">
+                <p className="text-sm font-semibold text-[#003251]">
                   {property.agent_name || "KeyNova Group"}
                 </p>
                 <p className="text-xs text-gray-500">{property.agent_title}</p>
@@ -429,7 +429,7 @@ export default function PropertyDetailsPage({
                 {property.agent_email && (
                   <a
                     href={`mailto:${property.agent_email}`}
-                    className="text-xs text-[#0F3A5F] hover:underline"
+                    className="text-xs text-[#003251] hover:underline"
                   >
                     {property.agent_email}
                   </a>
@@ -440,13 +440,13 @@ export default function PropertyDetailsPage({
             <button
               type="button"
               onClick={() => setShowDocumentModal(true)}
-              className="mt-4 block w-full bg-[#0F3A5F] py-2.5 text-center text-sm font-medium text-white hover:bg-[#0c2f4d]"
+              className="mt-4 block w-full bg-[#003251] py-2.5 text-center text-sm font-medium text-white hover:bg-[#0c2f4d]"
             >
               Request Document
             </button>
 
             <form onSubmit={handleSubmit} className="mt-8">
-              <h3 className="mb-4 text-base font-semibold text-[#0F3A5F]">Interested?</h3>
+              <h3 className="mb-4 text-base font-semibold text-[#003251]">Interested?</h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <input
@@ -455,7 +455,7 @@ export default function PropertyDetailsPage({
                   placeholder="First Name"
                   value={form.firstName}
                   onChange={(event) => updateField("firstName", event.target.value)}
-                  className="border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0F3A5F] focus:outline-none"
+                  className="border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
                 />
                 <input
                   required
@@ -463,7 +463,7 @@ export default function PropertyDetailsPage({
                   placeholder="Last Name"
                   value={form.lastName}
                   onChange={(event) => updateField("lastName", event.target.value)}
-                  className="border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0F3A5F] focus:outline-none"
+                  className="border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
                 />
               </div>
 
@@ -473,7 +473,7 @@ export default function PropertyDetailsPage({
                 placeholder="Email"
                 value={form.email}
                 onChange={(event) => updateField("email", event.target.value)}
-                className="mt-5 w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0F3A5F] focus:outline-none"
+                className="mt-5 w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
               />
 
               <textarea
@@ -481,7 +481,7 @@ export default function PropertyDetailsPage({
                 value={form.message}
                 onChange={(event) => updateField("message", event.target.value)}
                 rows={3}
-                className="mt-5 w-full resize-none border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0F3A5F] focus:outline-none"
+                className="mt-5 w-full resize-none border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
               />
 
               <input
@@ -489,7 +489,7 @@ export default function PropertyDetailsPage({
                 placeholder="Phone"
                 value={form.phone}
                 onChange={(event) => updateField("phone", event.target.value)}
-                className="mt-5 w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#0F3A5F] focus:outline-none"
+                className="mt-5 w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
               />
 
               <label className="mt-5 flex items-start gap-2 text-xs text-gray-600">
@@ -498,7 +498,7 @@ export default function PropertyDetailsPage({
                   type="checkbox"
                   checked={agreed}
                   onChange={(event) => setAgreed(event.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#0F3A5F]"
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#003251]"
                 />
                 I agree to the terms &amp; conditions below
               </label>
@@ -507,7 +507,7 @@ export default function PropertyDetailsPage({
                 I agree to be contacted by KeyNova Group via call, email, and text for real
                 estate services. To opt out, you can reply &quot;Stop&quot; at any time or reply
                 &quot;Help&quot; for assistance. Message and data rates may apply. Message frequency
-                may vary. <a href="#" className="text-[#0F3A5F] hover:underline">Privacy Policy</a>
+                may vary. <a href="#" className="text-[#003251] hover:underline">Privacy Policy</a>
               </p>
 
               {formStatus && (
@@ -519,7 +519,7 @@ export default function PropertyDetailsPage({
               <button
                 type="submit"
                 disabled={!agreed || formSubmitting}
-                className="mt-5 w-full rounded-md border border-[#0F3A5F] py-2.5 text-sm font-medium text-[#0F3A5F] transition-colors hover:bg-[#0F3A5F] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#0F3A5F]"
+                className="mt-5 w-full rounded-md border border-[#003251] py-2.5 text-sm font-medium text-[#003251] transition-colors hover:bg-[#003251] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#003251]"
               >
                 {formSubmitting ? "Submitting..." : "Submit"}
               </button>
@@ -528,7 +528,7 @@ export default function PropertyDetailsPage({
         </div>
 
         <div className="mt-14">
-          <h2 className="mb-4 text-lg font-semibold text-[#0F3A5F]">Location</h2>
+          <h2 className="mb-4 text-lg font-semibold text-[#003251]">Location</h2>
 
           <div className="relative aspect-12/6 w-200 overflow-hidden  border border-gray-200 bg-[#EAEDF0]">
             <iframe
@@ -540,7 +540,7 @@ export default function PropertyDetailsPage({
             />
 
             <div className="absolute left-3 top-3 w-64 rounded-md bg-white p-3 shadow-md">
-              <p className="text-sm font-semibold text-[#0F3A5F]">
+              <p className="text-sm font-semibold text-[#003251]">
                 {property.title || property.address}
               </p>
               <p className="mt-1 text-xs text-gray-500">{property.address}</p>
@@ -559,7 +559,7 @@ export default function PropertyDetailsPage({
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Get directions"
-                  className="rounded-full bg-[#0F3A5F] p-1.5 text-white hover:bg-[#0c2f4d]"
+                  className="rounded-full bg-[#003251] p-1.5 text-white hover:bg-[#0c2f4d]"
                 >
                   <Navigation className="h-3.5 w-3.5" />
                 </a>
@@ -575,7 +575,7 @@ export default function PropertyDetailsPage({
         </div>
 
         <div className="mt-14">
-          <h2 className="mb-5 text-lg font-semibold text-[#0F3A5F]">Facts &amp; features</h2>
+          <h2 className="mb-5 text-lg font-semibold text-[#003251]">Facts &amp; features</h2>
 
           <div className="space-y-8">
             <FactsBlock heading="Property" facts={propertyFacts} />
@@ -585,7 +585,7 @@ export default function PropertyDetailsPage({
           <button
             type="button"
             onClick={() => setShowMoreFacts((visible) => !visible)}
-            className="mt-5 flex items-center gap-1 text-sm font-medium text-[#0F3A5F] hover:underline"
+            className="mt-5 flex items-center gap-1 text-sm font-medium text-[#003251] hover:underline"
           >
             {showMoreFacts ? (
               <>
@@ -602,7 +602,7 @@ export default function PropertyDetailsPage({
         {similarListings.length > 0 && (
           <div className="mb-10 mt-14">
             <div className="mb-5">
-              <h2 className="text-lg font-semibold text-[#0F3A5F]">Similar Listings</h2>
+              <h2 className="text-lg font-semibold text-[#003251]">Similar Listings</h2>
             </div>
 
             <div className="relative hidden sm:block">
@@ -659,7 +659,7 @@ export default function PropertyDetailsPage({
                         )}
                       </div>
 
-                      <p className="mt-2 text-sm font-semibold text-[#0F3A5F]">
+                      <p className="mt-2 text-sm font-semibold text-[#003251]">
                         {listing.title}
                       </p>
                       <p className="text-sm text-gray-600">{listing.address}</p>
@@ -728,7 +728,7 @@ export default function PropertyDetailsPage({
                         )}
                       </div>
 
-                      <p className="mt-2 text-sm font-semibold text-[#0F3A5F]">
+                      <p className="mt-2 text-sm font-semibold text-[#003251]">
                         {listing.title}
                       </p>
                       <p className="text-sm text-gray-600">{listing.address}</p>
@@ -748,7 +748,7 @@ export default function PropertyDetailsPage({
                       Math.min(count + 3, similarListings.length),
                     )
                   }
-                  className="mx-auto mt-6 block rounded-md border border-[#0F3A5F] px-5 py-2.5 text-sm font-medium text-[#0F3A5F] transition-colors hover:bg-[#0F3A5F] hover:text-white"
+                  className="mx-auto mt-6 block rounded-md border border-[#003251] px-5 py-2.5 text-sm font-medium text-[#003251] transition-colors hover:bg-[#003251] hover:text-white"
                 >
                   Load more
                 </button>
