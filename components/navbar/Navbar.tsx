@@ -1,6 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { KeyRound } from "lucide-react";
+"use client";
 
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const socialLinks = [
   {
@@ -16,85 +18,112 @@ const socialLinks = [
     path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.554V9h3.565v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
   },
 ] as const;
-
 export default function Navbar() {
-     const [showNav, setShowNav] = useState(true);
+  const [showNav, setShowNav] = useState(true);
   const lastScrollY = useRef(0);
+
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
 
       if (currentY < 10) {
-        // Always show navbar at the very top of the page
         setShowNav(true);
       } else if (currentY > lastScrollY.current) {
-        // Scrolling down -> hide
         setShowNav(false);
-      } else if (currentY < lastScrollY.current) {
-        // Scrolling up -> show
+      } else {
         setShowNav(true);
       }
 
       lastScrollY.current = currentY;
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = ["Home", "About", "Grand Living", "Exclusive", "Contact Us"];
+  const navLinks = [
+    {
+      name: "Home",
+      path: "/",
+    },
+    {
+      name: "About",
+      path: "/about",
+    },
+    {
+      name: "Grand Living",
+      path: "/grandliving",
+    },
+    {
+      name: "Exclusive",
+      path: "/exclusive",
+    },
+    {
+      name: "Contact Us",
+      path: "/contact",
+    },
+  ];
 
   return (
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-[#0b2540] transition-transform duration-500 ease-in-out ${
-          showNav ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-4">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            
-            <img src="/logo/logo.avif" alt="" height={10} width={200} />
-          </div>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 bg-[#0b2540]
+      transition-transform duration-500 ease-in-out
+      ${showNav ? "translate-y-0" : "-translate-y-full"}`}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3">
+          <img src="/logo/logo.avif" alt="Logo" width={200} />
+        </Link>
 
-          {/* Nav links */}
-          <nav className="hidden md:flex items-center gap-10">
-            {navLinks.map((link, i) => (
-              <a
-                key={link}
-                href="#"
-                className="relative text-white/90 text-sm font-medium hover:text-white transition-colors"
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-10">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.path;
+
+            return (
+              <Link
+                key={link.name}
+                href={link.path}
+                className={`relative text-sm font-medium transition-colors ${
+                  isActive ? "text-white" : "text-white/70 hover:text-white"
+                }`}
               >
-                {link}
-                {i === 0 && (
+                {link.name}
+
+                {isActive && (
                   <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-white" />
                 )}
-              </a>
-            ))}
-          </nav>
+              </Link>
+            );
+          })}
+        </nav>
 
-          {/* Social icons */}
-          <div className="flex items-center gap-3">
-            {socialLinks.map(({ label, path }) => (
-              <a
-                key={label}
-                href="#"
-                aria-label={label}
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:opacity-80 transition-opacity"
+        {/* Social icons */}
+        <div className="flex items-center gap-3">
+          {socialLinks.map(({ label, path }) => (
+            <a
+              key={label}
+              href="#"
+              aria-label={label}
+              className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="w-4 h-4 fill-current text-[#0b2540]"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className="w-4 h-4 fill-current text-[#0b2540]"
-                >
-                  <path d={path} />
-                </svg>
-              </a>
-            ))}
-          </div>
+                <path d={path} />
+              </svg>
+            </a>
+          ))}
         </div>
-      </header>
-
-  )
+      </div>
+    </header>
+  );
 }

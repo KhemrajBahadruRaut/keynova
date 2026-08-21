@@ -10,7 +10,7 @@ const MAX_PROXY_BODY_BYTES = Math.floor(4.25 * 1024 * 1024);
 const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "property/get_properties.php",
   "property/get_doc_requests.php",
-  "property/get_inquiries.php",
+  "contact/get_contacts.php",
   "property/get_property.php",
   "property/create_property.php",
   "property/update_property.php",

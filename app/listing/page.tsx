@@ -1,6 +1,5 @@
 "use client";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 
 const ListingsMap = dynamic(() => import("./ListingsMap"), { ssr: false });
 import { useEffect, useMemo, useState } from "react";
@@ -160,23 +159,6 @@ export default function ListingsPage() {
     setMaxSize("");
     setPage(1);
   };
-
-  // Build a simple Google Maps embed URL. If we have lat/lng for the
-  // hovered or first property, center on it; otherwise just show a
-  // generic search of the addresses we have.
-  const mapSrc = useMemo(() => {
-    const focused =
-      (hoveredId && pageItems.find((p) => p.id === hoveredId)) || pageItems[0];
-    if (focused?.lat && focused?.lng) {
-      return `https://www.google.com/maps?q=${focused.lat},${focused.lng}&z=8&output=embed`;
-    }
-    if (focused?.address) {
-      return `https://www.google.com/maps?q=${encodeURIComponent(
-        focused.address,
-      )}&output=embed`;
-    }
-    return `https://www.google.com/maps?q=Connecticut&z=7&output=embed`;
-  }, [hoveredId, pageItems]);
 
   if (loading) {
     return (
@@ -420,7 +402,9 @@ export default function ListingsPage() {
               {pageItems.map((p) => (
                 <div
                   key={p.id}
-                  onClick={() => router.push(`/listing/${p.id}`)}
+                  onClick={() =>
+                    router.push(`/details?id=${p.id}&source=listing`)
+                  }
                   onMouseEnter={() => setHoveredId(p.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   className="bg-white cursor-pointer group relative"
@@ -488,7 +472,9 @@ export default function ListingsPage() {
           <ListingsMap
             properties={filtered}
             hoveredId={hoveredId}
-            onMarkerClick={(id) => router.push(`/listing/${id}`)}
+            onMarkerClick={(id) =>
+              router.push(`/details?id=${id}&source=listing`)
+            }
           />
         </div>
       </div>

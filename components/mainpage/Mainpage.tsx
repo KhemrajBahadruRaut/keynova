@@ -1,4 +1,3 @@
-import ListingsPage from '@/app/listing/page'
 import React from 'react'
 import Hero from '../pages/Hero'
 import GrandLivingPage from '../pages/GrandLivingpage'
@@ -8,12 +7,13 @@ import TestimonialsPage from '../pages/Testimonials'
 import ActionCardsPage from '../pages/Actioncardspage'
 import ContactFormPage from '../pages/ContactFormPage'
 import FooterPage from '../pages/Footerpage'
+import { AboutPreview } from '../pages/about/AboutSection'
 
 const Mainpage = () => {
   return (
     <div>
-      {/* <ListingsPage/> */}
       <Hero/>
+      <AboutPreview/>
       <GrandLivingPage/>
       <ExclusiveListingsPage/>
       <TeamPage/>

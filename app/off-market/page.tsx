@@ -1,5 +1,5 @@
-import ListingsPage from "@/app/listing/page";
+import { permanentRedirect } from "next/navigation";
 
 export default function OffMarketPage() {
-  return <ListingsPage />;
+  permanentRedirect("/exclusive");
 }
