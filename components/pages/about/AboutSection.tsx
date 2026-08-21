@@ -74,7 +74,7 @@ export function AboutPreview() {
         </div>
 
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#a66b1c]">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#003251]">
             About KeyNova
           </p>
           <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-[#003251] sm:text-5xl">
@@ -105,7 +105,7 @@ export default function AboutSection() {
         <div className="absolute bottom-0 left-0 h-32 w-1/3 bg-linear-to-r from-[#c8862a]/15 to-transparent" />
 
         <div className="relative mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#e4ad60]">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/80">
             About KeyNova Group
           </p>
           <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-20">
@@ -135,7 +135,7 @@ export default function AboutSection() {
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#a66b1c]">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#003251]">
                 How we work
               </p>
               <h2 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
@@ -172,7 +172,7 @@ export default function AboutSection() {
       <section className="bg-[#f4f1eb] px-6 py-20 sm:py-28 lg:px-10">
         <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-start lg:gap-24">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#a66b1c]">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#003251]">
               Our leadership
             </p>
             <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-tight sm:text-5xl">
@@ -210,7 +210,7 @@ export default function AboutSection() {
           <div className="absolute -left-20 -top-28 h-72 w-72 rounded-full bg-[#c8862a]/15" />
           <div className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full border border-white/10" />
           <div className="relative mx-auto max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#e4ad60]">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/80">
               Unlock what comes next
             </p>
             <h2 className="mt-5 text-3xl font-semibold leading-tight sm:text-5xl">

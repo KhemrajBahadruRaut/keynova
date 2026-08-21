@@ -5,10 +5,6 @@ import { ChevronDown } from "lucide-react";
 
 import { validateEmail, validatePhone, validateText } from "@/lib/validation";
 
-// ---------------------------------------------------------------------------
-// Configuration — swap these for your real assets
-// ---------------------------------------------------------------------------
-
 // Background texture behind the whole page (the marble look in the reference).
 const BACKGROUND_IMAGE_URL = "/contacts/contact-bg.png";
 

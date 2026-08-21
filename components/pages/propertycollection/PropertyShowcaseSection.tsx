@@ -56,9 +56,11 @@ const SHOWCASE_CONFIG: Record<CollectionVariant, ShowcaseConfig> = {
 };
 
 function PropertyCard({
+  duplicate = false,
   property,
   source,
 }: {
+  duplicate?: boolean;
   property: PropertyRecord;
   source: CollectionVariant;
 }) {
@@ -69,13 +71,19 @@ function PropertyCard({
   return (
     <Link
       href={`/details?id=${property.id}&source=${source}`}
+      aria-hidden={duplicate || undefined}
+      tabIndex={duplicate ? -1 : undefined}
       className="group flex w-[290px] shrink-0 flex-col rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251] focus-visible:ring-offset-4 sm:w-[360px]"
     >
       <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={property.title || property.address || "KeyNova property"}
+            alt={
+              duplicate
+                ? ""
+                : property.title || property.address || "KeyNova property"
+            }
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -141,7 +149,9 @@ export default function PropertyShowcaseSection({
   variant: CollectionVariant;
 }) {
   const config = SHOWCASE_CONFIG[variant];
+  const isExclusive = variant === "exclusive";
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const autoScrollPausedRef = useRef(false);
   const [properties, setProperties] = useState<PropertyRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -171,6 +181,61 @@ export default function PropertyShowcaseSection({
     return () => controller.abort();
   }, [config.destination]);
 
+  useEffect(() => {
+    const node = scrollerRef.current;
+    if (
+      !isExclusive ||
+      loading ||
+      properties.length === 0 ||
+      !node ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    let animationFrameId = 0;
+    let previousTime: number | null = null;
+    let loopPoint = 0;
+
+    const updateLoopPoint = () => {
+      const firstCard = node.children[0] as HTMLElement | undefined;
+      const firstDuplicate = node.children[properties.length] as
+        | HTMLElement
+        | undefined;
+
+      loopPoint =
+        firstCard && firstDuplicate
+          ? firstDuplicate.offsetLeft - firstCard.offsetLeft
+          : 0;
+    };
+
+    const animate = (time: number) => {
+      if (previousTime === null) previousTime = time;
+
+      const elapsed = Math.min(time - previousTime, 50);
+      previousTime = time;
+
+      if (!autoScrollPausedRef.current && loopPoint > 0) {
+        node.scrollLeft += elapsed * 0.035;
+
+        if (node.scrollLeft >= loopPoint) {
+          node.scrollLeft -= loopPoint;
+        }
+      }
+
+      animationFrameId = window.requestAnimationFrame(animate);
+    };
+
+    updateLoopPoint();
+    window.addEventListener("resize", updateLoopPoint);
+    animationFrameId = window.requestAnimationFrame(animate);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("resize", updateLoopPoint);
+    };
+  }, [isExclusive, loading, properties.length]);
+
   const scrollBy = (direction: "left" | "right") => {
     const node = scrollerRef.current;
     if (!node) return;
@@ -181,7 +246,9 @@ export default function PropertyShowcaseSection({
     });
   };
 
-  const isExclusive = variant === "exclusive";
+  const carouselProperties = isExclusive
+    ? Array.from({ length: 6 }, () => properties).flat()
+    : properties;
 
   return (
     <section className="px-6 py-16 sm:py-20 lg:px-10">
@@ -219,15 +286,31 @@ export default function PropertyShowcaseSection({
         <div className="relative mt-10">
           <div
             ref={scrollerRef}
-            className="flex gap-6 overflow-x-auto scroll-smooth pb-3 scrollbar-none [&::-webkit-scrollbar]:hidden"
+            onMouseEnter={() => {
+              autoScrollPausedRef.current = true;
+            }}
+            onMouseLeave={() => {
+              autoScrollPausedRef.current = false;
+            }}
+            onFocusCapture={() => {
+              autoScrollPausedRef.current = true;
+            }}
+            onBlurCapture={() => {
+              autoScrollPausedRef.current = false;
+            }}
+            className={`flex gap-6 overflow-x-auto pb-3 scrollbar-none [&::-webkit-scrollbar]:hidden ${
+              isExclusive ? "scroll-auto" : "scroll-smooth"
+            }`}
             aria-busy={loading}
+            aria-label={`${config.buttonLabel} carousel`}
           >
             {loading ? (
               <LoadingCards />
             ) : properties.length > 0 ? (
-              properties.map((property) => (
+              carouselProperties.map((property, propertyIndex) => (
                 <PropertyCard
-                  key={property.id}
+                  key={`${property.id}-${propertyIndex}`}
+                  duplicate={isExclusive && propertyIndex >= properties.length}
                   property={property}
                   source={config.source}
                 />
@@ -253,7 +336,7 @@ export default function PropertyShowcaseSection({
             )}
           </div>
 
-          {!loading && properties.length > 1 && (
+          {!isExclusive && !loading && properties.length > 1 && (
             <>
               <button
                 type="button"
