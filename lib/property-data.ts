@@ -178,7 +178,16 @@ export function numericPropertyValue(value: string | number | null | undefined) 
 
 export function displayPrice(price: string): string {
   if (!price) return "Price upon request";
-  return /[$€£¥]/.test(price) ? price : `$${price}`;
+
+  const amount = Number(price.trim().replace(/[$,]/g, ""));
+  if (!Number.isFinite(amount)) return price;
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
 export function displayBuildingSize(size: string): string {

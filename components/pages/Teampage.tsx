@@ -15,7 +15,7 @@ const team: TeamMember[] = [
     photo:
       "/teams/i1.png",
     name: "Suraj Tamrakar",
-    role: "Co-Founder, Lead Agent",
+    role: "Co-Founder,  Principal Broker",
   },
   {
     id: "t-2",
