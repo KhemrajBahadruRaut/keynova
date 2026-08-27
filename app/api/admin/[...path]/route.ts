@@ -18,6 +18,10 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "property/delete_property.php",
   "property/delete_property_image.php",
   "property/delete_property_document.php",
+  "team/get_admin_members.php",
+  "team/create_member.php",
+  "team/update_member.php",
+  "team/delete_member.php",
 ]);
 
 type AdminProxyContext = {

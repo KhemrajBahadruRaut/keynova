@@ -5,7 +5,6 @@ import { ChevronDown } from "lucide-react";
 
 import { validateEmail, validatePhone, validateText } from "@/lib/validation";
 
-// Background texture behind the whole page (the marble look in the reference).
 const BACKGROUND_IMAGE_URL = "/contacts/contact-bg.png";
 
 // Portrait photo of the person, shown on the left.
@@ -133,7 +132,7 @@ export default function LetsTalkPage() {
 
   return (
     <div
-      className="min-h-screen bg-gray-100 bg-cover bg-center"
+      className=" bg-gray-100 bg-cover bg-center"
       style={
         BACKGROUND_IMAGE_URL
           ? { backgroundImage: `url(${BACKGROUND_IMAGE_URL})` }

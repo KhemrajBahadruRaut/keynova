@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   MessageSquareText,
+  UsersRound,
   X,
 } from "lucide-react";
 
@@ -21,6 +22,12 @@ const ADMIN_SECTIONS = [
     label: "Properties",
     href: "/admin/dashboard/properties",
     Icon: Building2,
+  },
+  {
+    key: "team",
+    label: "Team Members",
+    href: "/admin/dashboard/team",
+    Icon: UsersRound,
   },
   {
     key: "requests",
@@ -40,7 +47,12 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [counts, setCounts] = useState({ properties: 0, requests: 0, inquiries: 0 });
+  const [counts, setCounts] = useState({
+    properties: 0,
+    team: 0,
+    requests: 0,
+    inquiries: 0,
+  });
 
   const loadCounts = useCallback(async () => {
     try {
@@ -48,6 +60,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
         fetch("/api/admin/property/get_properties.php?destination=all", {
           cache: "no-store",
         }),
+        fetch("/api/admin/team/get_admin_members.php", { cache: "no-store" }),
         fetch("/api/admin/property/get_doc_requests.php", { cache: "no-store" }),
         fetch("/api/admin/contact/get_contacts.php", { cache: "no-store" }),
       ]);
@@ -57,11 +70,12 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
         return;
       }
 
-      const [properties, requests, inquiries] = await Promise.all(
+      const [properties, team, requests, inquiries] = await Promise.all(
         responses.map((response) => response.json()),
       );
       setCounts({
         properties: properties.status === "success" ? properties.data?.length || 0 : 0,
+        team: team.status === "success" ? team.data?.length || 0 : 0,
         requests:
           requests.status === "success"
             ? (requests.data || []).filter(
@@ -126,7 +140,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
                 KeyNova Admin
               </p>
               <p className="hidden text-[10px] font-medium uppercase tracking-[0.18em] text-[#d7a85f] sm:block">
-                Property Management
+                Website Management
               </p>
             </div>
           </Link>

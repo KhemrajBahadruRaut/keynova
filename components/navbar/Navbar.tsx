@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronDown, Menu, X } from "lucide-react";
 
 const socialLinks = [
   {
@@ -18,8 +19,31 @@ const socialLinks = [
     path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.554V9h3.565v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
   },
 ] as const;
+
+type NavLink = {
+  name: string;
+  path: string;
+  children?: { name: string; path: string }[];
+};
+
+const navLinks: NavLink[] = [
+  { name: "Home", path: "/" },
+  {
+    name: "About",
+    path: "/about",
+    children: [
+      { name: "About KeyNova", path: "/about" },
+      { name: "Meet the Team", path: "/meet-the-team" },
+    ],
+  },
+  { name: "Grand Living", path: "/grandliving" },
+  { name: "Exclusive", path: "/exclusive" },
+  { name: "Contact Us", path: "/contact" },
+];
+
 export default function Navbar() {
   const [showNav, setShowNav] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   const pathname = usePathname();
@@ -28,7 +52,7 @@ export default function Navbar() {
     const handleScroll = () => {
       const currentY = window.scrollY;
 
-      if (currentY < 10) {
+      if (mobileOpen || currentY < 10) {
         setShowNav(true);
       } else if (currentY > lastScrollY.current) {
         setShowNav(false);
@@ -44,30 +68,10 @@ export default function Navbar() {
     });
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [mobileOpen]);
 
-  const navLinks = [
-    {
-      name: "Home",
-      path: "/",
-    },
-    {
-      name: "About",
-      path: "/about",
-    },
-    {
-      name: "Grand Living",
-      path: "/grandliving",
-    },
-    {
-      name: "Exclusive",
-      path: "/exclusive",
-    },
-    {
-      name: "Contact Us",
-      path: "/contact",
-    },
-  ];
+  const pathIsActive = (path: string) =>
+    pathname === path || (path !== "/" && pathname.startsWith(`${path}/`));
 
   return (
     <header
@@ -81,10 +85,57 @@ export default function Navbar() {
           <img src="/logo/logo.avif" alt="Logo" width={200} />
         </Link>
 
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-10">
+        {/* Desktop navigation */}
+        <nav className="hidden items-center gap-10 lg:flex" aria-label="Main navigation">
           {navLinks.map((link) => {
-            const isActive = pathname === link.path;
+            const isActive =
+              pathIsActive(link.path) ||
+              Boolean(link.children?.some((child) => pathIsActive(child.path)));
+
+            if (link.children) {
+              return (
+                <div key={link.name} className="group relative">
+                  <Link
+                    href={link.path}
+                    aria-haspopup="true"
+                    className={`relative flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                      isActive ? "text-white" : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    {link.name}
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 transition-transform group-hover:rotate-180 group-focus-within:rotate-180"
+                    />
+                    {isActive && (
+                      <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-white" />
+                    )}
+                  </Link>
+
+                  <div className="invisible absolute left-1/2 top-full w-52 -translate-x-1/2 translate-y-1 pt-4 opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                    <div className="border border-slate-200 bg-white p-2 shadow-xl shadow-slate-950/10">
+                      {link.children.map((child) => {
+                        const childIsActive = pathIsActive(child.path);
+
+                        return (
+                          <Link
+                            key={child.path}
+                            href={child.path}
+                            className={`block px-4 py-3 text-sm font-medium transition-colors ${
+                              childIsActive
+                                ? "bg-[#003251] text-white"
+                                : "text-[#003251] hover:bg-slate-100"
+                            }`}
+                          >
+                            {child.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <Link
@@ -104,26 +155,85 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* Social icons */}
         <div className="flex items-center gap-3">
-          {socialLinks.map(({ label, path }) => (
-            <a
-              key={label}
-              href="#"
-              aria-label={label}
-              className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:opacity-80 transition-opacity"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="w-4 h-4 fill-current text-[#003251]"
+          {/* Social icons */}
+          <div className="hidden items-center gap-3 sm:flex md:hidden lg:flex">
+            {socialLinks.map(({ label, path }) => (
+              <a
+                key={label}
+                href="#"
+                aria-label={label}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80"
               >
-                <path d={path} />
-              </svg>
-            </a>
-          ))}
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="h-4 w-4 fill-current text-[#003251]"
+                >
+                  <path d={path} />
+                </svg>
+              </a>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen((open) => !open)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
+            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+            className="flex h-10 w-10 items-center justify-center border border-white/25 text-white lg:hidden"
+          >
+            {mobileOpen ? (
+              <X aria-hidden="true" className="h-5 w-5" />
+            ) : (
+              <Menu aria-hidden="true" className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
+
+      {mobileOpen && (
+        <nav
+          id="mobile-navigation"
+          aria-label="Mobile navigation"
+          className="border-t border-white/15 px-6 pb-6 pt-3 lg:hidden"
+        >
+          {navLinks.map((link) => (
+            <div key={link.name} className="border-b border-white/10 last:border-b-0">
+              <Link
+                href={link.path}
+                onClick={() => setMobileOpen(false)}
+                className={`block py-3 text-sm font-semibold ${
+                  pathIsActive(link.path) ? "text-white" : "text-white/75"
+                }`}
+              >
+                {link.name}
+              </Link>
+              {link.children && (
+                <div className="mb-3 border-l border-white/20 pl-4">
+                  {link.children
+                    .filter((child) => child.path !== link.path)
+                    .map((child) => (
+                      <Link
+                        key={child.path}
+                        href={child.path}
+                        onClick={() => setMobileOpen(false)}
+                        className={`block py-2 text-sm ${
+                          pathIsActive(child.path)
+                            ? "font-semibold text-white"
+                            : "text-white/65"
+                        }`}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }
