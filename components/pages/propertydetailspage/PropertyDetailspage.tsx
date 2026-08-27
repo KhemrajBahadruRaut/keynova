@@ -527,52 +527,62 @@ export default function PropertyDetailsPage({
           </div>
         </div>
 
-        <div className="mt-14">
-          <h2 className="mb-4 text-lg font-semibold text-[#003251]">Location</h2>
+        <div className="mt-14 w-full">
+  <h2 className="mb-4 text-lg font-semibold text-[#003251]">Location</h2>
 
-          <div className="relative aspect-12/6 w-200 overflow-hidden  border border-gray-200 bg-[#EAEDF0]">
-            <iframe
-              title={`Map of ${property.address || property.title}`}
-              src={`https://www.google.com/maps?q=${encodedMapQuery}&z=14&output=embed`}
-              className="absolute inset-0 h-full w-full border-0"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+  <div className="relative w-full overflow-hidden border border-gray-200 bg-[#EAEDF0] aspect-[12/19] sm:aspect-[12/8] md:aspect-[12/7] lg:aspect-[12/6] lg:w-[50rem]">
+    <iframe
+      title={`Map of ${property.address || property.title}`}
+      src={`https://www.google.com/maps?q=${encodedMapQuery}&z=14&output=embed`}
+      className="absolute inset-0 h-full w-full border-0"
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    />
 
-            <div className="absolute left-3 top-3 w-64 rounded-md bg-white p-3 shadow-md">
-              <p className="text-sm font-semibold text-[#003251]">
-                {property.title || property.address}
-              </p>
-              <p className="mt-1 text-xs text-gray-500">{property.address}</p>
-              <div className="mt-2 flex gap-2">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodedMapQuery}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Open in Maps"
-                  className="rounded-full border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodedMapQuery}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Get directions"
-                  className="rounded-full bg-[#003251] p-1.5 text-white hover:bg-[#0c2f4d]"
-                >
-                  <Navigation className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
+    <div className="absolute left-3 top-3 flex w-[calc(100%-1.5rem)] max-w-[16rem] flex-wrap items-center justify-between gap-2 rounded-md bg-white p-2 px-4 shadow-md">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-[#003251]">
+          {property.title || property.address}
+        </p>
 
-            {property.lat !== null && property.lng !== null && (
-              <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
-                <MapPin className="h-8 w-8 fill-red-500 text-red-500 drop-shadow" strokeWidth={1.5} />
-              </div>
-            )}
-          </div>
-        </div>
+        <p className="truncate text-xs text-gray-500">
+          {property.address}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 gap-2">
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodedMapQuery}`}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Open in Maps"
+          className="rounded-full border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${encodedMapQuery}`}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Get directions"
+          className="rounded-full bg-[#003251] p-1.5 text-white hover:bg-[#0c2f4d]"
+        >
+          <Navigation className="h-3.5 w-3.5" />
+        </a>
+      </div>
+    </div>
+
+    {property.lat !== null && property.lng !== null && (
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
+        <MapPin
+          className="h-8 w-8 fill-red-500 text-red-500 drop-shadow"
+          strokeWidth={1.5}
+        />
+      </div>
+    )}
+  </div>
+</div>
 
         <div className="mt-14">
           <h2 className="mb-5 text-lg font-semibold text-[#003251]">Facts &amp; features</h2>
