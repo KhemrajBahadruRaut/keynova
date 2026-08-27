@@ -16,7 +16,7 @@ const cards: ActionCard[] = [
       "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=900&q=80",
     title: "Buy with us",
     description: "Find your next home with local experts guiding every step.",
-    href: "/buy",
+    href: "/buywithus",
   },
   {
     id: "list",
@@ -24,7 +24,7 @@ const cards: ActionCard[] = [
       "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=900&q=80",
     title: "List with us",
     description: "Sell your property for the best price with our strategic marketing and extensive network.",
-    href: "/list",
+    href: "/listwithus",
   },
   {
     id: "valuation",
@@ -32,7 +32,7 @@ const cards: ActionCard[] = [
       "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=80",
     title: "Home Valuation",
     description: "Discover the current market value of your property in minutes.",
-    href: "/valuation",
+    href: "/homevaluation",
   },
   {
     id: "contact",

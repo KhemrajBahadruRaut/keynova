@@ -22,6 +22,11 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "team/create_member.php",
   "team/update_member.php",
   "team/delete_member.php",
+  "content/get_admin_content.php",
+  "content/update_content.php",
+  "content/upload_image.php",
+  "valuation/get_requests.php",
+  "valuation/update_request_status.php",
 ]);
 
 type AdminProxyContext = {

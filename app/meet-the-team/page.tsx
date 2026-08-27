@@ -20,7 +20,7 @@ export default async function MeetTheTeamPage() {
         <div className="absolute -right-32 top-16 h-96 w-96 border border-white/10" />
         <div className="absolute -bottom-24 left-0 h-48 w-2/5 bg-linear-to-r from-[#c8862a]/20 to-transparent" />
         <div className="relative mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#e4ad60]">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#bacdd3]">
             Meet the team
           </p>
           <div className="mt-5 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-20">
@@ -35,13 +35,10 @@ export default async function MeetTheTeamPage() {
         </div>
       </section>
 
-      <section className="px-6 py-16 sm:py-24 lg:px-10">
+      <section className="px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 border-b border-slate-200 pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#c8862a]">
-                Our professionals
-              </p>
               <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
                 The KeyNova Group
               </h2>
@@ -71,7 +68,7 @@ export default async function MeetTheTeamPage() {
                     <div className="border-b border-slate-200 py-5">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="text-xl font-semibold transition group-hover:text-[#c8862a]">
+                          <h3 className="text-xl font-semibold transition group-hover:text-[#1c878f]">
                             {member.name}
                           </h3>
                           {member.role && (
@@ -82,7 +79,7 @@ export default async function MeetTheTeamPage() {
                         </div>
                         <ArrowRight
                           aria-hidden="true"
-                          className="mt-1 h-4 w-4 shrink-0 text-[#c8862a] transition-transform group-hover:translate-x-1"
+                          className="mt-1 h-4 w-4 shrink-0 text-[#1c878f] transition-transform group-hover:translate-x-1"
                         />
                       </div>
                     </div>

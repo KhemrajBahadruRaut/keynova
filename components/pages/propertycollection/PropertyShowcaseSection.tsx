@@ -73,7 +73,7 @@ function PropertyCard({
       href={`/details?id=${property.id}&source=${source}`}
       aria-hidden={duplicate || undefined}
       tabIndex={duplicate ? -1 : undefined}
-      className="group flex w-[290px] shrink-0 flex-col rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251] focus-visible:ring-offset-4 sm:w-[360px]"
+      className="group flex w-72.5 shrink-0 flex-col rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251] focus-visible:ring-offset-4 sm:w-90"
     >
       <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
         {imageUrl ? (
@@ -115,7 +115,7 @@ function PropertyCard({
         )}
       </div>
 
-      <h3 className="mt-3 font-semibold text-[#003251] transition-colors group-hover:text-[#c8862a]">
+      <h3 className="mt-3 font-semibold text-[#003251] transition-colors group-hover:text-[#1c878f]">
         {property.title || property.address || "KeyNova property"}
       </h3>
       {property.address && property.address !== property.title && (
@@ -132,7 +132,7 @@ function LoadingCards() {
   return Array.from({ length: 3 }, (_, index) => (
     <div
       key={index}
-      className="w-[290px] shrink-0 animate-pulse sm:w-[360px]"
+      className="w-72.5 shrink-0 animate-pulse sm:w-90"
       aria-hidden="true"
     >
       <div className="aspect-4/3 rounded-xl bg-slate-200" />
@@ -259,9 +259,9 @@ export default function PropertyShowcaseSection({
           }`}
         >
           <div className={isExclusive ? "sm:text-right" : ""}>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#c8862a]">
+            {/* <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#c8862a]">
               {isExclusive ? "Privately presented" : "Elevated living"}
-            </p>
+            </p> */}
             <h2 className="mt-3 max-w-2xl text-3xl font-bold leading-tight text-[#003251] sm:text-4xl">
               {config.title}
             </h2>
@@ -342,7 +342,7 @@ export default function PropertyShowcaseSection({
                 type="button"
                 onClick={() => scrollBy("left")}
                 aria-label={`Show previous ${config.buttonLabel.toLowerCase()}`}
-                className="absolute -left-4 top-[38%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-slate-50 sm:flex"
+                className="absolute -left-4 top-[33%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-slate-50 sm:flex"
               >
                 <ChevronLeft aria-hidden="true" size={18} />
               </button>
@@ -350,7 +350,7 @@ export default function PropertyShowcaseSection({
                 type="button"
                 onClick={() => scrollBy("right")}
                 aria-label={`Show more ${config.buttonLabel.toLowerCase()}`}
-                className="absolute -right-4 top-[38%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-slate-50 sm:flex"
+                className="absolute -right-4 top-[33%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-slate-50 sm:flex"
               >
                 <ChevronRight aria-hidden="true" size={18} />
               </button>

@@ -93,9 +93,6 @@ export default function TeamPage() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#c8862a]">
-              The people behind KeyNova
-            </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#003251] sm:text-4xl">
               Meet our team
             </h2>
@@ -142,7 +139,7 @@ export default function TeamPage() {
                   />
                 </div>
                 <div className="border-b border-slate-200 py-4">
-                  <h3 className="text-lg font-semibold text-[#003251] transition group-hover:text-[#c8862a]">
+                  <h3 className="text-lg font-semibold text-[#003251] transition group-hover:text-[#1c878f]">
                     {member.name}
                   </h3>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -156,7 +153,7 @@ export default function TeamPage() {
 
         <Link
           href="/meet-the-team"
-          className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#003251] transition hover:text-[#c8862a]"
+          className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#003251] transition hover:text-[#1c878f]"
         >
           View the full team
           <ArrowRight aria-hidden="true" className="h-4 w-4" />
