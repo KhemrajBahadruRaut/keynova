@@ -102,7 +102,6 @@ export default function AboutSection() {
       <section className="relative overflow-hidden bg-[#003251] px-6 pb-20 pt-36 text-white sm:pb-28 sm:pt-44 lg:px-10">
         <div className="absolute -right-32 top-20 h-96 w-96 rounded-full border border-white/10" />
         <div className="absolute -right-12 top-40 h-72 w-72 rounded-full border border-[#c8862a]/30" />
-        <div className="absolute bottom-0 left-0 h-32 w-1/3 bg-linear-to-r from-[#c8862a]/15 to-transparent" />
 
         <div className="relative mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/80">

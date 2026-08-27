@@ -17,8 +17,6 @@ export default async function MeetTheTeamPage() {
   return (
     <main className="bg-white text-[#003251]">
       <section className="relative overflow-hidden bg-[#003251] px-6 pb-20 pt-36 text-white sm:pb-24 sm:pt-44 lg:px-10">
-        <div className="absolute -right-32 top-16 h-96 w-96 border border-white/10" />
-        <div className="absolute -bottom-24 left-0 h-48 w-2/5 bg-linear-to-r from-[#c8862a]/20 to-transparent" />
         <div className="relative mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#bacdd3]">
             Meet the team
