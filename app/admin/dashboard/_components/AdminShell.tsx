@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   MessageSquareText,
+  Quote,
   UsersRound,
   X,
 } from "lucide-react";
@@ -32,6 +33,13 @@ const ADMIN_SECTIONS = [
     description: "Profiles and biographies",
     href: "/admin/dashboard/team",
     Icon: UsersRound,
+  },
+  {
+    key: "testimonials",
+    label: "Testimonials",
+    description: "Approve client stories",
+    href: "/admin/dashboard/testimonials",
+    Icon: Quote,
   },
   {
     key: "content",
@@ -68,6 +76,7 @@ type AdminCounts = Record<(typeof ADMIN_SECTIONS)[number]["key"], number>;
 const EMPTY_COUNTS: AdminCounts = {
   properties: 0,
   team: 0,
+  testimonials: 0,
   content: 0,
   valuations: 0,
   requests: 0,
@@ -90,6 +99,9 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
         fetch("/api/admin/property/get_doc_requests.php", { cache: "no-store" }),
         fetch("/api/admin/contact/get_contacts.php", { cache: "no-store" }),
         fetch("/api/admin/valuation/get_requests.php", { cache: "no-store" }),
+        fetch("/api/admin/testimonials/get_admin_testimonials.php", {
+          cache: "no-store",
+        }),
       ]);
       if (responses.some((response) => response.status === 401)) {
         router.replace("/admin");
@@ -97,12 +109,18 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
         return;
       }
 
-      const [properties, team, requests, inquiries, valuations] = await Promise.all(
+      const [properties, team, requests, inquiries, valuations, testimonials] = await Promise.all(
         responses.map((response) => response.json()),
       );
       setCounts({
         properties: properties.status === "success" ? properties.data?.length || 0 : 0,
         team: team.status === "success" ? team.data?.length || 0 : 0,
+        testimonials:
+          testimonials.status === "success"
+            ? (testimonials.data || []).filter(
+                (testimonial: { status?: string }) => testimonial.status === "pending",
+              ).length
+            : 0,
         content: 0,
         valuations:
           valuations.status === "success"
@@ -148,7 +166,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
             href={href}
             onClick={mobile ? () => setMobileNavOpen(false) : undefined}
             aria-current={active ? "page" : undefined}
-            className={`group flex min-h-16 items-center gap-3 rounded-xl border px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a85f] ${
+            className={`group flex min-h-16 items-center gap-3 rounded-xl border px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7bc3df] ${
               active
                 ? "border-white/15 bg-white/15 text-white shadow-sm"
                 : "border-transparent text-white/70 hover:border-white/10 hover:bg-white/8 hover:text-white"
@@ -157,7 +175,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
             <span
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition ${
                 active
-                  ? "bg-[#c8862a] text-white"
+                  ? "bg-[#2f87a8] text-white"
                   : "bg-white/8 text-white/70 group-hover:bg-white/12 group-hover:text-white"
               }`}
             >
@@ -170,7 +188,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
               </span>
             </span>
             {counts[key] > 0 && (
-              <span className="min-w-6 rounded-full bg-[#c8862a] px-2 py-1 text-center text-[11px] font-bold leading-none text-white">
+              <span className="min-w-6 rounded-full bg-[#2f87a8] px-2 py-1 text-center text-[11px] font-bold leading-none text-white">
                 {counts[key]}
               </span>
             )}
@@ -185,7 +203,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col bg-[#003251] shadow-2xl shadow-[#071a2a]/20 xl:flex">
         <Link
           href="/admin/dashboard/properties"
-          className="flex items-center gap-4 border-b border-white/10 px-6 py-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d7a85f]"
+          className="flex items-center gap-4 border-b border-white/10 px-6 py-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7bc3df]"
           aria-label="Go to property management"
         >
           <Image
@@ -198,7 +216,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
           />
           <div className="min-w-0 border-l border-white/20 pl-4">
             <p className="text-base font-semibold text-white">KeyNova Admin</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7a85f]">
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7bc3df]">
               Website Management
             </p>
           </div>
@@ -248,7 +266,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
             />
             <div className="min-w-0 border-l border-white/20 pl-3">
               <p className="truncate text-sm font-semibold text-white">KeyNova Admin</p>
-              <p className="hidden text-[10px] uppercase tracking-[0.18em] text-[#d7a85f] sm:block">
+              <p className="hidden text-[10px] uppercase tracking-[0.18em] text-[#7bc3df] sm:block">
                 Website Management
               </p>
             </div>

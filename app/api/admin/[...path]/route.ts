@@ -27,6 +27,8 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "content/upload_image.php",
   "valuation/get_requests.php",
   "valuation/update_request_status.php",
+  "testimonials/get_admin_testimonials.php",
+  "testimonials/update_testimonial_status.php",
 ]);
 
 type AdminProxyContext = {

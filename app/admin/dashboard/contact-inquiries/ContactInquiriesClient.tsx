@@ -69,7 +69,7 @@ export default function ContactInquiriesClient() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
           Administration
         </p>
         <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -107,7 +107,7 @@ export default function ContactInquiriesClient() {
                       <span className="mx-2 text-gray-400">·</span>
                       <a
                         href={`mailto:${inquiry.email}`}
-                        className="text-sm text-[#c8862a] hover:underline"
+                        className="text-sm text-[#2f7895] hover:underline"
                       >
                         {inquiry.email}
                       </a>
@@ -128,7 +128,7 @@ export default function ContactInquiriesClient() {
                     </time>
                   </div>
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-full bg-orange-50 px-2 py-1 font-medium text-[#c8862a]">
+                    <span className="rounded-full bg-sky-50 px-2 py-1 font-medium text-[#2f7895]">
                       {inquiry.source === "property"
                         ? "Property inquiry"
                         : "Website contact"}

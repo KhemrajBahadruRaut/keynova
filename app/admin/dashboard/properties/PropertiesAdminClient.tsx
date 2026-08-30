@@ -777,7 +777,7 @@ export default function PropertiesAdminClient() {
       );
     if (geocodeStatus === "fail")
       return (
-        <p className="text-xs text-amber-500 mt-1">
+        <p className="mt-1 text-xs text-red-500">
           ⚠ Address not found on map — property will still be saved
         </p>
       );
@@ -819,7 +819,7 @@ export default function PropertiesAdminClient() {
 
 
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
           Administration
         </p>
         <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -916,7 +916,7 @@ export default function PropertiesAdminClient() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#071a2a]/70 p-4 backdrop-blur-sm">
           <div className="my-6 w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b-4 border-[#c8862a] bg-[#003251] px-6 py-5">
+            <div className="flex items-center justify-between border-b-4 border-[#2f87a8] bg-[#003251] px-6 py-5">
               <h3 className="text-lg font-semibold text-white">
                 {editProperty ? "Edit Property" : "Add New Property"}
               </h3>
@@ -1369,7 +1369,7 @@ export default function PropertiesAdminClient() {
                       name="agent_photo"
                       type="file"
                       accept=".jpg,.jpeg,.png,.webp,.gif"
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
                       onChange={handleAgentPhoto}
                       onClick={() =>
                         setFileErrors((current) => ({
@@ -1434,7 +1434,7 @@ export default function PropertiesAdminClient() {
                       type="file"
                       accept=".jpg,.jpeg,.png,.webp,.gif"
                       multiple
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
                       onChange={handleAddImages}
                       onClick={() =>
                         setFileErrors((current) => ({
@@ -1517,7 +1517,7 @@ export default function PropertiesAdminClient() {
                       type="file"
                       accept=".pdf,.doc,.docx"
                       multiple
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[#c8862a] hover:file:bg-orange-100"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
                       onChange={handleDocuments}
                       onClick={() =>
                         setFileErrors((current) => ({

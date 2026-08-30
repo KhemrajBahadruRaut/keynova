@@ -65,7 +65,7 @@ export default function DocumentRequestsClient() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
           Administration
         </p>
         <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -112,7 +112,7 @@ export default function DocumentRequestsClient() {
                   {requests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50">
                       <td className="py-3 font-medium text-gray-900">{request.name}</td>
-                      <td className="py-3 text-[#c8862a]">{request.email}</td>
+                      <td className="py-3 text-[#2f7895]">{request.email}</td>
                       <td className="max-w-32 truncate py-3 text-gray-600">
                         {request.property_title}
                       </td>
@@ -124,7 +124,7 @@ export default function DocumentRequestsClient() {
                           className={`rounded-full px-2 py-1 text-xs font-medium ${
                             request.status === "verified"
                               ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                              : "bg-sky-100 text-sky-700"
                           }`}
                         >
                           {request.status === "verified" ? "Verified" : "Pending"}

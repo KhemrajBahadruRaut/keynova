@@ -306,7 +306,7 @@ export default function PageContentAdminClient() {
               type="button"
               onClick={restoreDefaults}
               disabled={loading || saving}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#c8862a] hover:text-[#8a5716] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#2f87a8] hover:text-[#246f8c] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Load originals

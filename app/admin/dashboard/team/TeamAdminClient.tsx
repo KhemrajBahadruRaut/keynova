@@ -353,17 +353,17 @@ export default function TeamAdminClient() {
   };
 
   const inputClass = (field: keyof MemberForm) =>
-    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#c8862a]/30 ${
+    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/30 ${
       fieldError(field)
         ? "border-red-300 focus:border-red-400"
-        : "border-slate-200 focus:border-[#c8862a]"
+        : "border-slate-200 focus:border-[#2f87a8]"
     }`;
 
   return (
     <>
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
             Administration
           </p>
           <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -452,7 +452,7 @@ export default function TeamAdminClient() {
                     <button
                       type="button"
                       onClick={() => openEdit(member)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#c8862a] hover:text-[#c8862a]"
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#2f87a8] hover:text-[#2f7895]"
                       aria-label={`Edit ${member.name}`}
                     >
                       <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -528,7 +528,7 @@ export default function TeamAdminClient() {
 
                 <div className="sm:col-span-2">
                   <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Profile URL slug</label>
-                  <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#c8862a] focus-within:ring-2 focus-within:ring-[#c8862a]/30">
+                  <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#2f87a8] focus-within:ring-2 focus-within:ring-[#2f87a8]/30">
                     <span className="hidden items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 sm:flex">/meet-the-team/</span>
                     <input
                       id="team-slug"
@@ -640,7 +640,7 @@ export default function TeamAdminClient() {
                     accept=".jpg,.jpeg,.png,.webp,.gif"
                     onChange={handlePhoto}
                     onClick={() => setPhotoError("")}
-                    className="mt-2 w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-orange-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#c8862a] hover:file:bg-orange-100"
+                    className="mt-2 w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
                     aria-invalid={Boolean(photoError)}
                   />
                   <p className="mt-1 min-h-4 text-xs text-red-600">{photoError}</p>

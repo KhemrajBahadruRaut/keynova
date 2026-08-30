@@ -377,7 +377,7 @@ export default function HomeValuationsAdminClient() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="font-semibold text-[#003251]">{request.name}</h2>
-                        {request.status === "new" && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">New</span>}
+                        {request.status === "new" && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">New</span>}
                       </div>
                       <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="h-4 w-4" aria-hidden="true" />{request.address}, {request.zip}</p>
                       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">

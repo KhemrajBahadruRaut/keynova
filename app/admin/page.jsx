@@ -77,14 +77,14 @@ export default function AdminLogin() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#071d31] px-4 py-10">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full border border-[#c8862a]/20" />
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full border border-[#5aa9c8]/20" />
       <div className="pointer-events-none absolute -bottom-40 -right-28 h-112 w-md rounded-full bg-[#6E9CAE]/10 blur-3xl" />
       <form
         onSubmit={handleSubmit}
         className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl shadow-black/30"
         noValidate
       >
-        <div className="border-b-4 border-[#c8862a] bg-[#003251] px-8 py-7 text-center">
+        <div className="border-b-4 border-[#2f87a8] bg-[#003251] px-8 py-7 text-center">
           <Image
             src="/logo/logofooter.png"
             width={282}
