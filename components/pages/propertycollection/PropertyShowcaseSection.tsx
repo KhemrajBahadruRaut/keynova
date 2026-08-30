@@ -34,7 +34,7 @@ interface ShowcaseConfig {
 
 const SHOWCASE_CONFIG: Record<CollectionVariant, ShowcaseConfig> = {
   grandliving: {
-    buttonLabel: "Grand Living Listings",
+    buttonLabel: "Grand Living",
     description:
       "Explore distinguished residences that blend timeless architecture, exceptional craftsmanship, and modern luxury.",
     destination: "listing",
@@ -44,7 +44,7 @@ const SHOWCASE_CONFIG: Record<CollectionVariant, ShowcaseConfig> = {
     title: "Discover the Finest Homes for Grand Living",
   },
   exclusive: {
-    buttonLabel: "Exclusive Listings",
+    buttonLabel: "Exclusive",
     description:
       "Discover a handpicked collection of premium homes available through our exclusive network.",
     destination: "off_market",
