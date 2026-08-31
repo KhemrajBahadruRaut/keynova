@@ -104,7 +104,7 @@ export default function AboutSection() {
         <div className="absolute -right-12 top-40 h-72 w-72 rounded-full border border-[#c8862a]/30" />
 
         <div className="relative mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/80">
+          <p className="text-xl font-bold tracking-[0.2em] text-white/80">
             About KeyNova Group
           </p>
           <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-20">
@@ -220,7 +220,7 @@ export default function AboutSection() {
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
-                href="/listing"
+                href="/exclusive"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#c8862a] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#b77722]"
               >
                 Explore properties

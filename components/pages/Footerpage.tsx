@@ -35,7 +35,7 @@ const FooterPage: React.FC = () => {
         {/* Contact */}
         <div className="flex justify-center">
           <div className=" flex flex-col gap-4 text-sm text-white/90">
-          <h2 className="text-sm font-bold tracking-wide">CONTACT</h2>
+          <h2 className="text-sm font-bold tracking-wide">Contact</h2>
             <div className="flex items-center gap-3">
               <Phone size={16} />
               <a href="tel:19782457392">(978) 245-7392</a>
@@ -65,19 +65,19 @@ const FooterPage: React.FC = () => {
 
         {/* Navigation */}
         <div>
-          <h2 className="text-sm font-bold tracking-wide">NAVIGATION</h2>
+          <h2 className="text-sm font-bold tracking-wide">Navigation</h2>
           <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-white/90">
             <a href="/about" className="hover:text-white">
-              ABOUT
+              About
             </a>
             <a href="/exclusive" className="hover:text-white">
-              EXCLUSIVE
+              Exclusive
             </a>
             <a href="/grandliving" className="hover:text-white">
-              GRAND LIVING
+              Grand Living
             </a>
             <a href="/contact" className="hover:text-white">
-              CONTACT US
+              Contact Us
             </a>
           </div>
 

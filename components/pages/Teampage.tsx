@@ -93,8 +93,8 @@ export default function TeamPage() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#003251] sm:text-4xl">
-              Meet our team
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[#003251] sm:text-4xl ">
+              Meet the team
             </h2>
           </div>
 

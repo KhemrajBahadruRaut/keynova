@@ -51,7 +51,7 @@ const SHOWCASE_CONFIG: Record<CollectionVariant, ShowcaseConfig> = {
     emptyMessage: "New exclusive opportunities are coming soon.",
     href: "/exclusive",
     source: "exclusive",
-    title: "Explore Our Most Exclusive Property Listings",
+    title: "Explore Our Most Exclusive Property",
   },
 };
 
