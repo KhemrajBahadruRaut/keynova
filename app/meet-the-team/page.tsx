@@ -18,7 +18,7 @@ export default async function MeetTheTeamPage() {
     <main className="bg-white text-[#003251]">
       <section className="relative overflow-hidden bg-[#003251] px-6 pb-20 pt-36 text-white sm:pb-24 sm:pt-44 lg:px-10">
         <div className="relative mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#bacdd3]">
+          <p className="text-xl font-bold tracking-[0.2em] text-[#bacdd3]">
             Meet the team
           </p>
           <div className="mt-5 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:gap-20">
