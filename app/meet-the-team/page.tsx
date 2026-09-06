@@ -54,7 +54,7 @@ export default async function MeetTheTeamPage() {
                 <article key={member.id} className="group min-w-0">
                   <Link
                     href={`/meet-the-team/${member.slug}`}
-                    className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c8862a]"
+                    className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1c878f]"
                     aria-label={`Read more about ${member.name}`}
                   >
                     <div className="aspect-4/5 overflow-hidden bg-slate-100">

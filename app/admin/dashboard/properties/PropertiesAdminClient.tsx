@@ -828,6 +828,9 @@ export default function PropertiesAdminClient() {
         <p className="mt-1 text-sm text-slate-500">
           Create, update, publish, and manage KeyNova property listings.
         </p>
+        <p className="mt-3 max-w-3xl rounded-lg border border-[#cfe0e4] bg-[#edf5f6] px-4 py-3 text-xs leading-5 text-[#315867]">
+          This is the source for Grand Living and Exclusive. The website has no live MLS/IDX connection, so enter the exact unit address and current price here and unpublish stale or unverified records.
+        </p>
       </div>
 
       <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">

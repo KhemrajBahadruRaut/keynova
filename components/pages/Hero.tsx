@@ -1,23 +1,60 @@
-"use client"
-import React, { useState, useEffect, useRef } from "react";
-import { KeyRound } from "lucide-react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Navbar from "../navbar/Navbar";
 import Link from "next/link";
 
+const MASSACHUSETTS_SLIDES = [
+  {
+    src: "https://images.unsplash.com/photo-1553734021-17c8ee5de759?auto=format&fit=crop&w=1920&q=85",
+    alt: "Beacon Hill neighborhood in Boston, Massachusetts",
+    location: "Beacon Hill, Boston",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1599136115254-f3fa567872ae?auto=format&fit=crop&w=1920&q=85",
+    alt: "Historic brick homes along a Beacon Hill street in Boston",
+    location: "Beacon Hill, Boston",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1766381854360-e4ab2f8f7291?auto=format&fit=crop&w=1920&q=85",
+    alt: "Historic row homes on Acorn Street in Boston, Massachusetts",
+    location: "Acorn Street, Boston",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1563772030906-5837787ca892?auto=format&fit=crop&w=1920&q=85",
+    alt: "Brick-lined residential lane in Beacon Hill, Massachusetts",
+    location: "Beacon Hill, Boston",
+  },
+] as const;
 
 export default function Hero() {
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % MASSACHUSETTS_SLIDES.length);
+    }, 6000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900 font-sans">
       <Navbar/>
       {/* HERO */}
       <section className="relative w-full h-screen min-h-160 overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1920&q=80"
-          alt="Modern luxury home exterior"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/25" />
+        {MASSACHUSETTS_SLIDES.map((slide, index) => (
+          <img
+            key={slide.src}
+            src={slide.src}
+            alt={index === activeSlide ? slide.alt : ""}
+            aria-hidden={index !== activeSlide}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
+              index === activeSlide ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
+        <div className="absolute inset-0 bg-[#001d2f]/45" />
 
         <div className="relative z-10 h-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center px-6">
           <h1 className="text-white font-semibold leading-[1.05] text-4xl sm:text-5xl lg:text-6xl">
@@ -31,13 +68,20 @@ export default function Hero() {
           </Link>
         </div>
 
-        {/* Carousel dots */}
-        <div className="absolute bottom-8 right-8 flex gap-2 z-10">
-          {[0, 1, 2, 3].map((dot) => (
-            <span
-              key={dot}
-              className={`w-2 h-2 rounded-sm ${
-                dot === 3 ? "bg-white" : "bg-white/40"
+        <p className="absolute bottom-8 left-8 z-10 hidden text-xs font-semibold uppercase tracking-[0.2em] text-white/85 sm:block">
+          {MASSACHUSETTS_SLIDES[activeSlide].location}
+        </p>
+
+        <div className="absolute bottom-8 right-8 z-10 flex gap-2" aria-label="Hero images">
+          {MASSACHUSETTS_SLIDES.map((slide, index) => (
+            <button
+              key={slide.src}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              aria-label={`Show image ${index + 1}: ${slide.location}`}
+              aria-current={index === activeSlide ? "true" : undefined}
+              className={`h-2.5 rounded-full transition-all ${
+                index === activeSlide ? "w-8 bg-white" : "w-2.5 bg-white/45 hover:bg-white/75"
               }`}
             />
           ))}

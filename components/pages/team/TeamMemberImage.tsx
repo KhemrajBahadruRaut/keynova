@@ -1,7 +1,7 @@
 import { teamPhotoUrl, type TeamMember } from "@/lib/team-data";
 
 type TeamMemberImageProps = {
-  member: TeamMember;
+  member: Pick<TeamMember, "name" | "photo">;
   eager?: boolean;
   className?: string;
 };

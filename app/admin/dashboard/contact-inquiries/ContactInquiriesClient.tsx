@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 interface Inquiry {
   id: number;
   property_title: string | null;
+  agent_id: number | null;
+  agent_name: string | null;
   name: string;
   email: string;
   phone: string;
   subject: string | null;
   help_with: string | null;
-  source: "property" | "general";
+  source: "property" | "general" | "agent";
   consented_at: string | null;
   message: string;
   created_at: string;
@@ -131,6 +133,8 @@ export default function ContactInquiriesClient() {
                     <span className="rounded-full bg-sky-50 px-2 py-1 font-medium text-[#2f7895]">
                       {inquiry.source === "property"
                         ? "Property inquiry"
+                        : inquiry.source === "agent"
+                          ? `Agent inquiry${inquiry.agent_name ? ` · ${inquiry.agent_name}` : ""}`
                         : "Website contact"}
                     </span>
                     {inquiry.help_with && (

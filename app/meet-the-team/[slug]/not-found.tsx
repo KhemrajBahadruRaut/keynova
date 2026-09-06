@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function TeamMemberNotFound() {
   return (
-    <main className="flex min-h-[70vh] items-center justify-center bg-[#f4f1eb] px-6 pb-20 pt-32 text-center text-[#003251]">
+    <main className="flex min-h-[70vh] items-center justify-center bg-white px-6 pb-20 pt-32 text-center text-[#003251]">
       <div className="max-w-xl">
-        <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#c8862a]">
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#1c878f]">
           Profile not found
         </p>
         <h1 className="mt-4 text-4xl font-semibold sm:text-5xl">

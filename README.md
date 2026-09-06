@@ -1,5 +1,25 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Lead email configuration
+
+The PHP backend stores every contact, home-valuation, and agent-search lead in MySQL. To also deliver inbox notifications, configure these environment variables for the PHP/Apache process:
+
+```text
+KEYNOVA_LEAD_RECIPIENTS=admin1@example.com,admin2@example.com,admin3@example.com,admin4@example.com
+KEYNOVA_MANAGEMENT_EMAIL=management@keynovagrp.com
+KEYNOVA_MAIL_FROM_ADDRESS=management@keynovagrp.com
+KEYNOVA_MAIL_FROM_NAME=KeyNova Website
+KEYNOVA_SMTP_HOST=smtp.example.com
+KEYNOVA_SMTP_PORT=587
+KEYNOVA_SMTP_ENCRYPTION=tls
+KEYNOVA_SMTP_USERNAME=...
+KEYNOVA_SMTP_PASSWORD=...
+```
+
+Home-valuation and general-contact leads go to every address in `KEYNOVA_LEAD_RECIPIENTS`, every email in the backend `admins` table, and the management address. Agent-profile and agent-search activity goes directly to the email on that agent's team record; if it is missing, the admin/management list is used as a fallback.
+
+Grand Living, Exclusive, and the agent landing pages use records manually published in **Admin → Properties**. They are not connected to an MLS/IDX provider, so unit addresses, prices, and publication destinations must be verified there.
+
 ## Getting Started
 
 First, run the development server:

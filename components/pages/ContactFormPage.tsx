@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { teamPhotoUrl } from "@/lib/team-data";
 import { validateEmail, validatePhone, validateText } from "@/lib/validation";
 
 const BACKGROUND_IMAGE_URL = "/contacts/contact-bg.png";
@@ -46,8 +47,18 @@ type FormStatus = {
   message: string;
 } | null;
 
-export default function LetsTalkPage() {
-  const [form, setForm] = useState<ContactForm>(INITIAL_FORM);
+export default function LetsTalkPage({
+  agent = null,
+  initialSubject = "",
+}: Readonly<{
+  agent?: { slug: string; name: string; photo: string | null } | null;
+  initialSubject?: string;
+}>) {
+  const portraitUrl = agent ? teamPhotoUrl(agent.photo) : PORTRAIT_IMAGE_URL;
+  const [form, setForm] = useState<ContactForm>(() => ({
+    ...INITIAL_FORM,
+    subject: initialSubject,
+  }));
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState<FormStatus>(null);
@@ -100,6 +111,7 @@ export default function LetsTalkPage() {
           message: form.message.trim(),
           help_with: form.helpWith,
           consent: true,
+          ...(agent ? { agent_slug: agent.slug } : {}),
         }),
       });
       const payload = (await response.json().catch(() => null)) as {
@@ -111,11 +123,13 @@ export default function LetsTalkPage() {
         throw new Error(payload?.message || "Your message could not be sent.");
       }
 
-      setForm(INITIAL_FORM);
+      setForm({ ...INITIAL_FORM, subject: initialSubject });
       setAgreed(false);
       setFormStatus({
         type: "success",
-        message: "Thank you. Your message has been sent to the KeyNova team.",
+        message: agent
+          ? `Thank you. Your message has been sent directly to ${agent.name}.`
+          : "Thank you. Your message has been sent to the KeyNova team.",
       });
     } catch (submissionError) {
       setFormStatus({
@@ -143,12 +157,24 @@ export default function LetsTalkPage() {
         {/* Portrait */}
         <div className="flex justify-center md:justify-start">
           <div className="h-105 w-full max-w-md overflow-hidden md:h-178">
-            {PORTRAIT_IMAGE_URL ? (
+            {portraitUrl ? (
               <img
-                src={PORTRAIT_IMAGE_URL}
-                alt="Contact"
+                src={portraitUrl}
+                alt={agent ? `${agent.name}, KeyNova Group` : "Contact KeyNova Group"}
                 className="h-full w-full object-cover object-top"
               />
+            ) : agent ? (
+              <div
+                className="flex h-full w-full items-center justify-center bg-[#edf5f6] text-6xl font-semibold text-[#003251]"
+                aria-label={agent.name}
+                role="img"
+              >
+                {agent.name
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")}
+              </div>
             ) : (
               <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white/60 text-sm text-gray-400">
                 Portrait image goes here
@@ -160,8 +186,14 @@ export default function LetsTalkPage() {
         {/* Form */}
         <div>
           <h1 className="mb-8 text-center text-3xl font-bold text-[#003251] md:text-left">
-            Let&apos;s Talk
+            {agent ? `Talk with ${agent.name}` : "Let's Talk"}
           </h1>
+
+          {agent && (
+            <p className="-mt-5 mb-8 text-center text-sm text-slate-600 md:text-left">
+              This form is routed to {agent.name}&apos;s KeyNova inbox.
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-6">

@@ -330,6 +330,10 @@ export default function PropertyCollectionPage({
           {title}
         </h1>
 
+        <div className="mb-5 border-l-2 border-[#6e9cae] bg-[#edf5f6] px-4 py-3 text-xs leading-5 text-slate-600">
+          These properties are manually published by KeyNova through its admin dashboard; this page is not connected to a live MLS/IDX feed. Confirm the unit number, availability, and price with the listing agent.
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-55 flex-1">
             <Search
@@ -427,8 +431,8 @@ export default function PropertyCollectionPage({
 
         <div className="mt-5 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            {filteredProperties.length > 0 ? 1 : 0} - {filteredProperties.length}{" "}
-            results out of {properties.length} Listings
+            {filteredProperties.length} of {properties.length}{" "}
+            {properties.length === 1 ? "published listing" : "published listings"}
           </p>
 
           <div className="flex items-center gap-5">
