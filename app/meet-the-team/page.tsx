@@ -57,10 +57,10 @@ export default async function MeetTheTeamPage() {
                     className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1c878f]"
                     aria-label={`Read more about ${member.name}`}
                   >
-                    <div className="aspect-4/5 overflow-hidden bg-slate-100">
+                    <div className="relative aspect-4/5 overflow-hidden bg-slate-100">
                       <TeamMemberImage
                         member={member}
-                        className="transition duration-500 group-hover:scale-[1.025]"
+                        variant="card"
                       />
                     </div>
                     <div className="border-b border-slate-200 py-5">

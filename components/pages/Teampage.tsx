@@ -132,10 +132,10 @@ export default function TeamPage() {
                 className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c8862a]"
                 aria-label={`View ${member.name}'s profile`}
               >
-                <div className="aspect-4/5 w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-4/5 w-full overflow-hidden bg-slate-100">
                   <TeamMemberImage
                     member={member}
-                    className="transition duration-500 group-hover:scale-[1.025]"
+                    variant="card"
                   />
                 </div>
                 <div className="border-b border-slate-200 py-4">

@@ -51,6 +51,8 @@ const UPDATE_ENDPOINT = "/api/admin/team/update_member.php";
 const DELETE_ENDPOINT = "/api/admin/team/delete_member.php";
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
+const AGENT_ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "revitalmoves.com";
+const RESERVED_SUBDOMAINS = new Set(["admin", "api", "app", "ftp", "localhost", "mail", "smtp", "www"]);
 
 const EMPTY_FORM: MemberForm = {
   name: "",
@@ -70,7 +72,7 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 160);
+    .slice(0, 63);
 }
 
 function memberPhotoUrl(photo: string | null) {
@@ -148,9 +150,11 @@ export default function TeamAdminClient() {
         ? "URL slug is required."
         : !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug)
           ? "Use lowercase letters, numbers, and single hyphens only."
-          : form.slug.length > 160
-            ? "URL slug must be 160 characters or fewer."
-            : "",
+          : form.slug.length > 63
+            ? "Subdomain must be 63 characters or fewer."
+            : RESERVED_SUBDOMAINS.has(form.slug)
+              ? "That subdomain is reserved. Choose another slug."
+              : "",
     role: validateText(form.role, "Role", { required: true, max: 180 }),
     bio: validateText(form.bio, "Biography", { max: 20000 }),
     email: validateEmail(form.email, false),
@@ -444,7 +448,7 @@ export default function TeamAdminClient() {
                       {member.bio || "No biography has been added yet."}
                     </p>
                     <p className="mt-2 text-xs text-slate-400">
-                      /meet-the-team/{member.slug} · display order {member.sort_order}
+                      {member.slug}.{AGENT_ROOT_DOMAIN} · display order {member.sort_order}
                     </p>
                   </div>
 
@@ -527,9 +531,9 @@ export default function TeamAdminClient() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Profile URL slug</label>
+                  <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Agent subdomain</label>
                   <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#2f87a8] focus-within:ring-2 focus-within:ring-[#2f87a8]/30">
-                    <span className="hidden items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 sm:flex">/meet-the-team/</span>
+                    <span className="hidden items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 sm:flex">https://</span>
                     <input
                       id="team-slug"
                       value={form.slug}
@@ -538,12 +542,16 @@ export default function TeamAdminClient() {
                         updateField("slug", slugify(event.target.value));
                       }}
                       onBlur={() => markTouched("slug")}
-                      maxLength={160}
-                      className="min-w-0 flex-1 rounded-lg px-3 py-2.5 text-sm outline-none sm:rounded-l-none"
+                      maxLength={63}
+                      className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
                       aria-invalid={Boolean(fieldError("slug"))}
                     />
+                    <span className="hidden items-center border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 sm:flex">.{AGENT_ROOT_DOMAIN}</span>
                   </div>
                   <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("slug")}</p>
+                  <p className="text-xs text-slate-400">
+                    Local preview: http://{form.slug || "agent-slug"}.localhost:3000
+                  </p>
                 </div>
 
                 <div className="sm:col-span-2">

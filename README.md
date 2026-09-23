@@ -18,8 +18,6 @@ KEYNOVA_SMTP_PASSWORD=...
 
 Home-valuation and general-contact leads go to every address in `KEYNOVA_LEAD_RECIPIENTS`, every email in the backend `admins` table, and the management address. Agent-profile and agent-search activity goes directly to the email on that agent's team record; if it is missing, the admin/management list is used as a fallback.
 
-Grand Living, Exclusive, and the agent landing pages use records manually published in **Admin → Properties**. They are not connected to an MLS/IDX provider, so unit addresses, prices, and publication destinations must be verified there.
-
 ## Getting Started
 
 First, run the development server:
@@ -35,6 +33,19 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Agent subdomains
+
+Agent profile homepages are resolved from the existing team-member slug. In
+local development, a profile such as `john-smith` is available at
+`http://john-smith.localhost:3000`. No local DNS entry is required in modern
+browsers.
+
+For production, set `NEXT_PUBLIC_ROOT_DOMAIN=revitalmoves.com`, attach both
+`revitalmoves.com` and `*.revitalmoves.com` to the same deployment, and create
+one wildcard DNS record for `*.revitalmoves.com`. Do not create a project or DNS
+record per agent. The application proxy rewrites only the subdomain homepage;
+the apex site and all existing routes continue to use their normal routing.
 
 ## Authentication configuration
 

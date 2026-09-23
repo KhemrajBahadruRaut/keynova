@@ -5,6 +5,8 @@ export interface PropertyDocument {
 
 export interface PropertyRecord {
   id: string;
+  agent_id: number | null;
+  agent_slug: string;
   title: string;
   address: string;
   price: string;
@@ -57,6 +59,12 @@ function asCoordinate(value: unknown): number | null {
   return Number.isFinite(coordinate) ? coordinate : null;
 }
 
+function asInteger(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
 function asStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map(asString).filter(Boolean);
@@ -88,6 +96,8 @@ export function normalizeProperty(value: unknown): PropertyRecord {
 
   return {
     id: asString(property.id),
+    agent_id: asInteger(property.agent_id),
+    agent_slug: asString(property.agent_slug),
     title: asString(property.title),
     address: asString(property.address),
     price: asString(property.price),
@@ -149,6 +159,28 @@ export async function fetchListingProperties(
     : [];
 }
 
+export async function fetchAgentProperties(
+  slug: string,
+  signal?: AbortSignal,
+): Promise<PropertyRecord[]> {
+  const normalizedSlug = slug.trim().toLowerCase();
+  if (
+    normalizedSlug.length > 63 ||
+    !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(normalizedSlug)
+  ) {
+    return [];
+  }
+
+  const data = await requestApi(
+    `/property/get_properties.php?destination=listing&agent_slug=${encodeURIComponent(normalizedSlug)}`,
+    signal,
+  );
+
+  return Array.isArray(data)
+    ? data.map(normalizeProperty).filter((property) => property.id)
+    : [];
+}
+
 export async function fetchProperty(
   id: string,
   signal?: AbortSignal,
@@ -165,6 +197,7 @@ export async function fetchProperty(
 export function propertyUploadUrl(file: string | null | undefined): string {
   if (!file) return "";
   if (/^https?:\/\//i.test(file)) return file;
+  if (file.startsWith("/teams/")) return file;
   if (!API_BASE) return "";
   return `${API_BASE}/uploads/${file.replace(/^\/+/, "")}`;
 }

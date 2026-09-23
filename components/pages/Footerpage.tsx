@@ -1,5 +1,6 @@
 import React from "react";
-import { Phone, Mail, MapPin, KeyRound } from "lucide-react";
+import Link from "next/link";
+import { Phone, Mail, MapPin } from "lucide-react";
 
 const socialLinks = [
   {
@@ -67,18 +68,18 @@ const FooterPage: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold tracking-wide">Navigation</h2>
           <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-white/90">
-            <a href="/about" className="hover:text-white">
+            <Link href="/about" className="hover:text-white">
               About
-            </a>
-            <a href="/exclusive" className="hover:text-white">
+            </Link>
+            <Link href="/exclusive" className="hover:text-white">
               Exclusive
-            </a>
-            <a href="/grandliving" className="hover:text-white">
+            </Link>
+            <Link href="/grandliving" className="hover:text-white">
               Grand Living
-            </a>
-            <a href="/contact" className="hover:text-white">
+            </Link>
+            <Link href="/contact" className="hover:text-white">
               Contact Us
-            </a>
+            </Link>
           </div>
 
           <div className="mt-5 flex gap-3">

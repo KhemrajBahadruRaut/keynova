@@ -7,8 +7,6 @@ import { Plus, X } from "lucide-react";
 import {
   hasValidationErrors,
   validateBuildingSize,
-  validateEmail,
-  validatePhone,
   validatePrice,
   validateText,
   validateUnits,
@@ -17,6 +15,7 @@ import {
 
 interface Property {
   id: number;
+  agent_id: number | null;
   title: string;
   address: string;
   price: string;
@@ -35,6 +34,7 @@ interface Property {
 }
 
 type PropertyForm = {
+  agent_id: string;
   title: string;
   address: string;
   price: string;
@@ -43,11 +43,18 @@ type PropertyForm = {
   year_built: string;
   description: string;
   highlights: string;
-  agent_name: string;
-  agent_title: string;
-  agent_phone: string;
-  agent_email: string;
 };
+
+interface AdminAgent {
+  id: number;
+  slug: string;
+  name: string;
+  role: string;
+  photo: string | null;
+  email: string | null;
+  phone: string | null;
+  is_active: boolean;
+}
 
 type PropertyFormField = keyof PropertyForm;
 
@@ -58,12 +65,12 @@ type PropertyMutationResponse = {
 };
 
 type PropertyAttachment = {
-  field: "images[]" | "agent_photo";
+  field: "images[]";
   file: File;
-  kind: "image" | "agentPhoto";
 };
 
 const INITIAL_PROPERTY_FORM: PropertyForm = {
+  agent_id: "",
   title: "",
   address: "",
   price: "",
@@ -72,17 +79,13 @@ const INITIAL_PROPERTY_FORM: PropertyForm = {
   year_built: "",
   description: "",
   highlights: "",
-  agent_name: "",
-  agent_title: "",
-  agent_phone: "",
-  agent_email: "",
 };
 
 const PROPERTY_FORM_FIELDS = Object.keys(
   INITIAL_PROPERTY_FORM,
 ) as PropertyFormField[];
 
-const EMPTY_FILE_ERRORS = { images: "", agentPhoto: "", documents: "" };
+const EMPTY_FILE_ERRORS = { images: "", documents: "" };
 // Vercel Functions reject request bodies above 4.5 MB. Attachments are sent
 // one at a time, and this leaves room for multipart fields and boundaries.
 const MAX_PROXIED_FILE_SIZE = 4 * 1024 * 1024;
@@ -94,6 +97,7 @@ const DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx"];
 
 function getPropertyFormErrors(form: PropertyForm) {
   return {
+    agent_id: "",
     title: validateText(form.title, "Property title", {
       required: true,
       min: 3,
@@ -110,13 +114,6 @@ function getPropertyFormErrors(form: PropertyForm) {
     year_built: validateYearBuilt(form.year_built),
     description: validateText(form.description, "Description", { max: 5000 }),
     highlights: validateText(form.highlights, "Highlights", { max: 3000 }),
-    agent_name: validateText(form.agent_name, "Agent name", {
-      min: 2,
-      max: 80,
-    }),
-    agent_title: validateText(form.agent_title, "Agent title", { max: 100 }),
-    agent_phone: validatePhone(form.agent_phone),
-    agent_email: validateEmail(form.agent_email, false),
   };
 }
 
@@ -213,6 +210,7 @@ const ADMIN_API = "/api/admin";
 export default function PropertiesAdminClient() {
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [agents, setAgents] = useState<AdminAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editProperty, setEditProperty] = useState<Property | null>(null);
@@ -237,7 +235,6 @@ export default function PropertiesAdminClient() {
   >("idle");
 
   const [images, setImages] = useState<File[]>([]);
-  const [agentPhoto, setAgentPhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const [fileErrors, setFileErrors] = useState(EMPTY_FILE_ERRORS);
   const [formLoading, setFormLoading] = useState(false);
@@ -307,17 +304,25 @@ export default function PropertiesAdminClient() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await fetch(
-        `${ADMIN_API}/property/get_properties.php?destination=all`,
-        { cache: "no-store" },
-      );
-      if (response.status === 401) {
+      const [propertyResponse, agentResponse] = await Promise.all([
+        fetch(`${ADMIN_API}/property/get_properties.php?destination=all`, {
+          cache: "no-store",
+        }),
+        fetch(`${ADMIN_API}/team/get_admin_members.php`, {
+          cache: "no-store",
+        }),
+      ]);
+      if (propertyResponse.status === 401 || agentResponse.status === 401) {
         router.replace("/admin");
         router.refresh();
         return;
       }
-      const data = await response.json();
-      if (data.status === "success") setProperties(data.data || []);
+      const [propertyData, agentData] = await Promise.all([
+        propertyResponse.json(),
+        agentResponse.json(),
+      ]);
+      if (propertyData.status === "success") setProperties(propertyData.data || []);
+      if (agentData.status === "success") setAgents(agentData.data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -343,7 +348,6 @@ export default function PropertiesAdminClient() {
     setShowOffMarket(false);
     setTouchedFields({});
     setImages([]);
-    setAgentPhoto(null);
     setDocuments([]);
     setFileErrors(EMPTY_FILE_ERRORS);
     setFormMsg({ type: "", text: "" });
@@ -393,6 +397,7 @@ export default function PropertiesAdminClient() {
     setEditProperty(p);
     resetForm();
     setForm({
+      agent_id: p.agent_id ? String(p.agent_id) : "",
       title: p.title,
       address: p.address,
       price: p.price,
@@ -401,10 +406,6 @@ export default function PropertiesAdminClient() {
       year_built: p.year_built,
       description: p.description,
       highlights: p.highlights,
-      agent_name: p.agent_name,
-      agent_title: p.agent_title,
-      agent_phone: p.agent_phone,
-      agent_email: p.agent_email,
     });
     setShowOnListing(p.show_on_listing);
     setShowOffMarket(p.show_off_market);
@@ -485,19 +486,9 @@ export default function PropertiesAdminClient() {
       ? `${ADMIN_API}/property/update_property.php`
       : `${ADMIN_API}/property/create_property.php`;
     const attachments: PropertyAttachment[] = [
-      ...(agentPhoto
-        ? [
-            {
-              field: "agent_photo" as const,
-              file: agentPhoto,
-              kind: "agentPhoto" as const,
-            },
-          ]
-        : []),
       ...images.map((file) => ({
         field: "images[]" as const,
         file,
-        kind: "image" as const,
       })),
     ];
     let propertyId = editProperty?.id;
@@ -548,13 +539,9 @@ export default function PropertiesAdminClient() {
           );
         }
 
-        if (attachment.kind === "image") {
-          setImages((current) =>
-            current.filter((file) => file !== attachment.file),
-          );
-        } else {
-          setAgentPhoto(null);
-        }
+        setImages((current) =>
+          current.filter((file) => file !== attachment.file),
+        );
       }
 
       for (const document of documents) {
@@ -616,6 +603,11 @@ export default function PropertiesAdminClient() {
         setEditProperty({
           id: propertyId,
           ...form,
+          agent_id: form.agent_id ? Number(form.agent_id) : null,
+          agent_name: agents.find((agent) => String(agent.id) === form.agent_id)?.name || "",
+          agent_title: agents.find((agent) => String(agent.id) === form.agent_id)?.role || "",
+          agent_phone: agents.find((agent) => String(agent.id) === form.agent_id)?.phone || "",
+          agent_email: agents.find((agent) => String(agent.id) === form.agent_id)?.email || "",
           created_at: new Date().toISOString(),
           show_on_listing: showOnListing,
           show_off_market: showOffMarket,
@@ -709,27 +701,6 @@ export default function PropertiesAdminClient() {
       setFileErrors((current) => ({ ...current, images: "" }));
     }
     e.target.value = "";
-  };
-
-  const handleAgentPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    const validationError = file ? validateImageFile(file) : "";
-
-    if (validationError) {
-      setAgentPhoto(null);
-      setFileErrors((current) => ({
-        ...current,
-        agentPhoto: validationError,
-      }));
-      e.target.value = "";
-      return;
-    }
-
-    setAgentPhoto(file);
-    setFileErrors((current) => ({
-      ...current,
-      agentPhoto: "",
-    }));
   };
 
   const handleDocuments = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -827,9 +798,6 @@ export default function PropertiesAdminClient() {
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           Create, update, publish, and manage KeyNova property listings.
-        </p>
-        <p className="mt-3 max-w-3xl rounded-lg border border-[#cfe0e4] bg-[#edf5f6] px-4 py-3 text-xs leading-5 text-[#315867]">
-          This is the source for Grand Living and Exclusive. The website has no live MLS/IDX connection, so enter the exact unit address and current price here and unpublish stale or unverified records.
         </p>
       </div>
 
@@ -1260,139 +1228,41 @@ export default function PropertiesAdminClient() {
                 </p>
               </div>
 
-              {/* Agent Info */}
+              {/* Agent relationship */}
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                  Agent Info
+                <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                  Listing Agent
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label htmlFor="agent-name" className="block text-xs font-medium text-gray-600 mb-1">
-                      Agent Name
-                    </label>
-                    <input
-                      id="agent-name"
-                      name="agent_name"
-                      autoComplete="name"
-                      maxLength={80}
-                      className={fieldClass("agent_name")}
-                      value={form.agent_name}
-                      onChange={(e) =>
-                        updateFormField("agent_name", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("agent_name")}
-                      aria-invalid={Boolean(fieldError("agent_name"))}
-                      aria-describedby="agent-name-error"
-                      placeholder="Brad Balletto"
-                    />
-                    <p id="agent-name-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fieldError("agent_name")}
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="agent-title" className="block text-xs font-medium text-gray-600 mb-1">
-                      Title
-                    </label>
-                    <input
-                      id="agent-title"
-                      name="agent_title"
-                      maxLength={100}
-                      className={fieldClass("agent_title")}
-                      value={form.agent_title}
-                      onChange={(e) =>
-                        updateFormField("agent_title", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("agent_title")}
-                      aria-invalid={Boolean(fieldError("agent_title"))}
-                      aria-describedby="agent-title-error"
-                      placeholder="Managing Director"
-                    />
-                    <p id="agent-title-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fieldError("agent_title")}
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="agent-phone" className="block text-xs font-medium text-gray-600 mb-1">
-                      Phone
-                    </label>
-                    <input
-                      id="agent-phone"
-                      name="agent_phone"
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      maxLength={30}
-                      className={fieldClass("agent_phone")}
-                      value={form.agent_phone}
-                      onChange={(e) =>
-                        updateFormField("agent_phone", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("agent_phone")}
-                      aria-invalid={Boolean(fieldError("agent_phone"))}
-                      aria-describedby="agent-phone-error"
-                      placeholder="860.420.9775"
-                    />
-                    <p id="agent-phone-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fieldError("agent_phone")}
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="agent-email" className="block text-xs font-medium text-gray-600 mb-1">
-                      Email
-                    </label>
-                    <input
-                      id="agent-email"
-                      name="agent_email"
-                      type="email"
-                      autoComplete="email"
-                      maxLength={254}
-                      className={fieldClass("agent_email")}
-                      value={form.agent_email}
-                      onChange={(e) =>
-                        updateFormField("agent_email", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("agent_email")}
-                      aria-invalid={Boolean(fieldError("agent_email"))}
-                      aria-describedby="agent-email-error"
-                      placeholder="agent@firm.com"
-                    />
-                    <p id="agent-email-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fieldError("agent_email")}
-                    </p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label htmlFor="agent-photo" className="block text-xs font-medium text-gray-600 mb-1">
-                      Agent Photo
-                    </label>
-                    <p id="agent-photo-help" className="mb-2 text-xs text-gray-500">
-                      JPG, PNG, WebP, or GIF. Maximum file size: 4 MB.
-                    </p>
-                    <input
-                      id="agent-photo"
-                      name="agent_photo"
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.webp,.gif"
-                      className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
-                      onChange={handleAgentPhoto}
-                      onClick={() =>
-                        setFileErrors((current) => ({
-                          ...current,
-                          agentPhoto: "",
-                        }))
-                      }
-                      aria-invalid={Boolean(fileErrors.agentPhoto)}
-                      aria-describedby="agent-photo-help agent-photo-error"
-                    />
-                    <p id="agent-photo-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fileErrors.agentPhoto}
-                    </p>
-                    {agentPhoto && (
-                      <p className="mt-1 text-xs text-green-700">
-                        Selected: {agentPhoto.name} ({formatFileSize(agentPhoto.size)})
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <label htmlFor="property-agent" className="mb-1 block text-xs font-medium text-gray-600">
+                  Assign an existing team member
+                </label>
+                <select
+                  id="property-agent"
+                  name="agent_id"
+                  value={form.agent_id}
+                  onChange={(event) => updateFormField("agent_id", event.target.value)}
+                  className={fieldClass("agent_id")}
+                >
+                  <option value="">No agent assigned</option>
+                  {agents.map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name} — {agent.role}{agent.is_active ? "" : " (hidden)"}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs leading-5 text-gray-500">
+                  Agent contact details, photo, and subdomain come from the Team section, so they only need to be maintained once.
+                </p>
+                {form.agent_id && (() => {
+                  const selectedAgent = agents.find((agent) => String(agent.id) === form.agent_id);
+                  return selectedAgent ? (
+                    <div className="mt-3 rounded-xl border border-[#dbe5ea] bg-[#f7fafb] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#003251]">{selectedAgent.name}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{selectedAgent.role}</p>
+                      <p className="mt-2 text-xs text-[#2f7895]">{selectedAgent.slug}.revitalmoves.com</p>
+                    </div>
+                  ) : null;
+                })()}
               </div>
 
               {/* Files */}

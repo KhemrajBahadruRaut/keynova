@@ -4,7 +4,10 @@ import dynamic from "next/dynamic";
 const ListingsMap = dynamic(() => import("./ListingsMap"), { ssr: false });
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { validateNonNegativeNumber } from "@/lib/validation";
+import Navbar from "@/components/navbar/Navbar";
+import FooterPage from "@/components/pages/Footerpage";
 
 interface Property {
   id: number;
@@ -26,7 +29,7 @@ interface Property {
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 4;
 
 export default function ListingsPage() {
   const pathname = usePathname();
@@ -47,6 +50,7 @@ export default function ListingsPage() {
   const [sortBy, setSortBy] = useState("date_updated");
   const [page, setPage] = useState(1);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   const minUnitsError = validateNonNegativeNumber(
     minUnits,
@@ -82,13 +86,21 @@ export default function ListingsPage() {
   const sizeError = minSizeError || maxSizeError || sizeRangeError;
 
   useEffect(() => {
+    const requestedSearch = new URLSearchParams(window.location.search)
+      .get("search")
+      ?.trim();
+
     fetch(`${API}/property/get_properties.php?destination=${destination}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.status === "success") setProperties(d.data || []);
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => undefined)
+      .finally(() => {
+        setSearch((requestedSearch || "").slice(0, 120));
+        setPage(1);
+        setLoading(false);
+      });
   }, [destination]);
 
   const propertyTypes = useMemo(() => {
@@ -164,7 +176,7 @@ export default function ListingsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f7f6f3]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#c8862a] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-[#003251] border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-500 text-sm">Loading listings…</p>
         </div>
       </div>
@@ -172,11 +184,13 @@ export default function ListingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f6f3] flex flex-col">
-      <div className="border-b border-gray-200 bg-white px-6 py-2">
+    <>
+    <Navbar/>
+    <div className="min-h-screen bg-[#f7f6f3] flex flex-col pt-20">
+      <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6 sm:py-2">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c8862a]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#003251]">
               Explore Properties
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-gray-900">
@@ -187,9 +201,9 @@ export default function ListingsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-[1600px] mx-auto flex flex-wrap items-end gap-4">
-          <div className="flex flex-col">
+      <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap">
+          <div className="flex w-full flex-col lg:w-auto">
             <label htmlFor="listing-search" className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
               SEARCH
             </label>
@@ -204,11 +218,11 @@ export default function ListingsPage() {
                 setPage(1);
               }}
               placeholder="Search by address, city, state, or zip"
-              className="w-72 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a]"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003251]/25 lg:w-72"
             />
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex w-full flex-col lg:w-auto">
             <label htmlFor="listing-type" className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
               TYPES
             </label>
@@ -220,7 +234,7 @@ export default function ListingsPage() {
                 setType(e.target.value);
                 setPage(1);
               }}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8862a] bg-white"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003251]/25 lg:w-auto"
             >
               <option>All Property Types</option>
               {propertyTypes.map((t) => (
@@ -229,7 +243,7 @@ export default function ListingsPage() {
             </select>
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex w-full flex-col lg:w-auto">
             <label className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
               NO. OF UNITS
             </label>
@@ -247,10 +261,10 @@ export default function ListingsPage() {
                   setPage(1);
                 }}
                 placeholder="Min"
-                className={`w-20 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-20 lg:flex-none ${
                   unitsError
                     ? "border-red-500 focus:ring-red-200"
-                    : "border-gray-200 focus:ring-[#c8862a]"
+                    : "border-gray-200 focus:ring-[#003251]/25"
                 }`}
                 aria-invalid={Boolean(unitsError)}
                 aria-describedby="units-filter-error"
@@ -270,10 +284,10 @@ export default function ListingsPage() {
                   setPage(1);
                 }}
                 placeholder="Max"
-                className={`w-20 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-20 lg:flex-none ${
                   unitsError
                     ? "border-red-500 focus:ring-red-200"
-                    : "border-gray-200 focus:ring-[#c8862a]"
+                    : "border-gray-200 focus:ring-[#003251]/25"
                 }`}
                 aria-invalid={Boolean(unitsError)}
                 aria-describedby="units-filter-error"
@@ -285,7 +299,7 @@ export default function ListingsPage() {
             </p>
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex w-full flex-col lg:w-auto">
             <label className="text-[11px] font-semibold text-gray-500 tracking-wide mb-1">
               BUILDING SIZE
             </label>
@@ -303,10 +317,10 @@ export default function ListingsPage() {
                   setPage(1);
                 }}
                 placeholder="Min SF"
-                className={`w-24 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-24 lg:flex-none ${
                   sizeError
                     ? "border-red-500 focus:ring-red-200"
-                    : "border-gray-200 focus:ring-[#c8862a]"
+                    : "border-gray-200 focus:ring-[#003251]/25"
                 }`}
                 aria-invalid={Boolean(sizeError)}
                 aria-describedby="size-filter-error"
@@ -326,10 +340,10 @@ export default function ListingsPage() {
                   setPage(1);
                 }}
                 placeholder="Max SF"
-                className={`w-24 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 ${
+                className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-24 lg:flex-none ${
                   sizeError
                     ? "border-red-500 focus:ring-red-200"
-                    : "border-gray-200 focus:ring-[#c8862a]"
+                    : "border-gray-200 focus:ring-[#003251]/25"
                 }`}
                 aria-invalid={Boolean(sizeError)}
                 aria-describedby="size-filter-error"
@@ -341,13 +355,13 @@ export default function ListingsPage() {
             </p>
           </div>
 
-          <div className="ml-auto flex gap-2">
-            <button className="bg-[#c8862a] hover:bg-[#b5721f] transition-colors text-white text-sm font-medium px-4 py-2 rounded-lg">
+          <div className="flex w-full gap-2 sm:col-span-2 lg:ml-auto lg:w-auto">
+            <button className="flex-1 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#143c60] lg:flex-none">
               ☰ More Filters
             </button>
             <button
               onClick={resetFilters}
-              className="bg-[#c8862a] hover:bg-[#b5721f] transition-colors text-white text-sm font-medium px-4 py-2 rounded-lg"
+              className="flex-1 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#143c60] lg:flex-none"
             >
               Reset Filters
             </button>
@@ -356,8 +370,8 @@ export default function ListingsPage() {
       </div>
 
       {/* Results header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-2">
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+      <div className="border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-2">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-gray-500 tracking-wide">
             {filtered.length === 0
               ? "0 RESULTS"
@@ -366,7 +380,7 @@ export default function ListingsPage() {
                   filtered.length,
                 )} RESULTS OUT OF ${filtered.length} LISTINGS`}
           </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center justify-between gap-2 text-xs text-gray-500 sm:justify-start">
             <label htmlFor="listing-sort">Sort:</label>
             <select
               id="listing-sort"
@@ -385,9 +399,13 @@ export default function ListingsPage() {
       </div>
 
       {/* List + Map */}
-      <div className="flex max-w-300 w-full mx-auto flex-col lg:flex-row">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:flex-row">
         {/* List */}
-        <div className="lg:w-105 xl:w-120 shrink-0 border-r border-gray-200 bg-white overflow-y-auto max-h-[calc(100vh-150px)]">
+        <div
+          className={`w-full shrink-0 overflow-y-auto bg-white transition-[width] duration-300 lg:max-h-[calc(100vh-150px)] lg:border-r lg:border-gray-200 ${
+            mapExpanded ? "lg:w-1/2" : "lg:w-2/3"
+          }`}
+        >
           {pageItems.length === 0 ? (
             <div className="text-center py-20 px-4">
               <div className="text-5xl mb-4">🏢</div>
@@ -398,7 +416,7 @@ export default function ListingsPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-px bg-gray-100">
+            <div className="grid grid-cols-1 gap-px bg-gray-100 sm:grid-cols-2 lg:grid-cols-4">
               {pageItems.map((p) => (
                 <div
                   key={p.id}
@@ -409,7 +427,7 @@ export default function ListingsPage() {
                   onMouseLeave={() => setHoveredId(null)}
                   className="bg-white cursor-pointer group relative"
                 >
-                  <div className="h-32 bg-gray-100 relative overflow-hidden">
+                  <div className="relative aspect-16/10 overflow-hidden bg-gray-100">
                     {p.cover_image ? (
                       <img
                         src={`${API}/uploads/${p.cover_image}`}
@@ -449,14 +467,14 @@ export default function ListingsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100">
+            <div className="flex flex-wrap items-center justify-center gap-2 border-t border-gray-100 px-4 py-3 sm:justify-start">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
                 <button
                   key={n}
                   onClick={() => setPage(n)}
                   className={`w-7 h-7 text-xs rounded-full flex items-center justify-center transition-colors ${
                     page === n
-                      ? "bg-[#c8862a] text-white font-semibold"
+                      ? "bg-[#003251] text-white font-semibold"
                       : "text-gray-500 hover:bg-gray-100"
                   }`}
                 >
@@ -468,9 +486,32 @@ export default function ListingsPage() {
         </div>
 
         {/* Map */}
-        <div className="flex-1 min-h-100 relative">
+        <div
+          className={`hidden cursor-pointer overflow-hidden border-gray-200 transition-[width] duration-300 lg:relative lg:block lg:min-h-100 lg:border-l ${
+            mapExpanded ? "lg:w-1/2" : "lg:w-1/3"
+          }`}
+          onClick={() => {
+            if (!mapExpanded) setMapExpanded(true);
+          }}
+        >
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMapExpanded((current) => !current);
+            }}
+            className="absolute right-3 top-3 z-1100 inline-flex items-center gap-2 rounded-lg bg-[#003251] px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-[#143c60] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            aria-label={mapExpanded ? "Make map smaller" : "Expand map"}
+          >
+            {mapExpanded ? (
+              <Minimize2 aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <Maximize2 aria-hidden="true" className="h-4 w-4" />
+            )}
+            {mapExpanded ? "Smaller map" : "Expand map"}
+          </button>
           <ListingsMap
-            properties={filtered}
+            properties={pageItems}
             hoveredId={hoveredId}
             onMarkerClick={(id) =>
               router.push(`/details?id=${id}&source=listing`)
@@ -479,5 +520,9 @@ export default function ListingsPage() {
         </div>
       </div>
     </div>
+    <FooterPage/>
+        </>
+
+
   );
 }

@@ -58,6 +58,19 @@ export default function ListingsMap({ properties, hoveredId, onMarkerClick }: Pr
     };
   }, []);
 
+  // Keep Leaflet aligned when the responsive map panel expands or contracts.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize({ pan: false });
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   // Sync markers whenever the property list changes
   useEffect(() => {
     const map = mapRef.current;

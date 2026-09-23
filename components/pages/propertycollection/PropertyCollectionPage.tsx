@@ -329,11 +329,6 @@ export default function PropertyCollectionPage({
         <h1 className="mb-5 text-2xl font-bold text-[#003251] md:text-3xl">
           {title}
         </h1>
-
-        <div className="mb-5 border-l-2 border-[#6e9cae] bg-[#edf5f6] px-4 py-3 text-xs leading-5 text-slate-600">
-          These properties are manually published by KeyNova through its admin dashboard; this page is not connected to a live MLS/IDX feed. Confirm the unit number, availability, and price with the listing agent.
-        </div>
-
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-55 flex-1">
             <Search

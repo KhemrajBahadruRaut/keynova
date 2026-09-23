@@ -42,10 +42,8 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
   if (!member) notFound();
 
   const requestHeaders = await headers();
-  const requestHost =
-    requestHeaders.get("x-forwarded-host") ||
-    requestHeaders.get("host") ||
-    undefined;
+  const requestHost = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || undefined;
+
   const telephone = member.phone.replace(/[^\d+]/g, "");
   const [overview, experience] = member.bio.split(/\n\s*\nExperience\s*\n\s*\n/i, 2);
 
