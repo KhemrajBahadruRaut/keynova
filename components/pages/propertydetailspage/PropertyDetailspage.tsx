@@ -16,6 +16,12 @@ import {
   Navigation,
 } from "lucide-react";
 import {
+  clearPropertyAccess,
+  readPropertyAccess,
+  savePropertyAccess,
+  type PropertyAccessVisitor,
+} from "@/lib/property-access";
+import {
   displayBuildingSize,
   displayPrice,
   fetchListingProperties,
@@ -24,6 +30,14 @@ import {
   type PropertyRecord,
 } from "@/lib/property-data";
 import DocumentAccessModal from "./DocumentAccessModal";
+
+type AccessStatus = "checking" | "required" | "granted";
+type InquiryStatus = {
+  type: "success" | "error";
+  message: string;
+} | null;
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "";
 
 interface PropertyDetailsPageProps {
   propertyId?: string;
@@ -107,11 +121,14 @@ export default function PropertyDetailsPage({
     message: "",
     phone: "",
   });
-  const [formStatus, setFormStatus] = useState("");
+  const [formStatus, setFormStatus] = useState<InquiryStatus>(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [carouselStart, setCarouselStart] = useState(0);
   const [mobileVisibleCount, setMobileVisibleCount] = useState(3);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [accessStatus, setAccessStatus] = useState<AccessStatus>("checking");
+  const [verifiedVisitor, setVerifiedVisitor] =
+    useState<PropertyAccessVisitor | null>(null);
 
   useEffect(() => {
     if (!propertyId) return;
@@ -157,6 +174,68 @@ export default function PropertyDetailsPage({
     return () => controller.abort();
   }, [propertyId, source]);
 
+  useEffect(() => {
+    if (!propertyId) return;
+
+    const controller = new AbortController();
+    const validationTimer = window.setTimeout(() => {
+      const savedAccess = readPropertyAccess();
+
+      if (!savedAccess || !API_BASE) {
+        setVerifiedVisitor(null);
+        setAccessStatus("required");
+        return;
+      }
+
+      fetch(`${API_BASE}/property/access_session.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: savedAccess.token,
+          property_id: propertyId,
+          source: source || "listing",
+        }),
+        cache: "no-store",
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          const payload = (await response.json()) as {
+            status?: string;
+            expires_at?: string;
+            visitor?: PropertyAccessVisitor;
+          };
+          if (!response.ok || payload.status !== "success" || !payload.visitor) {
+            throw new Error("Property access verification is required.");
+          }
+
+          const refreshedAccess = {
+            token: savedAccess.token,
+            expiresAt: payload.expires_at || savedAccess.expiresAt,
+            visitor: payload.visitor,
+          };
+          savePropertyAccess(refreshedAccess);
+          setVerifiedVisitor(payload.visitor);
+          setAccessStatus("granted");
+        })
+        .catch((accessError: unknown) => {
+          if (
+            accessError instanceof DOMException &&
+            accessError.name === "AbortError"
+          ) {
+            return;
+          }
+          clearPropertyAccess();
+          setVerifiedVisitor(null);
+          setAccessStatus("required");
+        });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(validationTimer);
+      controller.abort();
+    };
+  }, [propertyId, source]);
+
   const galleryImages = useMemo(() => {
     if (!property) return [];
     const files = property.images.length
@@ -176,7 +255,7 @@ export default function PropertyDetailsPage({
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((previous) => ({ ...previous, [field]: value }));
-    setFormStatus("");
+    setFormStatus(null);
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -184,7 +263,7 @@ export default function PropertyDetailsPage({
     if (!property) return;
 
     setFormSubmitting(true);
-    setFormStatus("");
+    setFormStatus(null);
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "");
@@ -199,28 +278,43 @@ export default function PropertyDetailsPage({
           email: form.email.trim(),
           phone: form.phone.trim(),
           message: form.message.trim(),
-          consent: true,
+          consent: agreed,
         }),
       });
 
-      if (!response.ok) throw new Error("The inquiry could not be sent.");
-      const payload = (await response.json()) as {
+      let payload: {
         status?: string;
         message?: string;
       };
-      if (payload.status !== "success") {
+
+      try {
+        payload = (await response.json()) as typeof payload;
+      } catch {
+        throw new Error(
+          response.ok
+            ? "The inquiry service returned an invalid response."
+            : `The inquiry service returned HTTP ${response.status}.`,
+        );
+      }
+
+      if (!response.ok || payload.status !== "success") {
         throw new Error(payload.message || "The inquiry could not be sent.");
       }
 
       setForm({ firstName: "", lastName: "", email: "", message: "", phone: "" });
       setAgreed(false);
-      setFormStatus("Your inquiry has been sent.");
+      setFormStatus({
+        type: "success",
+        message: payload.message || "Your inquiry has been sent.",
+      });
     } catch (submissionError) {
-      setFormStatus(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "The inquiry could not be sent.",
-      );
+      setFormStatus({
+        type: "error",
+        message:
+          submissionError instanceof Error
+            ? submissionError.message
+            : "The inquiry could not be sent.",
+      });
     } finally {
       setFormSubmitting(false);
     }
@@ -269,6 +363,17 @@ export default function PropertyDetailsPage({
     );
   }
 
+  if (accessStatus === "checking") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white pt-30">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#003251] border-t-transparent" />
+          <p className="text-sm text-gray-500">Checking property access...</p>
+        </div>
+      </div>
+    );
+  }
+
   const description = property.description || "No description has been added for this property.";
   const descriptionPreview = description.length > 430 ? description.slice(0, 430).trimEnd() : description;
   const hasMoreDescription = descriptionPreview.length < description.length;
@@ -310,7 +415,15 @@ export default function PropertyDetailsPage({
   };
 
   return (
-    <div className="min-h-screen bg-white px-6 py-6 pt-30 md:px-10">
+    <>
+    <div
+      className={`min-h-screen bg-white px-6 py-6 pt-30 transition md:px-10 ${
+        accessStatus === "required"
+          ? "pointer-events-none select-none blur-sm"
+          : ""
+      }`}
+      aria-hidden={accessStatus === "required"}
+    >
       <div className="mx-auto max-w-6xl">
         <nav className="mb-4 flex items-center gap-1 text-xs text-gray-400">
           <Link href="/">Home</Link>
@@ -442,7 +555,7 @@ export default function PropertyDetailsPage({
               onClick={() => setShowDocumentModal(true)}
               className="mt-4 block w-full bg-[#003251] py-2.5 text-center text-sm font-medium text-white hover:bg-[#0c2f4d]"
             >
-              Request Document
+              Read Document
             </button>
 
             <form onSubmit={handleSubmit} className="mt-8">
@@ -477,6 +590,8 @@ export default function PropertyDetailsPage({
               />
 
               <textarea
+                required
+                minLength={10}
                 placeholder="Type your message here ..."
                 value={form.message}
                 onChange={(event) => updateField("message", event.target.value)}
@@ -511,9 +626,25 @@ export default function PropertyDetailsPage({
               </p>
 
               {formStatus && (
-                <p className="mt-3 text-xs text-gray-600" role="status">
-                  {formStatus}
-                </p>
+                <div
+                  className={`mt-4 rounded-md border px-3 py-2.5 text-xs ${
+                    formStatus.type === "success"
+                      ? "border-green-200 bg-green-50 text-green-700"
+                      : "border-red-200 bg-red-50 text-red-700"
+                  }`}
+                  role={formStatus.type === "error" ? "alert" : "status"}
+                  aria-live="polite"
+                >
+                  <p className="font-semibold">
+                    {formStatus.type === "success"
+                      ? "Inquiry sent"
+                      : "Inquiry not sent"}
+                  </p>
+                  <p className="mt-1">
+                    {formStatus.type === "error" && "Reason: "}
+                    {formStatus.message}
+                  </p>
+                </div>
               )}
 
               <button
@@ -530,7 +661,7 @@ export default function PropertyDetailsPage({
         <div className="mt-14 w-full">
   <h2 className="mb-4 text-lg font-semibold text-[#003251]">Location</h2>
 
-  <div className="relative w-full overflow-hidden border border-gray-200 bg-[#EAEDF0] aspect-[12/19] sm:aspect-[12/8] md:aspect-[12/7] lg:aspect-[12/6] lg:w-[50rem]">
+  <div className="relative w-full overflow-hidden border border-gray-200 bg-[#EAEDF0] aspect-12/19 sm:aspect-12/8 md:aspect-12/7 lg:aspect-12/6 lg:w-200">
     <iframe
       title={`Map of ${property.address || property.title}`}
       src={`https://www.google.com/maps?q=${encodedMapQuery}&z=14&output=embed`}
@@ -634,7 +765,7 @@ export default function PropertyDetailsPage({
                   return (
                     <Link
                       key={listing.id}
-                      href={`/details?id=${listing.id}&source=${source || "listing"}`}
+                      href={`/details?id=${listing.id}&source=related`}
                       className="group text-left"
                     >
                       <div className="aspect-7/5 overflow-hidden rounded-lg bg-gray-100">
@@ -703,7 +834,7 @@ export default function PropertyDetailsPage({
                   return (
                     <Link
                       key={listing.id}
-                      href={`/details?id=${listing.id}&source=${source || "listing"}`}
+                      href={`/details?id=${listing.id}&source=related`}
                       className="group text-left"
                     >
                       <div className="aspect-7/5 overflow-hidden rounded-lg bg-gray-100">
@@ -767,14 +898,22 @@ export default function PropertyDetailsPage({
           </div>
         )}
 
-        <DocumentAccessModal
-          propertyId={property.id}
-          propertyTitle={property.title || property.address}
-          documents={property.documents}
-          open={showDocumentModal}
-          onClose={() => setShowDocumentModal(false)}
-        />
       </div>
     </div>
+    <DocumentAccessModal
+      propertyId={property.id}
+      propertyTitle={property.title || property.address}
+      documents={property.documents}
+      open={accessStatus === "required" || showDocumentModal}
+      required={accessStatus === "required"}
+      source={source || "listing"}
+      verifiedVisitor={verifiedVisitor}
+      onVerified={(access) => {
+        setVerifiedVisitor(access.visitor);
+        setAccessStatus("granted");
+      }}
+      onClose={() => setShowDocumentModal(false)}
+    />
+    </>
   );
 }

@@ -57,7 +57,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "requests",
-    label: "Document Requests",
+    label: "Property Visitors",
     description: "Property document access",
     href: "/admin/dashboard/document-requests",
     Icon: FileCheck2,

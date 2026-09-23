@@ -477,7 +477,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                             {displayBuildingSize(property.building_size)}
                           </p>
                         )}
-                        <Link href={`/details?id=${property.id}&source=grandliving`} className="mt-2 block text-sm font-semibold text-[#003251] hover:text-[#1c878f]">
+                        <Link href={`/details?id=${property.id}&source=agent`} className="mt-2 block text-sm font-semibold text-[#003251] hover:text-[#1c878f]">
                           {property.title || property.address}
                         </Link>
                         <p className="mt-1 text-xs text-slate-500">{property.address}</p>

@@ -5,24 +5,33 @@ import { Download, X } from "lucide-react";
 import {
   hasValidationErrors,
   validateEmail,
+  validatePhone,
   validateText,
   validateVerificationCode,
 } from "@/lib/validation";
+import {
+  savePropertyAccess,
+  type PropertyAccessVisitor,
+  type StoredPropertyAccess,
+} from "@/lib/property-access";
 import { propertyUploadUrl, type PropertyDocument } from "@/lib/property-data";
 
 type DocumentStep = "request" | "verify";
-type DocumentField = "name" | "email" | "code";
+type DocumentField = "name" | "email" | "phone" | "code";
 
 interface DocumentAccessModalProps {
   propertyId: string;
   propertyTitle: string;
   documents: PropertyDocument[];
   open: boolean;
+  required?: boolean;
+  source?: string;
+  verifiedVisitor?: PropertyAccessVisitor | null;
+  onVerified?: (access: StoredPropertyAccess) => void;
   onClose: () => void;
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "";
-const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 const ACCENT = "#003251";
 const ACCENT_HOVER = "#0c2f4d";
 
@@ -31,11 +40,16 @@ export default function DocumentAccessModal({
   propertyTitle,
   documents,
   open,
+  required = false,
+  source = "listing",
+  verifiedVisitor,
+  onVerified,
   onClose,
 }: DocumentAccessModalProps) {
   const [step, setStep] = useState<DocumentStep>("request");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -43,8 +57,8 @@ export default function DocumentAccessModal({
     Partial<Record<DocumentField, boolean>>
   >({});
   const [unlockedEmail, setUnlockedEmail] = useState<string | null>(null);
+  const effectiveUnlockedEmail = unlockedEmail || verifiedVisitor?.email || null;
 
-  const storageKey = `doc_unlock_property_${propertyId}`;
   const validationErrors = {
     name: validateText(name, "Full name", {
       required: true,
@@ -52,46 +66,19 @@ export default function DocumentAccessModal({
       max: 80,
     }),
     email: validateEmail(email),
+    phone: validatePhone(phone, true),
     code: validateVerificationCode(code),
   };
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (!saved) return;
-
-        const parsed = JSON.parse(saved) as {
-          email?: string;
-          unlockedAt?: number;
-        };
-        if (
-          parsed.email &&
-          parsed.unlockedAt &&
-          Date.now() - parsed.unlockedAt < THIRTY_DAYS
-        ) {
-          setUnlockedEmail(parsed.email);
-          setEmail(parsed.email);
-        } else {
-          localStorage.removeItem(storageKey);
-        }
-      } catch {
-        localStorage.removeItem(storageKey);
-      }
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [storageKey]);
 
   useEffect(() => {
     if (!open) return;
 
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !required) onClose();
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose, open]);
+  }, [onClose, open, required]);
 
   const fieldError = (field: DocumentField) =>
     touched[field] ? validationErrors[field] : "";
@@ -104,10 +91,11 @@ export default function DocumentAccessModal({
     }`;
 
   const closeModal = () => {
+    if (required && !effectiveUnlockedEmail) return;
     setError("");
     setCode("");
     setTouched({});
-    if (!unlockedEmail) setStep("request");
+    if (!effectiveUnlockedEmail) setStep("request");
     onClose();
   };
 
@@ -116,10 +104,11 @@ export default function DocumentAccessModal({
     const requestErrors = {
       name: validationErrors.name,
       email: validationErrors.email,
+      phone: validationErrors.phone,
     };
 
     if (hasValidationErrors(requestErrors)) {
-      setTouched({ name: true, email: true });
+      setTouched({ name: true, email: true, phone: true });
       setError("Please correct the highlighted fields.");
       return;
     }
@@ -136,6 +125,8 @@ export default function DocumentAccessModal({
           property_id: propertyId,
           name: name.trim(),
           email: email.trim(),
+          phone: phone.trim(),
+          source,
         }),
       });
       const payload = (await response.json()) as {
@@ -181,29 +172,37 @@ export default function DocumentAccessModal({
           property_id: propertyId,
           email: email.trim(),
           code,
+          source,
         }),
       });
       const payload = (await response.json()) as {
         status?: string;
         message?: string;
+        access_token?: string;
+        expires_at?: string;
+        visitor?: PropertyAccessVisitor;
       };
 
       if (!response.ok || payload.status !== "success") {
         throw new Error(payload.message || "Invalid or expired code. Try again.");
       }
 
+      if (!payload.access_token || !payload.expires_at || !payload.visitor) {
+        throw new Error("Verification succeeded, but access could not be saved.");
+      }
+
+      const access: StoredPropertyAccess = {
+        token: payload.access_token,
+        expiresAt: payload.expires_at,
+        visitor: payload.visitor,
+      };
+      savePropertyAccess(access);
+
       const verifiedEmail = email.trim();
       setUnlockedEmail(verifiedEmail);
       setCode("");
       setTouched({});
-      try {
-        localStorage.setItem(
-          storageKey,
-          JSON.stringify({ email: verifiedEmail, unlockedAt: Date.now() }),
-        );
-      } catch {
-        // Access still remains unlocked for the current page session.
-      }
+      onVerified?.(access);
     } catch (verificationError) {
       setError(
         verificationError instanceof Error
@@ -226,7 +225,7 @@ export default function DocumentAccessModal({
       aria-modal="true"
       aria-labelledby="document-modal-title"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) closeModal();
+        if (!required && event.target === event.currentTarget) closeModal();
       }}
     >
       <div className="w-full max-w-lg  bg-white p-6 shadow-2xl">
@@ -236,23 +235,27 @@ export default function DocumentAccessModal({
             className="text-base font-semibold"
             style={{ color: ACCENT }}
           >
-            {unlockedEmail
+            {effectiveUnlockedEmail
               ? documents.length > 1
                 ? "Here are your Documents"
                 : "Here is your Document"
-              : "Access Secure Documents"}
+              : required
+                ? "Verify to View This Property"
+                : "Access Secure Documents"}
           </h3>
-          <button
-            type="button"
-            onClick={closeModal}
-            aria-label="Close document access modal"
-            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {!required && (
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="Close document access modal"
+              className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
-        {unlockedEmail ? (
+        {effectiveUnlockedEmail ? (
           <div>
             {singleDocument ? (
               <>
@@ -313,7 +316,9 @@ export default function DocumentAccessModal({
           <form onSubmit={handleRequest} className="space-y-5" noValidate>
             <p className="text-sm text-gray-500">
               Enter your details and we&apos;ll email you a verification code to
-              unlock the documents for this property.
+              {required
+                ? " view this property and its documents."
+                : " unlock the documents for this property."}
             </p>
             {error && (
               <p
@@ -384,10 +389,45 @@ export default function DocumentAccessModal({
                 {fieldError("email")}
               </p>
             </div>
+            <div>
+              <input
+                id="document-access-phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                maxLength={40}
+                className={inputClass("phone")}
+                placeholder="Phone Number"
+                value={phone}
+                onChange={(event) => {
+                  setPhone(event.target.value);
+                  setTouched((current) => ({ ...current, phone: true }));
+                  setError("");
+                }}
+                onBlur={() =>
+                  setTouched((current) => ({ ...current, phone: true }))
+                }
+                aria-invalid={Boolean(fieldError("phone"))}
+                aria-describedby="document-access-phone-error"
+                required
+              />
+              <p
+                id="document-access-phone-error"
+                className="mt-1 min-h-4 text-xs text-red-600"
+                aria-live="polite"
+              >
+                {fieldError("phone")}
+              </p>
+            </div>
             <button
               type="submit"
               disabled={
-                submitting || Boolean(validationErrors.name || validationErrors.email)
+                submitting ||
+                Boolean(
+                  validationErrors.name ||
+                    validationErrors.email ||
+                    validationErrors.phone,
+                )
               }
               className="w-full py-2.5 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               style={{ backgroundColor: ACCENT }}
@@ -400,7 +440,7 @@ export default function DocumentAccessModal({
                   e.currentTarget.style.backgroundColor = ACCENT;
               }}
             >
-              {submitting ? "Sending code..." : "Send Verification Code"}
+              {submitting ? "Sending code..." : "Email Verification Code"}
             </button>
           </form>
         ) : (
@@ -408,7 +448,7 @@ export default function DocumentAccessModal({
             <p className="text-sm text-gray-500">
               We sent a verification code to{" "}
               <span className="font-medium text-gray-800">{email}</span>. Enter
-              it below to unlock the documents.
+              it below to {required ? "continue." : "unlock the documents."}
             </p>
             {error && (
               <p
@@ -467,7 +507,11 @@ export default function DocumentAccessModal({
                   e.currentTarget.style.backgroundColor = ACCENT;
               }}
             >
-              {submitting ? "Verifying..." : "Verify & Unlock"}
+              {submitting
+                ? "Verifying..."
+                : required
+                  ? "Verify & View Property"
+                  : "Verify & Unlock"}
             </button>
             <button
               type="button"
