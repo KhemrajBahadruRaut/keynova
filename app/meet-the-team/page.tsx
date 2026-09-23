@@ -53,7 +53,7 @@ export default async function MeetTheTeamPage() {
               {members.map((member) => (
                 <article key={member.id} className="group min-w-0">
                   <Link
-                    href={`/meet-the-team/${member.slug}`}
+                    href={`/${encodeURIComponent(member.slug)}`}
                     className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1c878f]"
                     aria-label={`Read more about ${member.name}`}
                   >

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/navbar/Navbar";
 import AgentSearchLanding from "@/components/pages/agent/AgentSearchLanding";
 import FooterPage from "@/components/pages/Footerpage";
-import { agentProfileUrl } from "@/lib/agent-domain";
+import { agentPropertySiteUrl } from "@/lib/agent-domain";
 import { getTeamMember } from "@/lib/team-data";
 
 type AgentLandingPageProps = { params: Promise<{ slug: string }> };
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: AgentLandingPageProps): Promi
   const member = await getTeamMember(slug);
   if (!member) return { title: "Agent Not Found | KeyNova Group", robots: { index: false } };
 
-  const canonical = agentProfileUrl(member.slug);
+  const canonical = agentPropertySiteUrl(member.slug);
   const description = member.bio
     ? member.bio.replace(/\s+/g, " ").slice(0, 155)
     : `View ${member.name}'s profile and published properties, and connect directly with ${member.name} at KeyNova Group.`;

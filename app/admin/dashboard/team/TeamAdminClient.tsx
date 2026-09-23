@@ -12,7 +12,6 @@ import {
   validateText,
   type ValidationErrors,
 } from "@/lib/validation";
-import { rootDomain } from "@/lib/agent-domain";
 
 interface TeamMember {
   id: number;
@@ -52,8 +51,23 @@ const UPDATE_ENDPOINT = "/api/admin/team/update_member.php";
 const DELETE_ENDPOINT = "/api/admin/team/delete_member.php";
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
-const AGENT_ROOT_DOMAIN = rootDomain();
-const RESERVED_SUBDOMAINS = new Set(["admin", "api", "app", "ftp", "localhost", "mail", "smtp", "www"]);
+const RESERVED_ROUTES = new Set([
+  "about",
+  "admin",
+  "agent",
+  "api",
+  "buywithus",
+  "contact",
+  "details",
+  "exclusive",
+  "grandliving",
+  "homevaluation",
+  "listing",
+  "listwithus",
+  "meet-the-team",
+  "off-market",
+  "testimonials",
+]);
 
 const EMPTY_FORM: MemberForm = {
   name: "",
@@ -152,9 +166,9 @@ export default function TeamAdminClient() {
         : !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug)
           ? "Use lowercase letters, numbers, and single hyphens only."
           : form.slug.length > 63
-            ? "Subdomain must be 63 characters or fewer."
-            : RESERVED_SUBDOMAINS.has(form.slug)
-              ? "That subdomain is reserved. Choose another slug."
+            ? "URL slug must be 63 characters or fewer."
+            : RESERVED_ROUTES.has(form.slug)
+              ? "That URL is reserved. Choose another slug."
               : "",
     role: validateText(form.role, "Role", { required: true, max: 180 }),
     bio: validateText(form.bio, "Biography", { max: 20000 }),
@@ -449,7 +463,7 @@ export default function TeamAdminClient() {
                       {member.bio || "No biography has been added yet."}
                     </p>
                     <p className="mt-2 text-xs text-slate-400">
-                      {member.slug}.{AGENT_ROOT_DOMAIN} · display order {member.sort_order}
+                      /{member.slug} · display order {member.sort_order}
                     </p>
                   </div>
 
@@ -532,9 +546,9 @@ export default function TeamAdminClient() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Agent subdomain</label>
+                  <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Agent profile URL</label>
                   <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#2f87a8] focus-within:ring-2 focus-within:ring-[#2f87a8]/30">
-                    <span className="hidden items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 sm:flex">https://</span>
+                    <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400">/</span>
                     <input
                       id="team-slug"
                       value={form.slug}
@@ -547,11 +561,13 @@ export default function TeamAdminClient() {
                       className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
                       aria-invalid={Boolean(fieldError("slug"))}
                     />
-                    <span className="hidden items-center border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 sm:flex">.{AGENT_ROOT_DOMAIN}</span>
                   </div>
                   <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("slug")}</p>
                   <p className="text-xs text-slate-400">
-                    Local preview: http://{form.slug || "agent-slug"}.localhost:3000
+                    Local preview: http://localhost:3000/{form.slug || "agent-slug"}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Property site: http://{form.slug || "agent-slug"}.localhost:3000
                   </p>
                 </div>
 

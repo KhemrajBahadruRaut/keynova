@@ -8,29 +8,35 @@ const RESERVED_SUBDOMAINS = new Set([
   "localhost",
   "mail",
   "smtp",
+  "www",
 ]);
 
 function requestHostname(request: NextRequest): string {
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0];
-  const host = (forwardedHost || request.headers.get("host") || "").trim().toLowerCase();
+  const host = (forwardedHost || request.headers.get("host") || "")
+    .trim()
+    .toLowerCase();
+
   return host.replace(/:\d+$/, "").replace(/\.$/, "");
 }
 
 function agentSlugFromHostname(hostname: string): string | null | false {
-  if (!hostname || hostname === "localhost" || hostname === "127.0.0.1") return null;
+  if (!hostname || hostname === "localhost" || hostname === "127.0.0.1") {
+    return null;
+  }
 
   let candidate: string | null = null;
+
   if (hostname.endsWith(".localhost")) {
     candidate = hostname.slice(0, -".localhost".length);
   } else {
-    // Set NEXT_PUBLIC_ROOT_DOMAIN=keynovagrp.com in production and point one
-    // wildcard DNS record (*.keynovagrp.com) at this same deployment.
     const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "keynovagrp.com")
       .trim()
       .toLowerCase()
       .replace(/^https?:\/\//, "")
       .replace(/:\d+$/, "")
       .replace(/\/$/, "");
+
     if (hostname === rootDomain || hostname === `www.${rootDomain}`) return null;
     if (hostname.endsWith(`.${rootDomain}`)) {
       candidate = hostname.slice(0, -(rootDomain.length + 1));
@@ -45,6 +51,7 @@ function agentSlugFromHostname(hostname: string): string | null | false {
   ) {
     return false;
   }
+
   return candidate;
 }
 
@@ -59,7 +66,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Only the host's homepage becomes an agent profile. Existing paths keep
-  // their current behavior on the apex domain and on agent subdomains.
   matcher: ["/"],
 };

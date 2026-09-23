@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
       : false,
     maximumRedirects: 0,
   },
+  async redirects() {
+    return [
+      {
+        source: "/meet-the-team/:slug",
+        destination: "/:slug",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

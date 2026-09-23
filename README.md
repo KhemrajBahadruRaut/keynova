@@ -34,20 +34,24 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Agent subdomains
+## Agent profile URLs
 
-Agent profile homepages are resolved from the existing team-member slug. In
-local development, a profile such as `john-smith` is available at
-`http://john-smith.localhost:3000`. No local DNS entry is required in modern
-browsers.
+Agent profiles use the existing team-member slug directly beneath the site
+root. For example, `luisa-rodriguez` is available locally at
+`http://localhost:3000/luisa-rodriguez` and on the Vercel deployment at
+`https://keynova-ruby.vercel.app/luisa-rodriguez`. Previous
+`/meet-the-team/<slug>` URLs permanently redirect to the shorter profile URL.
 
-For production, set `NEXT_PUBLIC_ROOT_DOMAIN=keynovagrp.com`, attach both
-`keynovagrp.com` and `*.keynovagrp.com` to the same deployment, and create one
-wildcard DNS record for `*.keynovagrp.com`. The Vercel deployment remains
-available at `https://keynova-ruby.vercel.app`; agent profile URLs use the custom
-domain. Do not create a project or DNS record per agent. The application proxy
-rewrites only the subdomain homepage; the apex site and all existing routes
-continue to use their normal routing.
+Clicking the photo on an agent profile opens that agent's property-search site
+in a new tab. Locally, `http://localhost:3000/luisa-rodriguez` opens
+`http://luisa-rodriguez.localhost:3000`; the proxy serves the existing
+`/agent/luisa-rodriguez` page on that subdomain. In production, set
+`NEXT_PUBLIC_ROOT_DOMAIN=keynovagrp.com` and connect `*.keynovagrp.com` to the
+same Vercel deployment.
+
+On Vercel's generated domain, the same photo opens
+`https://keynova-ruby.vercel.app/agent/luisa-rodriguez` because generated
+`.vercel.app` project domains do not support per-agent subdomains.
 
 ## Authentication configuration
 

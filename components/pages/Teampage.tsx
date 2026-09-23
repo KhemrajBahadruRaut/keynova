@@ -128,7 +128,7 @@ export default function TeamPage() {
           {team.map((member) => (
             <article key={member.id} className="group min-w-0 snap-start">
               <Link
-                href={`/meet-the-team/${member.slug}`}
+                href={`/${encodeURIComponent(member.slug)}`}
                 className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c8862a]"
                 aria-label={`View ${member.name}'s profile`}
               >

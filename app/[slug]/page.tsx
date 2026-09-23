@@ -5,7 +5,7 @@ import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import TeamMemberImage from "@/components/pages/team/TeamMemberImage";
-import { agentProfileUrl } from "@/lib/agent-domain";
+import { agentPropertySiteUrl } from "@/lib/agent-domain";
 import { getTeamMember } from "@/lib/team-data";
 
 type TeamMemberPageProps = {
@@ -42,8 +42,10 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
   if (!member) notFound();
 
   const requestHeaders = await headers();
-  const requestHost = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || undefined;
-
+  const requestHost =
+    requestHeaders.get("x-forwarded-host") ||
+    requestHeaders.get("host") ||
+    undefined;
   const telephone = member.phone.replace(/[^\d+]/g, "");
   const [overview, experience] = member.bio.split(/\n\s*\nExperience\s*\n\s*\n/i, 2);
 
@@ -60,7 +62,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
 
         <div className="mt-9 grid items-start overflow-hidden bg-white shadow-xl shadow-slate-900/5 lg:grid-cols-[minmax(18rem,0.72fr)_1.28fr]">
           <a
-            href={agentProfileUrl(member.slug, requestHost)}
+            href={agentPropertySiteUrl(member.slug, requestHost)}
             target="_blank"
             rel="noopener noreferrer"
             className="group relative block aspect-4/5 w-full overflow-hidden bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1c878f]"
