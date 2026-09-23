@@ -12,6 +12,7 @@ import {
   validateText,
   type ValidationErrors,
 } from "@/lib/validation";
+import { rootDomain } from "@/lib/agent-domain";
 
 interface TeamMember {
   id: number;
@@ -51,7 +52,7 @@ const UPDATE_ENDPOINT = "/api/admin/team/update_member.php";
 const DELETE_ENDPOINT = "/api/admin/team/delete_member.php";
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
-const AGENT_ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "revitalmoves.com";
+const AGENT_ROOT_DOMAIN = rootDomain();
 const RESERVED_SUBDOMAINS = new Set(["admin", "api", "app", "ftp", "localhost", "mail", "smtp", "www"]);
 
 const EMPTY_FORM: MemberForm = {

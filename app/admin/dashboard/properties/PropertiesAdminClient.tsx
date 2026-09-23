@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, X } from "lucide-react";
+import { rootDomain } from "@/lib/agent-domain";
 import {
   hasValidationErrors,
   validateBuildingSize,
@@ -12,6 +13,8 @@ import {
   validateUnits,
   validateYearBuilt,
 } from "@/lib/validation";
+
+const AGENT_ROOT_DOMAIN = rootDomain();
 
 interface Property {
   id: number;
@@ -1259,7 +1262,7 @@ export default function PropertiesAdminClient() {
                     <div className="mt-3 rounded-xl border border-[#dbe5ea] bg-[#f7fafb] px-4 py-3">
                       <p className="text-sm font-semibold text-[#003251]">{selectedAgent.name}</p>
                       <p className="mt-0.5 text-xs text-slate-500">{selectedAgent.role}</p>
-                      <p className="mt-2 text-xs text-[#2f7895]">{selectedAgent.slug}.revitalmoves.com</p>
+                      <p className="mt-2 text-xs text-[#2f7895]">{selectedAgent.slug}.{AGENT_ROOT_DOMAIN}</p>
                     </div>
                   ) : null;
                 })()}

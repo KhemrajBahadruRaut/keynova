@@ -41,11 +41,13 @@ local development, a profile such as `john-smith` is available at
 `http://john-smith.localhost:3000`. No local DNS entry is required in modern
 browsers.
 
-For production, set `NEXT_PUBLIC_ROOT_DOMAIN=revitalmoves.com`, attach both
-`revitalmoves.com` and `*.revitalmoves.com` to the same deployment, and create
-one wildcard DNS record for `*.revitalmoves.com`. Do not create a project or DNS
-record per agent. The application proxy rewrites only the subdomain homepage;
-the apex site and all existing routes continue to use their normal routing.
+For production, set `NEXT_PUBLIC_ROOT_DOMAIN=keynovagrp.com`, attach both
+`keynovagrp.com` and `*.keynovagrp.com` to the same deployment, and create one
+wildcard DNS record for `*.keynovagrp.com`. The Vercel deployment remains
+available at `https://keynova-ruby.vercel.app`; agent profile URLs use the custom
+domain. Do not create a project or DNS record per agent. The application proxy
+rewrites only the subdomain homepage; the apex site and all existing routes
+continue to use their normal routing.
 
 ## Authentication configuration
 

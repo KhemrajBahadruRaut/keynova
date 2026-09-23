@@ -23,9 +23,9 @@ function agentSlugFromHostname(hostname: string): string | null | false {
   if (hostname.endsWith(".localhost")) {
     candidate = hostname.slice(0, -".localhost".length);
   } else {
-    // Set NEXT_PUBLIC_ROOT_DOMAIN=revitalmoves.com in production and point one
-    // wildcard DNS record (*.revitalmoves.com) at this same deployment.
-    const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "revitalmoves.com")
+    // Set NEXT_PUBLIC_ROOT_DOMAIN=keynovagrp.com in production and point one
+    // wildcard DNS record (*.keynovagrp.com) at this same deployment.
+    const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "keynovagrp.com")
       .trim()
       .toLowerCase()
       .replace(/^https?:\/\//, "")
