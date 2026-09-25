@@ -41,7 +41,6 @@ const navLinks: NavLink[] = [
   },
   { name: "Grand Living", path: "/grandliving" },
   { name: "Exclusive", path: "/exclusive" },
-  { name: "Home Valuation", path: "/homevaluation" },
   { name: "Contact Us", path: "/contact" },
 ];
 
