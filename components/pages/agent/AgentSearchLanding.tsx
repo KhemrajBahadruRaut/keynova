@@ -435,7 +435,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                   Browse properties represented by {member.name}.
                 </p>
               </div>
-              <Link href="#homes" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#1c878f] hover:underline">
+              <Link href="/listing" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#1c878f] hover:underline">
                 View all listings <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
