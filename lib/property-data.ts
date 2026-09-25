@@ -39,6 +39,16 @@ type ApiEnvelope = {
   data?: unknown;
 };
 
+export class PropertyRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "PropertyRequestError";
+  }
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "";
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -123,7 +133,11 @@ export function normalizeProperty(value: unknown): PropertyRecord {
   };
 }
 
-async function requestApi(path: string, signal?: AbortSignal) {
+async function requestApi(
+  path: string,
+  signal?: AbortSignal,
+  accessToken?: string,
+) {
   if (!API_BASE) {
     throw new Error("NEXT_PUBLIC_API_BASE is not configured.");
   }
@@ -131,15 +145,26 @@ async function requestApi(path: string, signal?: AbortSignal) {
   const response = await fetch(`${API_BASE}${path}`, {
     cache: "no-store",
     signal,
+    headers: accessToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : undefined,
   });
 
-  if (!response.ok) {
-    throw new Error(`Property request failed with status ${response.status}.`);
+  let payload: ApiEnvelope;
+  try {
+    payload = (await response.json()) as ApiEnvelope;
+  } catch {
+    throw new PropertyRequestError(
+      `Property request failed with status ${response.status}.`,
+      response.status,
+    );
   }
 
-  const payload = (await response.json()) as ApiEnvelope;
-  if (payload.status !== "success") {
-    throw new Error(payload.message || "The property service returned an error.");
+  if (!response.ok || payload.status !== "success") {
+    throw new PropertyRequestError(
+      payload.message || "The property service returned an error.",
+      response.status,
+    );
   }
 
   return payload.data;
@@ -183,11 +208,13 @@ export async function fetchAgentProperties(
 
 export async function fetchProperty(
   id: string,
+  accessToken: string,
   signal?: AbortSignal,
 ): Promise<PropertyRecord | null> {
   const data = await requestApi(
     `/property/get_property.php?id=${encodeURIComponent(id)}`,
     signal,
+    accessToken,
   );
   const item = Array.isArray(data) ? data[0] : data;
   const property = normalizeProperty(item);

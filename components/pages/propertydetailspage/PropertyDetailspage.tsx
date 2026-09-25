@@ -18,14 +18,15 @@ import {
 import {
   clearPropertyAccess,
   readPropertyAccess,
-  savePropertyAccess,
   type PropertyAccessVisitor,
+  type StoredPropertyAccess,
 } from "@/lib/property-access";
 import {
   displayBuildingSize,
   displayPrice,
   fetchListingProperties,
   fetchProperty,
+  PropertyRequestError,
   propertyUploadUrl,
   type PropertyRecord,
 } from "@/lib/property-data";
@@ -36,8 +37,6 @@ type InquiryStatus = {
   type: "success" | "error";
   message: string;
 } | null;
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "";
 
 interface PropertyDetailsPageProps {
   propertyId?: string;
@@ -102,6 +101,33 @@ function formatDate(value: string) {
     : new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(date);
 }
 
+async function loadAuthorizedPropertyData(
+  propertyId: string,
+  source: string | undefined,
+  accessToken: string,
+  signal?: AbortSignal,
+) {
+  const destination = source === "exclusive" ? "off_market" : "listing";
+  const [propertyResult, listingsResult] = await Promise.allSettled([
+    fetchProperty(propertyId, accessToken, signal),
+    fetchListingProperties(destination, signal),
+  ]);
+
+  if (propertyResult.status === "rejected") throw propertyResult.reason;
+  const selectedProperty = propertyResult.value;
+  if (!selectedProperty) throw new Error("Property not found.");
+
+  return {
+    property: selectedProperty,
+    listings:
+      listingsResult.status === "fulfilled"
+        ? listingsResult.value.filter(
+            (item) => item.id !== selectedProperty.id,
+          )
+        : [],
+  };
+}
+
 export default function PropertyDetailsPage({
   propertyId,
   source,
@@ -134,99 +160,57 @@ export default function PropertyDetailsPage({
     if (!propertyId) return;
 
     const controller = new AbortController();
-    const destination = source === "exclusive" ? "off_market" : "listing";
-
-    Promise.allSettled([
-      fetchProperty(propertyId, controller.signal),
-      fetchListingProperties(destination, controller.signal),
-    ])
-      .then(([propertyResult, listingsResult]) => {
-        if (propertyResult.status === "rejected") {
-          throw propertyResult.reason;
-        }
-
-        const selectedProperty = propertyResult.value;
-        setProperty(selectedProperty);
-
-        if (listingsResult.status === "fulfilled") {
-          setSimilarListings(
-            listingsResult.value.filter((item) => item.id !== selectedProperty?.id),
-          );
-        } else {
-          setSimilarListings([]);
-        }
-      })
-      .catch((requestError: unknown) => {
-        if (requestError instanceof DOMException && requestError.name === "AbortError") {
-          return;
-        }
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Unable to load this property.",
-        );
-        setProperty(null);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [propertyId, source]);
-
-  useEffect(() => {
-    if (!propertyId) return;
-
-    const controller = new AbortController();
     const validationTimer = window.setTimeout(() => {
       const savedAccess = readPropertyAccess();
 
-      if (!savedAccess || !API_BASE) {
+      if (!savedAccess) {
         setVerifiedVisitor(null);
         setAccessStatus("required");
+        setLoading(false);
         return;
       }
 
-      fetch(`${API_BASE}/property/access_session.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token: savedAccess.token,
-          property_id: propertyId,
-          source: source || "listing",
-        }),
-        cache: "no-store",
-        signal: controller.signal,
-      })
-        .then(async (response) => {
-          const payload = (await response.json()) as {
-            status?: string;
-            expires_at?: string;
-            visitor?: PropertyAccessVisitor;
-          };
-          if (!response.ok || payload.status !== "success" || !payload.visitor) {
-            throw new Error("Property access verification is required.");
-          }
-
-          const refreshedAccess = {
-            token: savedAccess.token,
-            expiresAt: payload.expires_at || savedAccess.expiresAt,
-            visitor: payload.visitor,
-          };
-          savePropertyAccess(refreshedAccess);
-          setVerifiedVisitor(payload.visitor);
+      loadAuthorizedPropertyData(
+        propertyId,
+        source,
+        savedAccess.token,
+        controller.signal,
+      )
+        .then((loaded) => {
+          setProperty(loaded.property);
+          setSimilarListings(loaded.listings);
+          setVerifiedVisitor(savedAccess.visitor);
+          setError("");
           setAccessStatus("granted");
+          setLoading(false);
         })
-        .catch((accessError: unknown) => {
+        .catch((requestError: unknown) => {
           if (
-            accessError instanceof DOMException &&
-            accessError.name === "AbortError"
+            requestError instanceof DOMException &&
+            requestError.name === "AbortError"
           ) {
             return;
           }
-          clearPropertyAccess();
-          setVerifiedVisitor(null);
-          setAccessStatus("required");
+
+          if (
+            requestError instanceof PropertyRequestError &&
+            requestError.status === 401
+          ) {
+            clearPropertyAccess();
+            setVerifiedVisitor(null);
+            setProperty(null);
+            setError("");
+            setAccessStatus("required");
+          } else {
+            setError(
+              requestError instanceof Error
+                ? requestError.message
+                : "Unable to load this property.",
+            );
+            setProperty(null);
+            setAccessStatus("granted");
+          }
+          setLoading(false);
         });
     }, 0);
 
@@ -235,6 +219,45 @@ export default function PropertyDetailsPage({
       controller.abort();
     };
   }, [propertyId, source]);
+
+  async function handleAccessVerified(access: StoredPropertyAccess) {
+    if (!propertyId) return;
+
+    setVerifiedVisitor(access.visitor);
+    setAccessStatus("checking");
+    setLoading(true);
+    setError("");
+
+    try {
+      const loaded = await loadAuthorizedPropertyData(
+        propertyId,
+        source,
+        access.token,
+      );
+      setProperty(loaded.property);
+      setSimilarListings(loaded.listings);
+      setAccessStatus("granted");
+    } catch (requestError) {
+      if (
+        requestError instanceof PropertyRequestError &&
+        requestError.status === 401
+      ) {
+        clearPropertyAccess();
+        setVerifiedVisitor(null);
+        setAccessStatus("required");
+      } else {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load this property.",
+        );
+        setProperty(null);
+        setAccessStatus("granted");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const galleryImages = useMemo(() => {
     if (!property) return [];
@@ -336,14 +359,33 @@ export default function PropertyDetailsPage({
     );
   }
 
-  if (loading) {
+  if (accessStatus === "checking" || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white pt-30">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#003251] border-t-transparent" />
-          <p className="text-sm text-gray-500">Loading property...</p>
+          <p className="text-sm text-gray-500">Checking property access...</p>
         </div>
       </div>
+    );
+  }
+
+  if (accessStatus === "required") {
+    return (
+      <>
+        <div className="min-h-screen bg-white" aria-hidden="true" />
+        <DocumentAccessModal
+          propertyId={propertyId}
+          propertyTitle="this property"
+          documents={[]}
+          open
+          required
+          source={source || "listing"}
+          verifiedVisitor={null}
+          onVerified={handleAccessVerified}
+          onClose={() => undefined}
+        />
+      </>
     );
   }
 
@@ -358,17 +400,6 @@ export default function PropertyDetailsPage({
           >
             Back to {sourceInfo.label}
           </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (accessStatus === "checking") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white pt-30">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#003251] border-t-transparent" />
-          <p className="text-sm text-gray-500">Checking property access...</p>
         </div>
       </div>
     );
@@ -416,14 +447,7 @@ export default function PropertyDetailsPage({
 
   return (
     <>
-    <div
-      className={`min-h-screen bg-white px-6 py-6 pt-30 transition md:px-10 ${
-        accessStatus === "required"
-          ? "pointer-events-none select-none blur-sm"
-          : ""
-      }`}
-      aria-hidden={accessStatus === "required"}
-    >
+    <div className="min-h-screen bg-white px-6 py-6 pt-30 md:px-10">
       <div className="mx-auto max-w-6xl">
         <nav className="mb-4 flex items-center gap-1 text-xs text-gray-400">
           <Link href="/">Home</Link>
@@ -904,14 +928,10 @@ export default function PropertyDetailsPage({
       propertyId={property.id}
       propertyTitle={property.title || property.address}
       documents={property.documents}
-      open={accessStatus === "required" || showDocumentModal}
-      required={accessStatus === "required"}
+      open={showDocumentModal}
       source={source || "listing"}
       verifiedVisitor={verifiedVisitor}
-      onVerified={(access) => {
-        setVerifiedVisitor(access.visitor);
-        setAccessStatus("granted");
-      }}
+      onVerified={handleAccessVerified}
       onClose={() => setShowDocumentModal(false)}
     />
     </>
