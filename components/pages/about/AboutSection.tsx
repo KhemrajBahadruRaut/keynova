@@ -150,7 +150,7 @@ export default function AboutSection() {
             {principles.map(({ title, description, Icon }, index) => (
               <article
                 key={title}
-                className="group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:-translate-y-1 hover:border-[#1c878f]/55 hover:shadow-xl hover:shadow-[#003251]/8 sm:p-8"
+                className="group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:-translate-y-1 hover:border-[#003251] hover:shadow-2xl hover:shadow-[#003251]/8 sm:p-8"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#003251] text-white">

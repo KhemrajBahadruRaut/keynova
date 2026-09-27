@@ -31,14 +31,16 @@ type NavLink = {
 
 const navLinks: NavLink[] = [
   { name: "Home", path: "/" },
-  {
-    name: "About",
-    path: "/about",
-    children: [
-      { name: "why", path: "/about" },
-      { name: "Meet the Team", path: "/meet-the-team" },
-    ],
-  },
+  // {
+  //   name: "About",
+  //   path: "/about",
+  //   children: [
+  //     { name: "why", path: "/about" },
+  //     { name: "Meet the Team", path: "/meet-the-team" },
+  //   ],
+  // },
+  { name: "why", path: "/why" },
+  { name: "The Team", path: "/meet-the-team" },
   { name: "Grand Living", path: "/grandliving" },
   { name: "Exclusive", path: "/exclusive" },
   { name: "Contact Us", path: "/contact" },
