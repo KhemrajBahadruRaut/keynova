@@ -11,6 +11,7 @@ import {
   FileCheck2,
   FilePenLine,
   HousePlus,
+  Images,
   LogOut,
   Menu,
   MessageSquareText,
@@ -20,6 +21,13 @@ import {
 } from "lucide-react";
 
 const ADMIN_SECTIONS = [
+  {
+    key: "hero",
+    label: "Homepage Hero",
+    description: "Carousel images and labels",
+    href: "/admin/dashboard/hero-images",
+    Icon: Images,
+  },
   {
     key: "properties",
     label: "Properties",
@@ -44,7 +52,7 @@ const ADMIN_SECTIONS = [
   {
     key: "content",
     label: "Page Content",
-    description: "Buyer and seller guides",
+    description: "Homepage and guide content",
     href: "/admin/dashboard/page-content",
     Icon: FilePenLine,
   },
@@ -74,6 +82,7 @@ const ADMIN_SECTIONS = [
 type AdminCounts = Record<(typeof ADMIN_SECTIONS)[number]["key"], number>;
 
 const EMPTY_COUNTS: AdminCounts = {
+  hero: 0,
   properties: 0,
   team: 0,
   testimonials: 0,
@@ -113,6 +122,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
         responses.map((response) => response.json()),
       );
       setCounts({
+        hero: 0,
         properties: properties.status === "success" ? properties.data?.length || 0 : 0,
         team: team.status === "success" ? team.data?.length || 0 : 0,
         testimonials:

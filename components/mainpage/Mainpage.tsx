@@ -1,4 +1,3 @@
-import React from 'react'
 import Hero from '../pages/Hero'
 import GrandLivingPage from '../pages/GrandLivingpage'
 import ExclusiveListingsPage from '../pages/Exclusivelistingpage'
@@ -7,17 +6,23 @@ import TestimonialsPage from '../pages/Testimonials'
 import ActionCardsPage from '../pages/Actioncardspage'
 import ContactFormPage from '../pages/ContactFormPage'
 import FooterPage from '../pages/Footerpage'
-import { AboutPreview } from '../pages/about/AboutSection'
+import { getHeroContent } from '@/lib/hero-content-data'
+import { getHomepageActionContent } from '@/lib/homepage-action-content-data'
 
-const Mainpage = () => {
+const Mainpage = async () => {
+  const [heroContent, actionContent] = await Promise.all([
+    getHeroContent(),
+    getHomepageActionContent(),
+  ])
+
   return (
     <div>
-      <Hero/>
+      <Hero content={heroContent}/>
       <GrandLivingPage/>
       <ExclusiveListingsPage/>
       <TeamPage/>
       <TestimonialsPage/>
-      <ActionCardsPage/>
+      <ActionCardsPage content={actionContent}/>
       <ContactFormPage/>
       <FooterPage/>
     </div>

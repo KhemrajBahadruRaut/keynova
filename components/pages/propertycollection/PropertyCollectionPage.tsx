@@ -312,10 +312,7 @@ export default function PropertyCollectionPage({
     variant === "exclusive"
       ? "Homes For Sale Exclusively by KeyNova"
       : "Luxury Homes For Sale in Massachusetts";
-  const gridClass =
-    variant === "exclusive"
-      ? "grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2"
-      : "grid grid-cols-1 gap-y-8";
+  const gridClass = "grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2";
 
   return (
     <div className="min-h-screen bg-white px-6 py-6 md:px-10 pt-25">

@@ -54,7 +54,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
       <article className="mx-auto max-w-7xl">
         <Link
           href="/meet-the-team"
-          className="inline-flex items-center gap-2 text-sm font-semibold transition hover:text-[#1c878f]"
+          className="inline-flex items-center gap-2 text-sm font-semibold transition hover:underline hover:underline-offset-4"
         >
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           Back to the team
@@ -65,7 +65,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
             href={agentPropertySiteUrl(member.slug, requestHost)}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block aspect-4/5 w-full overflow-hidden bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1c878f]"
+            className="group relative block aspect-4/5 w-full overflow-hidden bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#003251]"
             aria-label={`Open ${member.name}'s property website in a new tab`}
           >
             <TeamMemberImage
@@ -110,7 +110,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
                 {member.email && (
                   <a
                     href={`mailto:${member.email}`}
-                    className="inline-flex items-center gap-2 transition hover:text-[#1c878f]"
+                    className="inline-flex items-center gap-2 transition hover:underline hover:underline-offset-4"
                   >
                     <Mail aria-hidden="true" className="h-4 w-4" />
                     {member.email}
@@ -119,7 +119,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
                 {member.phone && (
                   <a
                     href={`tel:${telephone}`}
-                    className="inline-flex items-center gap-2 transition hover:text-[#1c878f]"
+                    className="inline-flex items-center gap-2 transition hover:underline hover:underline-offset-4"
                   >
                     <Phone aria-hidden="true" className="h-4 w-4" />
                     {member.phone}

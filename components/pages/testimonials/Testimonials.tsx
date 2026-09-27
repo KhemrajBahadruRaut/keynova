@@ -48,12 +48,12 @@ type ApiPayload = {
 };
 
 const fieldClassName =
-  "mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#003251] outline-none transition placeholder:text-slate-400 focus:border-[#2f87a8] focus:ring-4 focus:ring-[#2f87a8]/10";
+  "mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#003251] outline-none transition placeholder:text-slate-400 focus:border-[#003251] focus:ring-4 focus:ring-[#003251]/10";
 
 function RatingStars({ rating }: { rating: number }) {
   return (
     <div
-      className="flex gap-1 text-[#2f87a8]"
+      className="flex gap-1 text-[#003251]"
       aria-label={`${rating} out of 5 stars`}
     >
       {Array.from({ length: 5 }).map((_, index) => (
@@ -214,11 +214,11 @@ export default function Testimonials() {
     <div className="bg-white text-[#003251]">
       <section className="relative overflow-hidden bg-[#003251] px-6 pb-20 pt-36 text-white sm:pb-24 sm:pt-44 lg:px-10">
         <div className="absolute -right-28 top-24 h-80 w-80 rounded-full border border-white/10" />
-        <div className="absolute -right-8 top-36 h-56 w-56 rounded-full border border-sky-300/30" />
-        <div className="absolute -bottom-40 -left-20 h-80 w-80 rounded-full bg-sky-300/10" />
+        <div className="absolute -right-8 top-36 h-56 w-56 rounded-full border border-slate-300/30" />
+        <div className="absolute -bottom-40 -left-20 h-80 w-80 rounded-full bg-slate-300/10" />
 
         <div className="relative mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-sky-200">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-300">
             Client stories
           </p>
           <div className="mt-6 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-20">
@@ -232,7 +232,7 @@ export default function Testimonials() {
               </p>
               <a
                 href="#leave-testimonial"
-                className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-[#2f87a8] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#246f8c] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-slate-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Share your experience
                 <Send aria-hidden="true" className="h-4 w-4" />
@@ -246,7 +246,7 @@ export default function Testimonials() {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-8 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#2f7895]">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#003251]">
                 In their words
               </p>
               <h2
@@ -280,8 +280,8 @@ export default function Testimonials() {
               ))}
             </div>
           ) : testimonials.length === 0 ? (
-            <div className="mt-10 rounded-3xl bg-[#eef4f7] px-6 py-16 text-center sm:px-10">
-              <Quote aria-hidden="true" className="mx-auto h-9 w-9 text-[#2f87a8]" />
+            <div className="mt-10 rounded-3xl bg-slate-100 px-6 py-16 text-center sm:px-10">
+              <Quote aria-hidden="true" className="mx-auto h-9 w-9 text-[#003251]" />
               <h3 className="mt-5 text-2xl font-semibold">Be the first to share your story.</h3>
               <p className="mx-auto mt-3 max-w-xl leading-7 text-slate-600">
                 Approved client testimonials will appear here. Tell us about your
@@ -299,12 +299,12 @@ export default function Testimonials() {
               {testimonials.map((testimonial) => (
                 <article
                   key={testimonial.id}
-                  className="h-80 overflow-hidden rounded-3xl border border-slate-200 bg-[#f8fafc] shadow-sm shadow-slate-900/5 transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-lg"
+                  className="h-80 overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-sm shadow-slate-900/5 transition hover:-translate-y-0.5 hover:border-[#003251]/30 hover:shadow-lg"
                 >
                   <button
                     type="button"
                     onClick={() => openTestimonial(testimonial)}
-                    className="flex h-full w-full flex-col p-7 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2f87a8] sm:p-8"
+                    className="flex h-full w-full flex-col p-7 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#003251] sm:p-8"
                     aria-label={`Read the full testimonial from ${testimonial.name}`}
                   >
                     <span className="flex w-full items-start justify-between gap-5">
@@ -324,7 +324,7 @@ export default function Testimonials() {
                       </span>
                       <span className="mt-1 flex items-center justify-between gap-3 text-sm text-slate-500">
                         <span>{testimonial.client_type}</span>
-                        <span className="font-semibold text-[#2f7895]">
+                        <span className="font-semibold text-[#003251]">
                           Read full
                         </span>
                       </span>
@@ -339,12 +339,12 @@ export default function Testimonials() {
 
       <section
         id="leave-testimonial"
-        className="scroll-mt-24 bg-[#eef4f7] px-6 py-20 sm:py-28 lg:px-10"
+        className="scroll-mt-24 bg-slate-100 px-6 py-20 sm:py-28 lg:px-10"
         aria-labelledby="leave-testimonial-heading"
       >
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#2f7895]">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#003251]">
               Your experience matters
             </p>
             <h2
@@ -357,8 +357,8 @@ export default function Testimonials() {
               Your feedback helps future clients make their next move with
               confidence. Every submission is reviewed before it appears publicly.
             </p>
-            <div className="mt-8 flex items-start gap-3 rounded-2xl border border-[#003251]/10 bg-white/60 p-5">
-              <ShieldCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-[#2f87a8]" />
+            <div className="mt-8 flex items-start gap-3 rounded-2xl border border-[#003251]/10 bg-slate-200/70 p-5">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-[#003251]" />
               <p className="text-sm leading-6 text-slate-600">
                 Your email is used only to verify and manage your submission. It
                 is never shown with your public testimonial.
@@ -451,7 +451,7 @@ export default function Testimonials() {
                       key={value}
                       type="button"
                       onClick={() => setForm((current) => ({ ...current, rating: value }))}
-                      className="rounded-md p-1 text-[#2f87a8] transition hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251]"
+                      className="rounded-md p-1 text-[#003251] transition hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251]"
                       aria-label={`${value} star${value === 1 ? "" : "s"}`}
                       aria-pressed={value === form.rating}
                     >
@@ -539,7 +539,7 @@ export default function Testimonials() {
           >
             <header className="sticky top-0 flex items-start justify-between gap-5 border-b border-slate-100 bg-white px-6 py-5 sm:px-8">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#2f7895]">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#003251]">
                   Client testimonial
                 </p>
                 <h2
@@ -556,7 +556,7 @@ export default function Testimonials() {
                 type="button"
                 onClick={closeTestimonial}
                 autoFocus
-                className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[#003251] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2f87a8]"
+                className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[#003251] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251]"
                 aria-label="Close testimonial"
               >
                 <X aria-hidden="true" className="h-5 w-5" />

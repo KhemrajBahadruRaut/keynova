@@ -35,7 +35,7 @@ const navLinks: NavLink[] = [
     name: "About",
     path: "/about",
     children: [
-      { name: "About KeyNova", path: "/about" },
+      { name: "why", path: "/about" },
       { name: "Meet the Team", path: "/meet-the-team" },
     ],
   },

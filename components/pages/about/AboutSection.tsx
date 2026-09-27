@@ -120,9 +120,9 @@ export default function AboutSection() {
             {markets.map((market) => (
               <span
                 key={market}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/85"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15  px-4 py-2 text-sm text-white/85"
               >
-                <Check aria-hidden="true" className="h-3.5 w-3.5 text-[#8fcbd0]" />
+                <Check aria-hidden="true" className="h-3.5 w-3.5 text-[#ffffff]" />
                 {market}
               </span>
             ))}
@@ -206,8 +206,7 @@ export default function AboutSection() {
 
       <section className="px-6 py-20 sm:py-28 lg:px-10">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-4xl bg-[#003251] px-7 py-14 text-center text-white sm:px-14 sm:py-20">
-          <div className="absolute -left-20 -top-28 h-72 w-72 rounded-full bg-[#1c878f]/20" />
-          <div className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full border border-white/10" />
+          {/* <div className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full border border-white/10" /> */}
           <div className="relative mx-auto max-w-4xl">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/80">
               Unlock what comes next
@@ -221,7 +220,7 @@ export default function AboutSection() {
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/exclusive"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1c878f] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#176f76]"
+                className="inline-flex items-center justify-center gap-2 rounded-full border-white/30 border px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white hover:text-[#003251]"
               >
                 Explore properties
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />

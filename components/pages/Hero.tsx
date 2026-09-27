@@ -4,50 +4,29 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../navbar/Navbar";
 import { Search } from "lucide-react";
 import Link from "next/link";
+import { resolveHeroImage, type HeroContent } from "@/lib/hero-content";
 
-const MASSACHUSETTS_SLIDES = [
-  {
-    src: "https://images.unsplash.com/photo-1553734021-17c8ee5de759?auto=format&fit=crop&w=1920&q=85",
-    alt: "Beacon Hill neighborhood in Boston, Massachusetts",
-    location: "Beacon Hill, Boston",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1599136115254-f3fa567872ae?auto=format&fit=crop&w=1920&q=85",
-    alt: "Historic brick homes along a Beacon Hill street in Boston",
-    location: "Beacon Hill, Boston",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1766381854360-e4ab2f8f7291?auto=format&fit=crop&w=1920&q=85",
-    alt: "Historic row homes on Acorn Street in Boston, Massachusetts",
-    location: "Acorn Street, Boston",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1563772030906-5837787ca892?auto=format&fit=crop&w=1920&q=85",
-    alt: "Brick-lined residential lane in Beacon Hill, Massachusetts",
-    location: "Beacon Hill, Boston",
-  },
-] as const;
-
-export default function Hero() {
+export default function Hero({ content }: Readonly<{ content: HeroContent }>) {
+  const { slides } = content;
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setActiveSlide((current) => (current + 1) % MASSACHUSETTS_SLIDES.length);
+      setActiveSlide((current) => (current + 1) % slides.length);
     }, 6000);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [slides.length]);
 
   return (
     <div className="min-h-screen bg-slate-900 font-sans">
       <Navbar />
       {/* HERO */}
       <section className="relative w-full h-screen min-h-160 overflow-hidden">
-        {MASSACHUSETTS_SLIDES.map((slide, index) => (
+        {slides.map((slide, index) => (
           <img
-            key={slide.src}
-            src={slide.src}
+            key={`${slide.image}-${index}`}
+            src={resolveHeroImage(slide.image)}
             alt={index === activeSlide ? slide.alt : ""}
             aria-hidden={index !== activeSlide}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
@@ -94,7 +73,7 @@ export default function Hero() {
                 <Link
                   href="/listing"
                   aria-label="Browse all properties"
-                  className="inline-flex h-9 items-center justify-center rounded-full border border-white/35 bg-white/15 px-5 text-xs font-semibold tracking-wide text-white shadow-lg shadow-slate-950/10 backdrop-blur-xl transition hover:bg-white hover:text-[#003251] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="inline-flex h-9 items-center justify-center rounded-full border border-white/35 bg-white/15 px-5 text-xs font-semibold tracking-wide text-white shadow-lg shadow-slate-950/10 backdrop-blur-xl transition hover:border-[#003251] hover:bg-[#003251] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   Properties
                 </Link>
@@ -102,7 +81,7 @@ export default function Hero() {
                 <Link
                   href="/meet-the-team"
                   aria-label="Find an agent"
-                  className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/15 px-5 text-xs font-semibold tracking-wide text-white shadow-lg shadow-slate-950/10 backdrop-blur-xl transition hover:bg-white hover:text-[#003251] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/15 px-5 text-xs font-semibold tracking-wide text-white shadow-lg shadow-slate-950/10 backdrop-blur-xl transition hover:border-[#003251] hover:bg-[#003251] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   Agents
                 </Link>
@@ -112,16 +91,16 @@ export default function Hero() {
         </div>
 
         <p className="absolute bottom-8 left-8 z-10 hidden text-xs font-semibold uppercase tracking-[0.2em] text-white/85 sm:block">
-          {MASSACHUSETTS_SLIDES[activeSlide].location}
+          {slides[activeSlide].location}
         </p>
 
         <div
           className="absolute bottom-8 right-8 z-10 flex gap-2"
           aria-label="Hero images"
         >
-          {MASSACHUSETTS_SLIDES.map((slide, index) => (
+          {slides.map((slide, index) => (
             <button
-              key={slide.src}
+              key={`${slide.image}-${index}`}
               type="button"
               onClick={() => setActiveSlide(index)}
               aria-label={`Show image ${index + 1}: ${slide.location}`}

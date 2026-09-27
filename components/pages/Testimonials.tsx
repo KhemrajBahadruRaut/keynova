@@ -56,7 +56,7 @@ export default function TestimonialsPage() {
   const current = testimonials[index];
 
   return (
-    <section className="bg-[#3A6178] px-4 py-14 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+    <section className="bg-[#003251] px-4 py-14 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)] lg:gap-14 xl:gap-20">
         <div className="min-w-0">
            <p className="text-xs font-bold uppercase tracking-[0.25em] text-sky-200">
@@ -77,7 +77,7 @@ export default function TestimonialsPage() {
             </Link>
             <Link
               href="/testimonials#leave-testimonial"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#176f91] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#105d79]"
+              className="inline-flex items-center justify-center gap-2 rounded-full  px-5 py-2.5 border-white/35 border text-sm font-semibold text-white transition hover:bg-white hover:text-[#003251]"
             >
               Leave a testimonial
               <MessageSquarePlus aria-hidden="true" className="h-4 w-4" />
@@ -86,7 +86,7 @@ export default function TestimonialsPage() {
         </div>
 
         {loading ? (
-          <div className="h-48 animate-pulse rounded-3xl bg-white/10" aria-label="Loading testimonials" />
+          <div className="h-48 animate-pulse rounded-3xl bg-slate-700/60" aria-label="Loading testimonials" />
         ) : current ? (
           <div className="grid min-w-0 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 sm:gap-5">
             <button
@@ -100,7 +100,7 @@ export default function TestimonialsPage() {
             </button>
             <Link
               href={`/testimonials?testimonial=${current.id}`}
-              className="flex h-60 min-w-0 flex-col rounded-3xl bg-white/7 p-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 sm:p-7"
+              className="flex h-60 min-w-0 flex-col rounded-3xl bg-slate-700/55 p-5 transition hover:bg-slate-700/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 sm:p-7"
               aria-label={`Read the full testimonial from ${current.name}`}
             >
               <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-hidden sm:grid-cols-[minmax(8rem,auto)_minmax(0,1fr)] sm:gap-8 xl:gap-10">
@@ -117,7 +117,7 @@ export default function TestimonialsPage() {
                         key={starIndex}
                         aria-hidden="true"
                         size={14}
-                        fill={starIndex < current.rating ? "currentColor" : "none"}
+                        fill={starIndex < current.rating ? "white" : "none"}
                         strokeWidth={starIndex < current.rating ? 0 : 1.5}
                       />
                     ))}
@@ -127,7 +127,7 @@ export default function TestimonialsPage() {
                   <blockquote className="line-clamp-5 whitespace-pre-wrap text-sm leading-7 text-white/85">
                     “{current.quote}”
                   </blockquote>
-                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-200 transition group-hover:text-white">
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold  transition group-hover:text-white">
                     Read full testimonial
                     <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                   </span>
@@ -152,7 +152,7 @@ export default function TestimonialsPage() {
             </button>
           </div>
         ) : (
-          <div className="rounded-3xl border border-white/15 bg-white/7 px-7 py-12 text-center sm:px-10">
+          <div className="rounded-3xl border border-white/15 bg-slate-700/55 px-7 py-12 text-center sm:px-10">
             <Quote aria-hidden="true" className="mx-auto h-8 w-8 text-white/50" />
             <p className="mt-5 text-lg font-semibold">Client stories are coming soon.</p>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/65">

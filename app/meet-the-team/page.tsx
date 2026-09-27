@@ -54,7 +54,7 @@ export default async function MeetTheTeamPage() {
                 <article key={member.id} className="group min-w-0">
                   <Link
                     href={`/${encodeURIComponent(member.slug)}`}
-                    className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1c878f]"
+                    className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#003251]"
                     aria-label={`Read more about ${member.name}`}
                   >
                     <div className="relative aspect-4/5 overflow-hidden bg-slate-100">
@@ -66,7 +66,7 @@ export default async function MeetTheTeamPage() {
                     <div className="border-b border-slate-200 py-5">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="text-xl font-semibold transition group-hover:text-[#1c878f]">
+                          <h3 className="text-xl font-semibold transition group-hover:underline group-hover:underline-offset-4">
                             {member.name}
                           </h3>
                           {member.role && (

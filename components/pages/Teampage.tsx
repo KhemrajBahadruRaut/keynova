@@ -129,7 +129,7 @@ export default function TeamPage() {
             <article key={member.id} className="group min-w-0 snap-start">
               <Link
                 href={`/${encodeURIComponent(member.slug)}`}
-                className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c8862a]"
+                className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#003251]"
                 aria-label={`View ${member.name}'s profile`}
               >
                 <div className="relative aspect-4/5 w-full overflow-hidden bg-slate-100">
@@ -139,7 +139,7 @@ export default function TeamPage() {
                   />
                 </div>
                 <div className="border-b border-slate-200 py-4">
-                  <h3 className="text-lg font-semibold text-[#003251] transition group-hover:text-[#1c878f]">
+                  <h3 className="text-lg font-semibold text-[#003251] transition group-hover:underline group-hover:underline-offset-4">
                     {member.name}
                   </h3>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -153,7 +153,7 @@ export default function TeamPage() {
 
         <Link
           href="/meet-the-team"
-          className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#003251] transition hover:text-[#1c878f]"
+          className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#003251] transition hover:underline hover:underline-offset-4"
         >
           View the full team
           <ArrowRight aria-hidden="true" className="h-4 w-4" />

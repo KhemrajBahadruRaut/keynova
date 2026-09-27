@@ -115,7 +115,7 @@ function PropertyCard({
         )}
       </div>
 
-      <h3 className="mt-3 font-semibold text-[#003251] transition-colors group-hover:text-[#1c878f]">
+      <h3 className="mt-3 font-semibold text-[#003251] transition group-hover:underline group-hover:underline-offset-4">
         {property.title || property.address || "KeyNova property"}
       </h3>
       {property.address && property.address !== property.title && (
@@ -327,7 +327,7 @@ export default function PropertyShowcaseSection({
                 </p>
                 <Link
                   href={config.href}
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#003251] hover:text-[#c8862a]"
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#003251] hover:underline hover:underline-offset-4"
                 >
                   View full collection
                   <ArrowRight aria-hidden="true" size={15} />
@@ -336,21 +336,45 @@ export default function PropertyShowcaseSection({
             )}
           </div>
 
-          {!isExclusive && !loading && properties.length > 1 && (
+          {!loading && properties.length > 1 && (
             <>
               <button
                 type="button"
                 onClick={() => scrollBy("left")}
+                onMouseEnter={() => {
+                  autoScrollPausedRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  autoScrollPausedRef.current = false;
+                }}
+                onFocus={() => {
+                  autoScrollPausedRef.current = true;
+                }}
+                onBlur={() => {
+                  autoScrollPausedRef.current = false;
+                }}
                 aria-label={`Show previous ${config.buttonLabel.toLowerCase()}`}
-                className="absolute -left-4 top-[33%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-slate-50 sm:flex"
+                className="absolute left-2 top-[33%] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-[#003251] hover:text-white sm:-left-4"
               >
                 <ChevronLeft aria-hidden="true" size={18} />
               </button>
               <button
                 type="button"
                 onClick={() => scrollBy("right")}
+                onMouseEnter={() => {
+                  autoScrollPausedRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  autoScrollPausedRef.current = false;
+                }}
+                onFocus={() => {
+                  autoScrollPausedRef.current = true;
+                }}
+                onBlur={() => {
+                  autoScrollPausedRef.current = false;
+                }}
                 aria-label={`Show more ${config.buttonLabel.toLowerCase()}`}
-                className="absolute -right-4 top-[33%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-slate-50 sm:flex"
+                className="absolute right-2 top-[33%] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[#003251] shadow-md transition hover:bg-[#003251] hover:text-white sm:-right-4"
               >
                 <ChevronRight aria-hidden="true" size={18} />
               </button>

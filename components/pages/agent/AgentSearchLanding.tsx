@@ -365,7 +365,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                 <div className="mt-4 space-y-1.5 text-sm">
                   {member.phone && (
                     <p>
-                      <a href={`tel:${member.phone.replace(/[^+\d]/g, "")}`} className="text-[#003251] hover:text-[#1c878f]">
+                      <a href={`tel:${member.phone.replace(/[^+\d]/g, "")}`} className="text-[#003251] hover:underline hover:underline-offset-4">
                         {member.phone}
                       </a>
                     </p>
@@ -386,7 +386,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                     key={label}
                     href={href}
                     aria-label={label}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-[#003251] transition hover:border-[#1c878f] hover:text-[#1c878f]"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-[#003251] transition hover:border-[#003251]"
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </a>
@@ -477,7 +477,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                             {displayBuildingSize(property.building_size)}
                           </p>
                         )}
-                        <Link href={`/details?id=${property.id}&source=agent`} className="mt-2 block text-sm font-semibold text-[#003251] hover:text-[#1c878f]">
+                        <Link href={`/details?id=${property.id}&source=agent`} className="mt-2 block text-sm font-semibold text-[#003251] hover:underline hover:underline-offset-4">
                           {property.title || property.address}
                         </Link>
                         <p className="mt-1 text-xs text-slate-500">{property.address}</p>
@@ -511,7 +511,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                 <p className="mt-5 rounded-md bg-[#edf5f6] px-4 py-3 text-sm font-medium text-[#003251]">
                   {savedIds.length} saved {savedIds.length === 1 ? "home" : "homes"}
                 </p>
-                <button type="button" onClick={signOut} className="mt-6 text-sm font-semibold text-slate-500 hover:text-[#1c878f]">
+                <button type="button" onClick={signOut} className="mt-6 text-sm font-semibold text-slate-500 hover:text-[#003251]">
                   Sign out
                 </button>
               </div>
