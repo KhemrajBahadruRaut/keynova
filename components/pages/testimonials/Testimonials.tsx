@@ -213,9 +213,9 @@ export default function Testimonials() {
   return (
     <div className="bg-white text-[#003251]">
       <section className="relative overflow-hidden bg-[#003251] px-6 pb-20 pt-36 text-white sm:pb-24 sm:pt-44 lg:px-10">
-        <div className="absolute -right-28 top-24 h-80 w-80 rounded-full border border-white/10" />
-        <div className="absolute -right-8 top-36 h-56 w-56 rounded-full border border-slate-300/30" />
-        <div className="absolute -bottom-40 -left-20 h-80 w-80 rounded-full bg-slate-300/10" />
+        {/* <div className="absolute -right-28 top-24 h-80 w-80 rounded-full border border-white/10" /> */}
+        {/* <div className="absolute -right-8 top-36 h-56 w-56 rounded-full border border-slate-300/30" /> */}
+        {/* <div className="absolute -bottom-40 -left-20 h-80 w-80 rounded-full bg-slate-300/10" /> */}
 
         <div className="relative mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-300">
@@ -232,7 +232,7 @@ export default function Testimonials() {
               </p>
               <a
                 href="#leave-testimonial"
-                className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-slate-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="mt-7 inline-flex items-center justify-center gap-2 rounded-full border-white/35 border px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white hover:text-[#003251] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Share your experience
                 <Send aria-hidden="true" className="h-4 w-4" />
