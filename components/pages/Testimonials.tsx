@@ -100,7 +100,7 @@ export default function TestimonialsPage() {
             </button>
             <Link
               href={`/testimonials?testimonial=${current.id}`}
-              className="flex h-60 min-w-0 flex-col rounded-3xl bg-slate-700/55 p-5 transition hover:bg-slate-700/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 sm:p-7"
+              className="flex h-60 min-w-0 flex-col rounded-3xl  p-5 transition border-2 border-white/35 shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 sm:p-7"
               aria-label={`Read the full testimonial from ${current.name}`}
             >
               <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-hidden sm:grid-cols-[minmax(8rem,auto)_minmax(0,1fr)] sm:gap-8 xl:gap-10">
