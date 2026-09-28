@@ -7,10 +7,8 @@ import {
   ArrowRight,
   Heart,
   LoaderCircle,
-  LockKeyhole,
   Ruler,
   Search,
-  UserRound,
 } from "lucide-react";
 
 import TeamMemberImage from "@/components/pages/team/TeamMemberImage";
@@ -22,23 +20,22 @@ import {
   type PropertyRecord,
 } from "@/lib/property-data";
 import type { TeamMember } from "@/lib/team-data";
+import {
+  clearPropertyAccess,
+  PROPERTY_ACCESS_CHANGED_EVENT,
+  readPropertyAccess,
+  type StoredPropertyAccess,
+} from "@/lib/property-access";
+import {
+  fetchVisitorProfile,
+  toggleVisitorSavedHome,
+  VisitorAccountError,
+} from "@/lib/visitor-account";
 
 type PublicMember = Pick<
   TeamMember,
   "id" | "slug" | "name" | "role" | "photo" | "bio" | "email" | "phone"
 >;
-type Account = { name: string; email: string };
-type ApiPayload = {
-  status?: string;
-  message?: string;
-  token?: string;
-  user?: Account;
-  agent_slug?: string;
-  saved_property_ids?: number[];
-};
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
-
 type AgentExperience = {
   title: string;
   description: string;
@@ -103,25 +100,13 @@ function LinkedinIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 export default function AgentSearchLanding({ member }: Readonly<{ member: PublicMember }>) {
-  const storageKey = `keynova-agent-search:${member.slug}`;
   const [properties, setProperties] = useState<PropertyRecord[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [propertyError, setPropertyError] = useState("");
   const [draftSearch, setDraftSearch] = useState("");
   const [search, setSearch] = useState("");
-  const [token, setToken] = useState("");
-  const [account, setAccount] = useState<Account | null>(null);
+  const [access, setAccess] = useState<StoredPropertyAccess | null>(null);
   const [savedIds, setSavedIds] = useState<number[]>([]);
-  const [authMode, setAuthMode] = useState<"register" | "login">("register");
-  const [authForm, setAuthForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    consent: false,
-  });
-  const [authBusy, setAuthBusy] = useState(false);
-  const [authMessage, setAuthMessage] = useState("");
   const [activityMessage, setActivityMessage] = useState("");
   const [savingId, setSavingId] = useState<number | null>(null);
   const { overview, experience } = useMemo(
@@ -144,30 +129,39 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
   }, [member.slug]);
 
   useEffect(() => {
-    if (!API_BASE) return;
-    const savedToken = window.localStorage.getItem(storageKey) || "";
-    if (!savedToken) return;
+    let active = true;
 
-    fetch(`${API_BASE}/agent/actions.php`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${savedToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ action: "session" }),
-    })
-      .then(async (response) => {
-        const payload = (await response.json()) as ApiPayload;
-        if (!response.ok || payload.status !== "success" || payload.agent_slug !== member.slug) {
-          throw new Error(payload.message || "Session unavailable.");
-        }
-        setToken(savedToken);
-        setAccount(payload.user || null);
-        setSavedIds(payload.saved_property_ids || []);
-      })
-      .catch(() => window.localStorage.removeItem(storageKey));
-  }, [member.slug, storageKey]);
+    const syncProfile = () => {
+      const savedAccess = readPropertyAccess();
+      setAccess(savedAccess);
+      if (!savedAccess) {
+        setSavedIds([]);
+        return;
+      }
+
+      fetchVisitorProfile(savedAccess.token)
+        .then((profile) => {
+          if (active) setSavedIds((profile.saved_homes || []).map((home) => home.id));
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          if (error instanceof VisitorAccountError && error.status === 401) {
+            clearPropertyAccess();
+            setAccess(null);
+            setSavedIds([]);
+          }
+        });
+    };
+
+    syncProfile();
+    window.addEventListener(PROPERTY_ACCESS_CHANGED_EVENT, syncProfile);
+    window.addEventListener("storage", syncProfile);
+    return () => {
+      active = false;
+      window.removeEventListener(PROPERTY_ACCESS_CHANGED_EVENT, syncProfile);
+      window.removeEventListener("storage", syncProfile);
+    };
+  }, []);
 
   const visibleProperties = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -180,87 +174,17 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
     );
   }, [properties, search]);
 
-  async function callAgentApi(body: Record<string, unknown>, bearer = token) {
-    if (!API_BASE) throw new Error("The home-search service is not configured.");
-    const response = await fetch(`${API_BASE}/agent/actions.php`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-      },
-      body: JSON.stringify(body),
-    });
-    const payload = (await response.json().catch(() => ({}))) as ApiPayload;
-    if (!response.ok || payload.status !== "success") {
-      throw new Error(payload.message || "Your request could not be completed.");
-    }
-    return payload;
-  }
-
-  async function submitSearch(event: FormEvent<HTMLFormElement>) {
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextSearch = draftSearch.trim();
-    setSearch(nextSearch);
+    setSearch(draftSearch.trim());
     setActivityMessage("");
-    if (!account || !token) {
-      setActivityMessage(`Create an account or sign in so ${member.name} can help with your search.`);
-      return;
-    }
-    try {
-      await callAgentApi({ action: "search", query: nextSearch || "All available homes" });
-      setActivityMessage(`Your search has been shared with ${member.name}.`);
-    } catch (error) {
-      setActivityMessage(error instanceof Error ? error.message : "Unable to share this search.");
-    }
-  }
-
-  async function submitAuth(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthBusy(true);
-    setAuthMessage("");
-    try {
-      const payload = await callAgentApi(
-        authMode === "register"
-          ? {
-              action: "register",
-              agent_slug: member.slug,
-              name: authForm.name.trim(),
-              email: authForm.email.trim(),
-              phone: authForm.phone.trim(),
-              password: authForm.password,
-              consent: authForm.consent,
-            }
-          : {
-              action: "login",
-              agent_slug: member.slug,
-              email: authForm.email.trim(),
-              password: authForm.password,
-            },
-        "",
-      );
-      if (!payload.token || !payload.user) throw new Error("The server returned an invalid session.");
-      window.localStorage.setItem(storageKey, payload.token);
-      setToken(payload.token);
-      setAccount(payload.user);
-      setSavedIds(payload.saved_property_ids || []);
-      setAuthForm({ name: "", email: "", phone: "", password: "", consent: false });
-      setAuthMessage(
-        authMode === "register"
-          ? `Your account is ready and ${member.name} has been notified.`
-          : `Welcome back, ${payload.user.name}.`,
-      );
-    } catch (error) {
-      setAuthMessage(error instanceof Error ? error.message : "Unable to continue.");
-    } finally {
-      setAuthBusy(false);
-    }
   }
 
   async function toggleSaved(property: PropertyRecord) {
-    if (!account || !token) {
-      setActivityMessage("Sign in or create an account before saving a home.");
-      document.getElementById("search-account")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const currentAccess = readPropertyAccess();
+    if (!currentAccess) {
+      setAccess(null);
+      setActivityMessage("Sign in to your profile before saving a home.");
       return;
     }
     const propertyId = Number(property.id);
@@ -268,26 +192,30 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
     setSavingId(propertyId);
     setActivityMessage("");
     try {
-      const payload = await callAgentApi({ action: "save", property_id: propertyId, save: shouldSave });
-      setSavedIds(payload.saved_property_ids || []);
+      const nextSavedIds = await toggleVisitorSavedHome(
+        currentAccess.token,
+        propertyId,
+        shouldSave,
+      );
+      setAccess(currentAccess);
+      setSavedIds(nextSavedIds);
       setActivityMessage(
         shouldSave
-          ? `${property.address || property.title} was saved and ${member.name} was notified.`
-          : "The home was removed from your saved list.",
+          ? `${property.address || property.title} was saved to your profile.`
+          : "The home was removed from Saved Homes.",
       );
     } catch (error) {
+      if (error instanceof VisitorAccountError && error.status === 401) {
+        clearPropertyAccess();
+        setAccess(null);
+        setSavedIds([]);
+        setActivityMessage("Your session expired. Sign in to your profile to save homes.");
+        return;
+      }
       setActivityMessage(error instanceof Error ? error.message : "Unable to update saved homes.");
     } finally {
       setSavingId(null);
     }
-  }
-
-  function signOut() {
-    window.localStorage.removeItem(storageKey);
-    setToken("");
-    setAccount(null);
-    setSavedIds([]);
-    setAuthMessage("You have been signed out.");
   }
 
   // TODO: wire these to real profile URLs once social links are part of member data.
@@ -302,13 +230,12 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
       {/* HERO — headline + contact, with the search bar overlapping the bottom edge */}
       <section className="relative overflow-hidden bg-[#003251] px-6 pb-16 pt-16 text-white sm:pt-20 lg:px-10">
         <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -right-20 -top-24 h-96 w-96 rounded-full bg-[#1c878f]/20 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl">
           <h1 className="max-w-xl text-4xl font-semibold leading-tight sm:text-5xl">
             Real estate with
             <br />
-            <span className="italic text-[#bcdfe3]">{member.name}</span>
+            <span className="italic text-[#ffffff]">{member.name}</span>
           </h1>
           <Link
             href={`/contact?agent=${encodeURIComponent(member.slug)}`}
@@ -343,15 +270,26 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
             </button>
           </form>
           {activityMessage && (
-            <p className="mt-2 text-sm text-red-600" role="status">
-              {activityMessage}
-            </p>
+            <div
+              className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600"
+              role="status"
+            >
+              <span>{activityMessage}</span>
+              {!access && (
+                <Link
+                  href="/profile"
+                  className="font-semibold text-[#003251] underline underline-offset-4"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
           )}
         </div>
       </section>
 
       {/* AGENT BIO — photo left, name/role/contact/socials right, bio paragraphs below that */}
-      <section className="px-6 pb-4 pt-28 lg:px-10">
+      <section className="px-6 pb-4 pt-10 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 sm:grid-cols-[260px_1fr]">
             <div className="relative aspect-4/5 w-full max-w-65 overflow-hidden rounded-md bg-slate-200 shadow-sm">
@@ -359,7 +297,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
             </div>
             <div>
               <h2 className="text-3xl font-bold">{member.name}</h2>
-              {member.role && <p className="mt-2 text-base font-medium text-[#1c878f]">{member.role}</p>}
+              {member.role && <p className="mt-2 text-base font-medium text-[#003251]">{member.role}</p>}
 
               {(member.phone || member.email) && (
                 <div className="mt-4 space-y-1.5 text-sm">
@@ -372,7 +310,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                   )}
                   {member.email && (
                     <p>
-                      <a href={`mailto:${member.email}`} className="text-[#1c878f] hover:underline">
+                      <a href={`mailto:${member.email}`} className="text-[#003251] hover:underline">
                         {member.email}
                       </a>
                     </p>
@@ -408,11 +346,11 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
               <div className="mt-8 grid grid-cols-[minmax(0,180px)_20px_1fr] gap-x-4 sm:grid-cols-[220px_20px_1fr] sm:gap-x-6">
                 {experience.map((item, index) => (
                   <Fragment key={`${item.title}-${index}`}>
-                    <p className="py-1 text-sm font-semibold text-[#1c878f]">{item.title}</p>
+                    <p className="py-1 text-sm font-semibold text-[#003251]">{item.title}</p>
                     <div className="relative flex justify-center">
                       <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[#003251]" />
                       {index !== experience.length - 1 && (
-                        <span className="absolute top-4 h-[calc(100%+2rem)] w-px bg-[#1c878f]/30" />
+                        <span className="absolute top-4 h-[calc(100%+2rem)] w-px bg-[#9e9e9e]" />
                       )}
                     </div>
                     <p className="pb-8 text-sm leading-6 text-slate-600">{item.description}</p>
@@ -424,23 +362,33 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
         </div>
       </section>
 
-      {/* LISTINGS + ACCOUNT */}
+      {/* LISTINGS */}
       <section id="homes" className="scroll-mt-24 px-6 pb-20 lg:px-10">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_320px]">
-          <div>
-            <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-semibold">Exclusive listings by {member.name.split(" ")[0]}</h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
                   Browse properties represented by {member.name}.
                 </p>
               </div>
-              <Link href="/listing" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#1c878f] hover:underline">
-                View all listings <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-[#003251] hover:underline"
+                >
+                  {access
+                    ? `${savedIds.length} Saved ${savedIds.length === 1 ? "Home" : "Homes"}`
+                    : "Sign in to save homes"}
+                  <Heart className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <Link href="/listing" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#003251] hover:underline">
+                  View all listings <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </div>
             </div>
 
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {loadingProperties && <p className="col-span-full py-16 text-center text-slate-500">Loading available homes...</p>}
               {!loadingProperties && propertyError && <p className="col-span-full py-16 text-center text-red-700">{propertyError}</p>}
               {!loadingProperties && !propertyError && visibleProperties.length === 0 && (
@@ -485,7 +433,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                           <p className="text-base font-semibold">{displayPrice(property.price)}</p>
                           <Link
                             href={`/contact?agent=${encodeURIComponent(member.slug)}&subject=${encodeURIComponent(`Question about ${property.address || property.title}`)}`}
-                            className="text-xs font-semibold text-[#1c878f] hover:underline"
+                            className="text-xs font-semibold text-[#003251] hover:underline"
                           >
                             Inquire
                           </Link>
@@ -494,74 +442,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                     </article>
                   );
                 })}
-            </div>
           </div>
-
-          {/* ACCOUNT / SAVE SEARCH — logic unchanged */}
-          <aside id="search-account" className="h-fit scroll-mt-28 rounded-md border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-28">
-            {account ? (
-              <div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#003251] text-white">
-                  <UserRound className="h-5 w-5" />
-                </div>
-                <h2 className="mt-5 text-xl font-semibold">Welcome, {account.name}</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Your searches and saved homes are connected to {member.name}.
-                </p>
-                <p className="mt-5 rounded-md bg-[#edf5f6] px-4 py-3 text-sm font-medium text-[#003251]">
-                  {savedIds.length} saved {savedIds.length === 1 ? "home" : "homes"}
-                </p>
-                <button type="button" onClick={signOut} className="mt-6 text-sm font-semibold text-slate-500 hover:text-[#003251]">
-                  Sign out
-                </button>
-              </div>
-            ) : (
-              <div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#003251] text-white">
-                    <LockKeyhole className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold">Save your search</h2>
-                    <p className="text-xs text-slate-500">Free KeyNova search account</p>
-                  </div>
-                </div>
-                <div className="mt-6 grid grid-cols-2 border-b border-slate-200">
-                  {(["register", "login"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => { setAuthMode(mode); setAuthMessage(""); }}
-                      className={`border-b-2 px-2 py-2 text-sm font-semibold ${authMode === mode ? "border-[#1c878f] text-[#003251]" : "border-transparent text-slate-400"}`}
-                    >
-                      {mode === "register" ? "Create account" : "Sign in"}
-                    </button>
-                  ))}
-                </div>
-                <form onSubmit={submitAuth} className="mt-5 space-y-3">
-                  {authMode === "register" && (
-                    <>
-                      <input required maxLength={150} autoComplete="name" placeholder="Name" value={authForm.name} onChange={(event) => setAuthForm((current) => ({ ...current, name: event.target.value }))} className="w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-[#1c878f] focus:outline-none" />
-                      <input required maxLength={40} autoComplete="tel" type="tel" placeholder="Phone" value={authForm.phone} onChange={(event) => setAuthForm((current) => ({ ...current, phone: event.target.value }))} className="w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-[#1c878f] focus:outline-none" />
-                    </>
-                  )}
-                  <input required maxLength={254} autoComplete="email" type="email" placeholder="Email" value={authForm.email} onChange={(event) => setAuthForm((current) => ({ ...current, email: event.target.value }))} className="w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-[#1c878f] focus:outline-none" />
-                  <input required minLength={8} maxLength={128} autoComplete={authMode === "register" ? "new-password" : "current-password"} type="password" placeholder="Password" value={authForm.password} onChange={(event) => setAuthForm((current) => ({ ...current, password: event.target.value }))} className="w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-[#1c878f] focus:outline-none" />
-                  {authMode === "register" && (
-                    <label className="flex gap-2 text-xs leading-5 text-slate-600">
-                      <input required type="checkbox" checked={authForm.consent} onChange={(event) => setAuthForm((current) => ({ ...current, consent: event.target.checked }))} className="mt-0.5 accent-[#003251]" />
-                      I agree that KeyNova and {member.name} may contact me about my home search.
-                    </label>
-                  )}
-                  {authMessage && <p className="text-sm leading-6 text-slate-600" role="status">{authMessage}</p>}
-                  <button type="submit" disabled={authBusy} className="flex w-full items-center justify-center gap-2 rounded bg-[#003251] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
-                    {authBusy && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                    {authMode === "register" ? "Create account" : "Sign in"}
-                  </button>
-                </form>
-              </div>
-            )}
-          </aside>
         </div>
       </section>
     </main>

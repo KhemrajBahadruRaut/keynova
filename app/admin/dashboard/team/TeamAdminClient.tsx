@@ -4,6 +4,8 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2, UsersRound, X } from "lucide-react";
+import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+import ImageCropModal from "@/components/ui/ImageCropModal";
 
 import {
   hasValidationErrors,
@@ -106,6 +108,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
 
 export default function TeamAdminClient() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -117,6 +120,7 @@ export default function TeamAdminClient() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [photoError, setPhotoError] = useState("");
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -190,6 +194,7 @@ export default function TeamAdminClient() {
     setPhoto(null);
     setPhotoPreview("");
     setPhotoError("");
+    setCropFile(null);
     setTouched({});
     setSubmitted(false);
   };
@@ -204,6 +209,7 @@ export default function TeamAdminClient() {
     setPhoto(null);
     setPhotoPreview("");
     setPhotoError("");
+    setCropFile(null);
     setTouched({});
     setSubmitted(false);
     setNotice("");
@@ -226,6 +232,7 @@ export default function TeamAdminClient() {
     setPhoto(null);
     setPhotoPreview("");
     setPhotoError("");
+    setCropFile(null);
     setTouched({});
     setSubmitted(false);
     setNotice("");
@@ -250,28 +257,30 @@ export default function TeamAdminClient() {
 
   const handlePhoto = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] || null;
-    setPhoto(null);
-    setPhotoPreview("");
+    event.target.value = "";
     setPhotoError("");
 
     if (!selected) return;
     if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(selected.type)) {
       setPhotoError("Choose a JPG, PNG, WebP, or GIF image.");
-      event.target.value = "";
       return;
     }
     if (selected.size > MAX_PHOTO_BYTES) {
       setPhotoError("The photo must be 4 MB or smaller.");
-      event.target.value = "";
       return;
     }
-    setPhoto(selected);
+    setCropFile(selected);
+  };
+
+  const handleCroppedPhoto = (croppedPhoto: File) => {
+    setCropFile(null);
+    setPhoto(croppedPhoto);
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       setPhotoPreview(typeof reader.result === "string" ? reader.result : "");
     });
     reader.addEventListener("error", () => setPhotoPreview(""));
-    reader.readAsDataURL(selected);
+    reader.readAsDataURL(croppedPhoto);
   };
 
   const submitMember = async (event: FormEvent<HTMLFormElement>) => {
@@ -337,7 +346,13 @@ export default function TeamAdminClient() {
   };
 
   const deleteMember = async (member: TeamMember) => {
-    if (!window.confirm(`Delete ${member.name}? This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: "Delete team member?",
+      message: `${member.name} will be permanently removed. This cannot be undone.`,
+      confirmLabel: "Delete member",
+      tone: "danger",
+    });
+    if (!confirmed) return;
 
     setDeletingId(member.id);
     setError("");
@@ -380,6 +395,16 @@ export default function TeamAdminClient() {
 
   return (
     <>
+      {cropFile && (
+        <ImageCropModal
+          file={cropFile}
+          outputWidth={800}
+          title="Crop the team member photo"
+          freeCrop
+          onCancel={() => setCropFile(null)}
+          onComplete={handleCroppedPhoto}
+        />
+      )}
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
@@ -402,16 +427,8 @@ export default function TeamAdminClient() {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div className="mb-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700" role="status">
-          {notice}
-        </div>
-      )}
+      <ToastNotice message={error} kind="error" />
+      <ToastNotice message={notice} kind="success" />
 
       <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         {loading ? (
@@ -657,7 +674,9 @@ export default function TeamAdminClient() {
                   <label htmlFor="team-photo" className="text-sm font-medium text-slate-700">
                     Photo {editingMember && <span className="font-normal text-slate-400">(leave empty to keep the current image)</span>}
                   </label>
-                  <p className="mt-1 text-xs text-slate-400">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    JPG, PNG, WebP, or GIF. Maximum 4 MB. Choose any crop size or proportion after selecting.
+                  </p>
                   <input
                     key={`${editingMember?.id || "new"}-${showForm ? "open" : "closed"}`}
                     id="team-photo"
@@ -674,7 +693,7 @@ export default function TeamAdminClient() {
                     <img
                       src={photoPreview || memberPhotoUrl(editingMember?.photo || null)}
                       alt="Team member preview"
-                      className="mt-3 h-36 w-36 border border-slate-200 object-cover"
+                      className="mt-3 max-h-48 max-w-full border border-slate-200 object-contain"
                     />
                   )}
                 </div>

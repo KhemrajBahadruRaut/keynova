@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
+import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
 
 import {
   cloneHomeValuationContent,
@@ -85,6 +86,7 @@ function validateContent(content: HomeValuationContent) {
 
 export default function HomeValuationsAdminClient() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const [tab, setTab] = useState<AdminTab>("requests");
   const [requests, setRequests] = useState<ValuationRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
@@ -186,9 +188,14 @@ export default function HomeValuationsAdminClient() {
     return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
   }, [dirty]);
 
-  const selectTab = (nextTab: AdminTab) => {
+  const selectTab = async (nextTab: AdminTab) => {
     if (tab === "content" && nextTab !== tab && dirty) {
-      if (!window.confirm("Leave the editor and keep these changes unpublished?")) return;
+      const confirmed = await confirm({
+        title: "Leave the editor?",
+        message: "Your changes will remain unpublished until you return and publish them.",
+        confirmLabel: "Leave editor",
+      });
+      if (!confirmed) return;
     }
     setTab(nextTab);
     setError("");
@@ -317,8 +324,13 @@ export default function HomeValuationsAdminClient() {
     }
   };
 
-  const restoreDefaults = () => {
-    if (!window.confirm("Load the original Home Valuation page content?")) return;
+  const restoreDefaults = async () => {
+    const confirmed = await confirm({
+      title: "Restore original content?",
+      message: "Your current unpublished Home Valuation content will be replaced.",
+      confirmLabel: "Restore original",
+    });
+    if (!confirmed) return;
     setContent(cloneHomeValuationContent());
     setError("");
     setNotice("Original content loaded. Publish to make it live.");
@@ -360,8 +372,8 @@ export default function HomeValuationsAdminClient() {
         </div>
       </div>
 
-      {error && <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-      {notice && <div role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div>}
+      <ToastNotice message={error} kind="error" />
+      <ToastNotice message={notice} kind="success" />
 
       {tab === "requests" ? (
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

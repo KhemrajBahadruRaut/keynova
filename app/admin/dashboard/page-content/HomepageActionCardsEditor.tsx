@@ -11,6 +11,7 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
+import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
 
 import {
   cloneHomepageActionContent,
@@ -43,6 +44,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
 
 export default function HomepageActionCardsEditor() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const [content, setContent] = useState<HomepageActionContent>(() =>
     cloneHomepageActionContent(),
   );
@@ -214,8 +216,13 @@ export default function HomepageActionCardsEditor() {
     }
   };
 
-  const restoreDefaults = () => {
-    if (!window.confirm("Load the original homepage card images?")) return;
+  const restoreDefaults = async () => {
+    const confirmed = await confirm({
+      title: "Restore original images?",
+      message: "Your current unpublished homepage card images will be replaced.",
+      confirmLabel: "Restore originals",
+    });
+    if (!confirmed) return;
     setContent(cloneHomepageActionContent());
     setError("");
     setNotice("Original images loaded. Publish changes to use them.");
@@ -284,16 +291,8 @@ export default function HomepageActionCardsEditor() {
         </div>
       </div>
 
-      {error && (
-        <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {notice}
-        </div>
-      )}
+      <ToastNotice message={error} kind="error" />
+      <ToastNotice message={notice} kind="success" />
 
       {loading ? (
         <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">

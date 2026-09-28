@@ -10,6 +10,7 @@ import {
   Star,
   XCircle,
 } from "lucide-react";
+import { ToastNotice } from "@/components/ui/FeedbackProvider";
 
 import type {
   AdminTestimonial,
@@ -181,18 +182,8 @@ export default function TestimonialsAdminClient() {
         </div>
       </div>
 
-      {(error || notice) && (
-        <div
-          role={error ? "alert" : "status"}
-          className={`mb-5 rounded-xl border px-4 py-3 text-sm ${
-            error
-              ? "border-red-100 bg-red-50 text-red-700"
-              : "border-emerald-100 bg-emerald-50 text-emerald-700"
-          }`}
-        >
-          {error || notice}
-        </div>
-      )}
+      <ToastNotice message={error} kind="error" />
+      <ToastNotice message={notice} kind="success" />
 
       <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">

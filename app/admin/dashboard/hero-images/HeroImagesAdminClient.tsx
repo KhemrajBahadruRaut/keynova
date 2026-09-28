@@ -13,6 +13,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
+import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
 
 import {
   cloneHeroContent,
@@ -62,6 +63,7 @@ function validationMessage(content: HeroContent) {
 
 export default function HeroImagesAdminClient() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const [content, setContent] = useState<HeroContent>(() => cloneHeroContent());
   const [baseline, setBaseline] = useState("");
   const [updatedAt, setUpdatedAt] = useState("");
@@ -199,12 +201,18 @@ export default function HeroImagesAdminClient() {
     setNotice("New carousel item added. Complete it, then publish your changes.");
   };
 
-  const removeSlide = (index: number) => {
+  const removeSlide = async (index: number) => {
     if (content.slides.length === 1) {
       setError("The homepage hero must keep at least one image.");
       return;
     }
-    if (!window.confirm(`Remove hero image ${index + 1}?`)) return;
+    const confirmed = await confirm({
+      title: "Remove hero image?",
+      message: `Image ${index + 1} will be removed from this draft.`,
+      confirmLabel: "Remove image",
+      tone: "danger",
+    });
+    if (!confirmed) return;
     setContent((current) => ({
       slides: current.slides.filter((_, slideIndex) => slideIndex !== index),
     }));
@@ -255,8 +263,13 @@ export default function HeroImagesAdminClient() {
     }
   };
 
-  const restoreDefaults = () => {
-    if (!window.confirm("Load the original hero images into this editor?")) return;
+  const restoreDefaults = async () => {
+    const confirmed = await confirm({
+      title: "Restore original images?",
+      message: "Your current unpublished hero-image changes will be replaced.",
+      confirmLabel: "Restore originals",
+    });
+    if (!confirmed) return;
     setContent(cloneHeroContent());
     setError("");
     setNotice("Original hero images loaded. Publish changes to use them.");
@@ -322,16 +335,8 @@ export default function HeroImagesAdminClient() {
         </div>
       </div>
 
-      {error && (
-        <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {notice}
-        </div>
-      )}
+      <ToastNotice message={error} kind="error" />
+      <ToastNotice message={notice} kind="success" />
 
       {loading ? (
         <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">

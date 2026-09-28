@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ToastNotice } from "@/components/ui/FeedbackProvider";
 
 interface DocumentRequest {
   id: number;
@@ -113,11 +114,7 @@ export default function DocumentRequestsClient() {
         </p>
       </div>
 
-      {error && (
-        <div className="mb-5 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-          {error}
-        </div>
-      )}
+      <ToastNotice message={error} kind="error" />
 
       <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">

@@ -3,7 +3,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, User, X } from "lucide-react";
+import {
+  PROPERTY_ACCESS_CHANGED_EVENT,
+  PROPERTY_ACCESS_STORAGE_KEY,
+  readPropertyAccess,
+  redirectToPropertyAccessBridge,
+  type PropertyAccessVisitor,
+} from "@/lib/property-access";
+import { propertyUploadUrl } from "@/lib/property-data";
 
 const socialLinks = [
   {
@@ -39,7 +47,7 @@ const navLinks: NavLink[] = [
   //     { name: "Meet the Team", path: "/meet-the-team" },
   //   ],
   // },
-  { name: "why", path: "/why" },
+  { name: "Why", path: "/why" },
   { name: "The Team", path: "/meet-the-team" },
   { name: "Grand Living", path: "/grandliving" },
   { name: "Exclusive", path: "/exclusive" },
@@ -49,9 +57,11 @@ const navLinks: NavLink[] = [
 export default function Navbar() {
   const [showNav, setShowNav] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [visitor, setVisitor] = useState<PropertyAccessVisitor | null>(null);
   const lastScrollY = useRef(0);
 
   const pathname = usePathname();
+  const profileImageUrl = propertyUploadUrl(visitor?.profile_image);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,6 +85,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [mobileOpen]);
 
+  useEffect(() => {
+    const refreshVisitor = () => {
+      const access = readPropertyAccess();
+      setVisitor(access?.visitor || null);
+      if (!access) redirectToPropertyAccessBridge();
+    };
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === PROPERTY_ACCESS_STORAGE_KEY) refreshVisitor();
+    };
+
+    refreshVisitor();
+    window.addEventListener(PROPERTY_ACCESS_CHANGED_EVENT, refreshVisitor);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener(PROPERTY_ACCESS_CHANGED_EVENT, refreshVisitor);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
   const pathIsActive = (path: string) =>
     pathname === path || (path !== "/" && pathname.startsWith(`${path}/`));
 
@@ -91,7 +120,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop navigation */}
-        <nav className="hidden items-center gap-10 lg:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-5 lg:flex xl:gap-8" aria-label="Main navigation">
           {navLinks.map((link) => {
             const isActive =
               pathIsActive(link.path) ||
@@ -162,7 +191,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           {/* Social icons */}
-          <div className="hidden items-center gap-3 sm:flex md:hidden lg:flex">
+          <div className="hidden items-center gap-3 sm:flex md:hidden xl:flex">
             {socialLinks.map(({ label, href, path }) => (
               <a
                 key={label}
@@ -182,6 +211,29 @@ export default function Navbar() {
               </a>
             ))}
           </div>
+
+          <Link
+            href="/profile"
+            aria-label={visitor ? `Open ${visitor.name}'s profile` : "Open profile"}
+            className={`hidden items-center gap-2 border px-2 py-2 text-sm font-semibold transition lg:flex xl:px-3 ${
+              pathIsActive("/profile")
+                ? "border-white bg-white text-[#003251]"
+                : "border-white/30 text-white hover:bg-white hover:text-[#003251]"
+            }`}
+          >
+            {profileImageUrl ? (
+              <span
+                className="h-5 w-5 rounded-full bg-cover bg-center"
+                style={{ backgroundImage: `url("${profileImageUrl}")` }}
+                aria-hidden="true"
+              />
+            ) : (
+              <User className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span className="hidden max-w-24 truncate xl:inline">
+              {visitor?.name.split(/\s+/)[0] || "Profile"}
+            </span>
+          </Link>
 
           <button
             type="button"
@@ -206,6 +258,26 @@ export default function Navbar() {
           aria-label="Mobile navigation"
           className="border-t border-white/15 px-6 pb-6 pt-3 lg:hidden"
         >
+          <Link
+            href="/profile"
+            onClick={() => setMobileOpen(false)}
+            className={`mb-2 flex items-center gap-3 border border-white/20 px-4 py-3 text-sm font-semibold ${
+              pathIsActive("/profile") ? "bg-white text-[#003251]" : "text-white"
+            }`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+              {profileImageUrl ? (
+                <span
+                  className="h-8 w-8 rounded-full bg-cover bg-center"
+                  style={{ backgroundImage: `url("${profileImageUrl}")` }}
+                  aria-hidden="true"
+                />
+              ) : (
+                <User className="h-4 w-4" aria-hidden="true" />
+              )}
+            </span>
+            <span>{visitor ? `${visitor.name}'s profile` : "Profile / Sign in"}</span>
+          </Link>
           {navLinks.map((link) => (
             <div key={link.name} className="border-b border-white/10 last:border-b-0">
               <Link

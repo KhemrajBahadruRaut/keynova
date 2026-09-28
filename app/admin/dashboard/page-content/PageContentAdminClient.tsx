@@ -11,6 +11,7 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
+import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
 
 import {
   clonePageContent,
@@ -73,6 +74,7 @@ function validationMessage(content: ServicePageContent) {
 
 export default function PageContentAdminClient() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const [pageKey, setPageKey] = useState<PageContentKey>("buywithus");
   const [content, setContent] = useState<ServicePageContent>(() =>
     clonePageContent("buywithus"),
@@ -146,9 +148,17 @@ export default function PageContentAdminClient() {
     return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
   }, [dirty]);
 
-  const selectPage = (nextKey: PageContentKey) => {
+  const selectPage = async (nextKey: PageContentKey) => {
     if (nextKey === pageKey) return;
-    if (dirty && !window.confirm("Discard your unpublished changes?")) return;
+    if (dirty) {
+      const confirmed = await confirm({
+        title: "Switch page?",
+        message: "The unpublished changes in this editor will be discarded.",
+        confirmLabel: "Discard and switch",
+        tone: "danger",
+      });
+      if (!confirmed) return;
+    }
     setPageKey(nextKey);
   };
 
@@ -268,8 +278,13 @@ export default function PageContentAdminClient() {
     }
   };
 
-  const restoreDefaults = () => {
-    if (!window.confirm("Load the original page content into this editor?")) return;
+  const restoreDefaults = async () => {
+    const confirmed = await confirm({
+      title: "Restore original content?",
+      message: "Your current unpublished page content will be replaced.",
+      confirmLabel: "Restore original",
+    });
+    if (!confirmed) return;
     setContent(clonePageContent(pageKey));
     setError("");
     setNotice("Original content loaded. Save changes to publish it.");
@@ -354,16 +369,8 @@ export default function PageContentAdminClient() {
         </div>
       </div>
 
-      {error && (
-        <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {notice}
-        </div>
-      )}
+      <ToastNotice message={error} kind="error" />
+      <ToastNotice message={notice} kind="success" />
 
       {loading ? (
         <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">

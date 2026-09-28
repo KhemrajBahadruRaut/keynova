@@ -33,6 +33,29 @@ import {
 import DocumentAccessModal from "./DocumentAccessModal";
 
 type AccessStatus = "checking" | "required" | "granted";
+type InquiryFormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  message: string;
+  phone: string;
+};
+
+function prefilledInquiryForm(
+  current: InquiryFormValues,
+  visitor: PropertyAccessVisitor,
+): InquiryFormValues {
+  const nameParts = visitor.name.trim().split(/\s+/);
+  const firstName = nameParts.shift() || "";
+  const lastName = nameParts.join(" ");
+  return {
+    ...current,
+    firstName: current.firstName || firstName,
+    lastName: current.lastName || lastName,
+    email: current.email || visitor.email,
+    phone: current.phone || visitor.phone,
+  };
+}
 type InquiryStatus = {
   type: "success" | "error";
   message: string;
@@ -109,7 +132,7 @@ async function loadAuthorizedPropertyData(
 ) {
   const destination = source === "exclusive" ? "off_market" : "listing";
   const [propertyResult, listingsResult] = await Promise.allSettled([
-    fetchProperty(propertyId, accessToken, signal),
+    fetchProperty(propertyId, accessToken, signal, source || "listing"),
     fetchListingProperties(destination, signal),
   ]);
 
@@ -180,6 +203,7 @@ export default function PropertyDetailsPage({
           setProperty(loaded.property);
           setSimilarListings(loaded.listings);
           setVerifiedVisitor(savedAccess.visitor);
+          setForm((current) => prefilledInquiryForm(current, savedAccess.visitor));
           setError("");
           setAccessStatus("granted");
           setLoading(false);
@@ -224,6 +248,7 @@ export default function PropertyDetailsPage({
     if (!propertyId) return;
 
     setVerifiedVisitor(access.visitor);
+    setForm((current) => prefilledInquiryForm(current, access.visitor));
     setAccessStatus("checking");
     setLoading(true);
     setError("");
@@ -291,10 +316,14 @@ export default function PropertyDetailsPage({
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "");
       if (!apiBase) throw new Error("The inquiry service is not configured.");
+      const savedAccess = readPropertyAccess();
 
       const response = await fetch(`${apiBase}/property/contact_inquiry.php`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(savedAccess ? { Authorization: `Bearer ${savedAccess.token}` } : {}),
+        },
         body: JSON.stringify({
           property_id: property.id,
           name: `${form.firstName} ${form.lastName}`.trim(),

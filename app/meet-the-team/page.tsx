@@ -77,7 +77,7 @@ export default async function MeetTheTeamPage() {
                         </div>
                         <ArrowRight
                           aria-hidden="true"
-                          className="mt-1 h-4 w-4 shrink-0 text-[#1c878f] transition-transform group-hover:translate-x-1"
+                          className="mt-1 h-4 w-4 shrink-0 text-[#003251] transition-transform group-hover:translate-x-1"
                         />
                       </div>
                     </div>

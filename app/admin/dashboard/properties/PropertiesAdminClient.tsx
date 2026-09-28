@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, X } from "lucide-react";
+import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
 import {
   hasValidationErrors,
   validateBuildingSize,
@@ -209,6 +210,7 @@ const ADMIN_API = "/api/admin";
 
 export default function PropertiesAdminClient() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const [properties, setProperties] = useState<Property[]>([]);
   const [agents, setAgents] = useState<AdminAgent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -245,16 +247,6 @@ export default function PropertiesAdminClient() {
     hasValidationErrors(formErrors) ||
     hasValidationErrors(fileErrors) ||
     (!showOnListing && !showOffMarket);
-
-  useEffect(() => {
-    if (!formMsg.text) return;
-
-    const timer = window.setTimeout(() => {
-      setFormMsg({ type: "", text: "" });
-    }, 4500);
-
-    return () => window.clearTimeout(timer);
-  }, [formMsg.text, formMsg.type]);
 
   // ── Auto-geocode whenever address changes ─────────────────────────────────
   useEffect(() => {
@@ -627,7 +619,13 @@ export default function PropertiesAdminClient() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this property?")) return;
+    const confirmed = await confirm({
+      title: "Delete property?",
+      message: "This property and its associated content will be permanently removed.",
+      confirmLabel: "Delete property",
+      tone: "danger",
+    });
+    if (!confirmed) return;
     const response = await fetch(`${ADMIN_API}/property/delete_property.php`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -642,7 +640,13 @@ export default function PropertiesAdminClient() {
   };
 
   const handleDeleteExistingImage = async (filename: string) => {
-    if (!confirm("Remove this image?")) return;
+    const confirmed = await confirm({
+      title: "Remove image?",
+      message: "This image will be removed from the property.",
+      confirmLabel: "Remove image",
+      tone: "danger",
+    });
+    if (!confirmed) return;
     try {
       const response = await fetch(`${ADMIN_API}/property/delete_property_image.php`, {
         method: "POST",
@@ -661,7 +665,13 @@ export default function PropertiesAdminClient() {
   };
 
   const handleDeleteExistingDocument = async (filename: string) => {
-    if (!confirm("Remove this document?")) return;
+    const confirmed = await confirm({
+      title: "Remove document?",
+      message: "This document will be removed from the property.",
+      confirmLabel: "Remove document",
+      tone: "danger",
+    });
+    if (!confirmed) return;
     try {
       const response = await fetch(`${ADMIN_API}/property/delete_property_document.php`, {
         method: "POST",
@@ -757,36 +767,10 @@ export default function PropertiesAdminClient() {
 
   return (
     <>
-      {formMsg.text && (
-        <div
-          role={formMsg.type === "error" ? "alert" : "status"}
-          aria-live={formMsg.type === "error" ? "assertive" : "polite"}
-          aria-atomic="true"
-          className={`fixed right-4 top-4 z-100 flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 rounded-xl border px-4 py-3 shadow-lg sm:right-6 sm:top-6 ${
-            formMsg.type === "success"
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-              formMsg.type === "success" ? "bg-green-600" : "bg-red-600"
-            }`}
-          >
-            {formMsg.type === "success" ? "\u2713" : "!"}
-          </span>
-          <p className="min-w-0 flex-1 text-sm font-medium">{formMsg.text}</p>
-          <button
-            type="button"
-            onClick={() => setFormMsg({ type: "", text: "" })}
-            className="shrink-0 rounded p-0.5 text-current/70 hover:bg-black/5 hover:text-current focus:outline-none focus:ring-2 focus:ring-current/30"
-            aria-label="Dismiss notification"
-          >
-            <span aria-hidden="true">{"\u00d7"}</span>
-          </button>
-        </div>
-      )}
+      <ToastNotice
+        message={formMsg.text}
+        kind={formMsg.type === "success" ? "success" : "error"}
+      />
 
 
       <div className="mb-6">

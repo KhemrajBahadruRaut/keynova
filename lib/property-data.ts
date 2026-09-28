@@ -210,9 +210,10 @@ export async function fetchProperty(
   id: string,
   accessToken: string,
   signal?: AbortSignal,
+  source = "listing",
 ): Promise<PropertyRecord | null> {
   const data = await requestApi(
-    `/property/get_property.php?id=${encodeURIComponent(id)}`,
+    `/property/get_property.php?id=${encodeURIComponent(id)}&source=${encodeURIComponent(source)}`,
     signal,
     accessToken,
   );

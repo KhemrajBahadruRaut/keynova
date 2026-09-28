@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FeedbackProvider } from "@/components/ui/FeedbackProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export default function RootLayout({
       data-coolstyles-extension="installed"
       data-coolstyles-extension-version="1.9.0"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <FeedbackProvider>{children}</FeedbackProvider>
+      </body>
     </html>
   );
 }

@@ -10,5 +10,5 @@ export default async function AdminDashboardLayout({
   const session = await getAdminSession();
   if (!session || session.role !== "admin") redirect("/admin");
 
-  return <AdminShell>{children}</AdminShell>;
+  return <AdminShell adminEmail={session.email}>{children}</AdminShell>;
 }

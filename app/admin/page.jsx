@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { LockKeyhole } from "lucide-react";
+import { ToastNotice } from "@/components/ui/FeedbackProvider";
 import {
   hasValidationErrors,
   validateEmail,
@@ -29,7 +30,7 @@ export default function AdminLogin() {
       cache: "no-store",
       signal: controller.signal,
     }).then((response) => {
-      if (response.ok) router.replace("/admin/dashboard/properties");
+      if (response.ok) router.replace("/admin/dashboard");
     }).catch(() => {});
 
     return () => controller.abort();
@@ -63,7 +64,7 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok && data.status === "success") {
-        router.replace("/admin/dashboard/properties");
+        router.replace("/admin/dashboard");
         router.refresh();
       } else {
         setError(data.message || "Invalid email or password.");
@@ -109,14 +110,7 @@ export default function AdminLogin() {
             Sign in to manage KeyNova properties and inquiries.
           </p>
 
-          {error && (
-            <p
-              className="mb-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-center text-sm text-red-600"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
+          <ToastNotice message={error} kind="error" />
 
           <div className="mb-4">
             <label

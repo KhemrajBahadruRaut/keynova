@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { deleteMailSettingsAccess } from "@/lib/auth/mail-settings-access";
-import { deleteAdminSession } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -12,7 +11,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await deleteAdminSession();
   await deleteMailSettingsAccess();
   return NextResponse.json(
     { status: "success" },

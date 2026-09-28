@@ -197,7 +197,7 @@ export default function AboutSection() {
                     <p className="mt-0.5 text-sm text-slate-500">Co-Founder</p>
                   </div>
                 </div>
-                <MoveUpRight aria-hidden="true" className="h-4 w-4 text-[#1c878f]" />
+                <MoveUpRight aria-hidden="true" className="h-4 w-4 text-[#9e9e9e]" />
               </div>
             ))}
           </div>

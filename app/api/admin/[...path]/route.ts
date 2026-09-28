@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getBackendUrl } from "@/lib/auth/backend";
+import { getMailSettingsAccessToken } from "@/lib/auth/mail-settings-access";
 import { deleteAdminSession, getAdminSession } from "@/lib/auth/session";
 
 export const maxDuration = 60;
@@ -29,6 +30,13 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "valuation/update_request_status.php",
   "testimonials/get_admin_testimonials.php",
   "testimonials/update_testimonial_status.php",
+  "settings/get_mail_settings.php",
+  "settings/update_mail_settings.php",
+]);
+
+const MAIL_SETTINGS_ENDPOINTS = new Set([
+  "settings/get_mail_settings.php",
+  "settings/update_mail_settings.php",
 ]);
 
 type AdminProxyContext = {
@@ -86,6 +94,12 @@ async function proxyAdminRequest(
   });
   const contentType = request.headers.get("content-type");
   if (contentType) headers.set("Content-Type", contentType);
+  if (MAIL_SETTINGS_ENDPOINTS.has(endpoint)) {
+    const mailSettingsAccess = await getMailSettingsAccessToken();
+    if (mailSettingsAccess) {
+      headers.set("X-KeyNova-Mail-Access", `Bearer ${mailSettingsAccess}`);
+    }
+  }
 
   try {
     const backendResponse = await fetch(

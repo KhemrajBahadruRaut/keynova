@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ToastNotice } from "@/components/ui/FeedbackProvider";
 
 interface Inquiry {
   id: number;
@@ -82,17 +83,15 @@ export default function ContactInquiriesClient() {
         </p>
       </div>
 
+      <ToastNotice message={error} kind="error" />
+
       <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-5 text-lg font-semibold text-gray-900">
             Contact Inquiries
           </h2>
 
-          {error ? (
-            <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-              {error}
-            </div>
-          ) : loading ? (
+          {loading ? (
             <div className="py-12 text-center text-gray-400">Loading…</div>
           ) : inquiries.length === 0 ? (
             <div className="py-12 text-center text-gray-400">No inquiries yet.</div>

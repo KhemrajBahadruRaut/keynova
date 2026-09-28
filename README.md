@@ -2,7 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Lead email configuration
 
-The PHP backend stores every contact, home-valuation, and agent-search lead in MySQL. To also deliver inbox notifications, configure these environment variables for the PHP/Apache process:
+The PHP backend stores every contact, home-valuation, and agent-search lead in
+MySQL. To deliver inbox notifications locally, copy the backend
+`C:\xampp\htdocs\keynova\.env.example` file to
+`C:\xampp\htdocs\keynova\.env` and enter the sending mailbox's SMTP details:
 
 ```text
 KEYNOVA_LEAD_RECIPIENTS=admin1@example.com,admin2@example.com,admin3@example.com,admin4@example.com
@@ -16,7 +19,21 @@ KEYNOVA_SMTP_USERNAME=...
 KEYNOVA_SMTP_PASSWORD=...
 ```
 
-Home-valuation and general-contact leads go to every address in `KEYNOVA_LEAD_RECIPIENTS`, every email in the backend `admins` table, and the management address. Agent-profile and agent-search activity goes directly to the email on that agent's team record; if it is missing, the admin/management list is used as a fallback.
+The backend loads this file itself, so no global XAMPP or Apache configuration
+is required. The real `.env` is ignored by Git and blocked from HTTP access.
+Production environment variables take precedence over values in the file.
+
+The protected **Email Settings** page in the admin dashboard manages separate
+recipient lists for the main Contact form and property-detail inquiries, with up
+to five addresses in each list. The current admin password must be confirmed
+before those lists can be viewed or changed. Until settings are saved there,
+both lists fall back to `KEYNOVA_LEAD_RECIPIENTS`, emails in the backend
+`admins` table, and `KEYNOVA_MANAGEMENT_EMAIL`.
+
+Home-valuation leads continue to use the environment/admin/management list.
+Agent-profile and agent-search activity goes directly to the email on that
+agent's team record; if it is missing, the environment/admin/management list is
+used as a fallback.
 
 ## Getting Started
 

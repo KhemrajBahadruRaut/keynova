@@ -186,7 +186,7 @@ export default function ListingsPage() {
   return (
     <>
     <Navbar/>
-    <div className="min-h-screen bg-[#f7f6f3] flex flex-col pt-20">
+    <div className="min-h-screen  flex flex-col pt-20 ">
       <div className="border-b border-gray-200 bg-white px-4 py-4 sm:px-6 sm:py-2">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

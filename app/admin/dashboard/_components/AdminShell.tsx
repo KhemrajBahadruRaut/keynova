@@ -12,7 +12,9 @@ import {
   FilePenLine,
   HousePlus,
   Images,
+  LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   MessageSquareText,
   Quote,
@@ -23,6 +25,7 @@ import {
 const ADMIN_SECTIONS = [
   {
     key: "hero",
+    group: "Website",
     label: "Homepage Hero",
     description: "Carousel images and labels",
     href: "/admin/dashboard/hero-images",
@@ -30,6 +33,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "properties",
+    group: "Website",
     label: "Properties",
     description: "Listings and inventory",
     href: "/admin/dashboard/properties",
@@ -37,6 +41,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "team",
+    group: "Website",
     label: "Team Members",
     description: "Profiles and biographies",
     href: "/admin/dashboard/team",
@@ -44,6 +49,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "testimonials",
+    group: "Inbox & leads",
     label: "Testimonials",
     description: "Approve client stories",
     href: "/admin/dashboard/testimonials",
@@ -51,6 +57,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "content",
+    group: "Website",
     label: "Page Content",
     description: "Homepage and guide content",
     href: "/admin/dashboard/page-content",
@@ -58,6 +65,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "valuations",
+    group: "Inbox & leads",
     label: "Home Valuations",
     description: "Requests and form content",
     href: "/admin/dashboard/home-valuations",
@@ -65,6 +73,7 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "requests",
+    group: "Inbox & leads",
     label: "Property Visitors",
     description: "Property document access",
     href: "/admin/dashboard/document-requests",
@@ -72,10 +81,19 @@ const ADMIN_SECTIONS = [
   },
   {
     key: "inquiries",
+    group: "Inbox & leads",
     label: "Contact Inquiries",
     description: "Messages from visitors",
     href: "/admin/dashboard/contact-inquiries",
     Icon: MessageSquareText,
+  },
+  {
+    key: "email",
+    group: "System",
+    label: "Email Settings",
+    description: "Notification recipients",
+    href: "/admin/dashboard/email-settings",
+    Icon: Mail,
   },
 ] as const;
 
@@ -90,9 +108,13 @@ const EMPTY_COUNTS: AdminCounts = {
   valuations: 0,
   requests: 0,
   inquiries: 0,
+  email: 0,
 };
 
-export default function AdminShell({ children }: Readonly<{ children: ReactNode }>) {
+export default function AdminShell({
+  children,
+  adminEmail,
+}: Readonly<{ children: ReactNode; adminEmail: string }>) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -145,6 +167,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
               ).length
             : 0,
         inquiries: inquiries.status === "success" ? inquiries.data?.length || 0 : 0,
+        email: 0,
       });
     } catch {
       // Section pages surface their own loading errors; navigation remains usable.
@@ -166,45 +189,83 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
     router.refresh();
   };
 
+  const currentSection = ADMIN_SECTIONS.find(({ href }) => pathname === href);
+  const currentLabel = pathname === "/admin/dashboard" ? "Overview" : currentSection?.label || "Admin";
+
   const renderNavigation = (mobile = false) => (
-    <nav className="space-y-2" aria-label="Admin sections">
-      {ADMIN_SECTIONS.map(({ key, label, description, href, Icon }) => {
-        const active = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={mobile ? () => setMobileNavOpen(false) : undefined}
-            aria-current={active ? "page" : undefined}
-            className={`group flex min-h-16 items-center gap-3 rounded-xl border px-4 py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7bc3df] ${
-              active
-                ? "border-white/15 bg-white/15 text-white shadow-sm"
-                : "border-transparent text-white/70 hover:border-white/10 hover:bg-white/8 hover:text-white"
-            }`}
-          >
-            <span
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition ${
-                active
-                  ? "bg-[#2f87a8] text-white"
-                  : "bg-white/8 text-white/70 group-hover:bg-white/12 group-hover:text-white"
-              }`}
-            >
-              <Icon className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold leading-5">{label}</span>
-              <span className={`mt-0.5 block truncate text-xs ${active ? "text-white/65" : "text-white/40"}`}>
-                {description}
-              </span>
-            </span>
-            {counts[key] > 0 && (
-              <span className="min-w-6 rounded-full bg-[#2f87a8] px-2 py-1 text-center text-[11px] font-bold leading-none text-white">
-                {counts[key]}
-              </span>
+    <nav className="space-y-6" aria-label="Admin sections">
+      <div>
+        <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+          Workspace
+        </p>
+        <Link
+          href="/admin/dashboard"
+          onClick={mobile ? () => setMobileNavOpen(false) : undefined}
+          aria-current={pathname === "/admin/dashboard" ? "page" : undefined}
+          className={`group flex min-h-14 items-center gap-3 rounded-xl border px-3 py-2.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7bc3df] ${
+            pathname === "/admin/dashboard"
+              ? "border-white/15 bg-white/15 text-white shadow-sm"
+              : "border-transparent text-white/70 hover:border-white/10 hover:bg-white/8 hover:text-white"
+          }`}
+        >
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${pathname === "/admin/dashboard" ? "bg-[#2f87a8] text-white" : "bg-white/8"}`}>
+            <LayoutDashboard className="h-4.5 w-4.5" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-sm font-semibold">Overview</span>
+            <span className="block text-xs text-white/40">Site health and activity</span>
+          </span>
+        </Link>
+      </div>
+
+      {(["Website", "Inbox & leads", "System"] as const).map((group) => (
+        <div key={group}>
+          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+            {group}
+          </p>
+          <div className="space-y-1">
+            {ADMIN_SECTIONS.filter((section) => section.group === group).map(
+              ({ key, label, description, href, Icon }) => {
+                const active = pathname === href;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={mobile ? () => setMobileNavOpen(false) : undefined}
+                    aria-current={active ? "page" : undefined}
+                    className={`group flex min-h-14 items-center gap-3 rounded-xl border px-3 py-2.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7bc3df] ${
+                      active
+                        ? "border-white/15 bg-white/15 text-white shadow-sm"
+                        : "border-transparent text-white/70 hover:border-white/10 hover:bg-white/8 hover:text-white"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition ${
+                        active
+                          ? "bg-[#2f87a8] text-white"
+                          : "bg-white/8 text-white/70 group-hover:bg-white/12 group-hover:text-white"
+                      }`}
+                    >
+                      <Icon className="h-4.5 w-4.5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold leading-5">{label}</span>
+                      <span className={`block truncate text-[11px] ${active ? "text-white/65" : "text-white/40"}`}>
+                        {description}
+                      </span>
+                    </span>
+                    {counts[key] > 0 && (
+                      <span className="min-w-6 rounded-full bg-[#2f87a8] px-2 py-1 text-center text-[10px] font-bold leading-none text-white">
+                        {counts[key]}
+                      </span>
+                    )}
+                  </Link>
+                );
+              },
             )}
-          </Link>
-        );
-      })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 
@@ -212,9 +273,9 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
     <div className="min-h-screen bg-[#eef3f6] text-slate-800">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col bg-[#003251] shadow-2xl shadow-[#071a2a]/20 xl:flex">
         <Link
-          href="/admin/dashboard/properties"
+          href="/admin/dashboard"
           className="flex items-center gap-4 border-b border-white/10 px-6 py-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7bc3df]"
-          aria-label="Go to property management"
+          aria-label="Go to admin overview"
         >
           <Image
             src="/logo/logofooter.png"
@@ -233,9 +294,6 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
         </Link>
 
         <div className="flex-1 overflow-y-auto px-4 py-6">
-          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-            Management
-          </p>
           {renderNavigation()}
         </div>
 
@@ -263,7 +321,7 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#003251] shadow-lg shadow-[#071a2a]/10 xl:hidden">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
           <Link
-            href="/admin/dashboard/properties"
+            href="/admin/dashboard"
             className="flex min-w-0 items-center gap-3"
           >
             <Image
@@ -276,8 +334,8 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
             />
             <div className="min-w-0 border-l border-white/20 pl-3">
               <p className="truncate text-sm font-semibold text-white">KeyNova Admin</p>
-              <p className="hidden text-[10px] uppercase tracking-[0.18em] text-[#7bc3df] sm:block">
-                Website Management
+              <p className="truncate text-[10px] uppercase tracking-[0.18em] text-[#7bc3df]">
+                {currentLabel}
               </p>
             </div>
           </Link>
@@ -332,7 +390,24 @@ export default function AdminShell({ children }: Readonly<{ children: ReactNode 
       </header>
 
       <div className="xl:pl-72">
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <header className="sticky top-0 z-30 hidden h-20 items-center justify-between border-b border-slate-200/80 bg-white/90 px-8 backdrop-blur-xl xl:flex">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2f7895]">
+              KeyNova workspace
+            </p>
+            <p className="mt-1 text-lg font-semibold text-[#003251]">{currentLabel}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-semibold text-slate-700">Administrator</p>
+              <p className="max-w-56 truncate text-xs text-slate-400">{adminEmail}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#003251] text-sm font-bold uppercase text-white shadow-sm ring-4 ring-[#003251]/8">
+              {adminEmail.charAt(0) || "A"}
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-[90rem] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           {children}
         </main>
       </div>
