@@ -10,11 +10,12 @@ import {
   validateVerificationCode,
 } from "@/lib/validation";
 import {
+  readPropertyAccess,
   savePropertyAccess,
   type PropertyAccessVisitor,
   type StoredPropertyAccess,
 } from "@/lib/property-access";
-import { propertyUploadUrl, type PropertyDocument } from "@/lib/property-data";
+import type { PropertyDocument } from "@/lib/property-data";
 import { loginVisitor } from "@/lib/visitor-account";
 
 type DocumentStep = "request" | "login" | "verify" | "setup";
@@ -338,6 +339,44 @@ export default function DocumentAccessModal({
     }
   };
 
+  const startDocumentDownload = (documentToDownload: PropertyDocument) => {
+    const access = readPropertyAccess();
+    if (!API) {
+      setError("The document service is not configured.");
+      return;
+    }
+    if (!access) {
+      setError("Your session has expired. Refresh the page to sign in again.");
+      return;
+    }
+
+    const form = document.createElement("form");
+    form.action = `${API}/property/download_document.php`;
+    form.method = "POST";
+    form.target = "_blank";
+    form.style.display = "none";
+    form.setAttribute("rel", "noopener");
+
+    const fields = {
+      token: access.token,
+      property_id: propertyId,
+      document_file: documentToDownload.file,
+      source,
+    };
+    Object.entries(fields).forEach(([fieldName, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = fieldName;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.requestSubmit();
+    form.remove();
+    setError("");
+  };
+
   if (!open) return null;
 
   const singleDocument = documents.length === 1 ? documents[0] : null;
@@ -385,15 +424,22 @@ export default function DocumentAccessModal({
 
         {effectiveUnlockedEmail ? (
           <div>
+            {error && (
+              <p
+                className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-500"
+                role="alert"
+              >
+                {error}
+              </p>
+            )}
             {singleDocument ? (
               <>
                 <p className="mb-5 text-sm text-gray-500">
                   Click the button below to start the download
                 </p>
-                <a
-                  href={propertyUploadUrl(singleDocument.file)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => startDocumentDownload(singleDocument)}
                   className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-white transition-colors"
                   style={{ backgroundColor: ACCENT }}
                   onMouseEnter={(e) =>
@@ -405,7 +451,7 @@ export default function DocumentAccessModal({
                 >
                   <Download className="h-4 w-4" />
                   Download Document
-                </a>
+                </button>
               </>
             ) : documents.length > 1 ? (
               <>
@@ -414,11 +460,10 @@ export default function DocumentAccessModal({
                 </p>
                 <div className="space-y-3">
                   {documents.map((document) => (
-                    <a
+                    <button
+                      type="button"
                       key={document.file}
-                      href={propertyUploadUrl(document.file)}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onClick={() => startDocumentDownload(document)}
                       className="flex w-full items-center justify-between gap-3 rounded-lg py-2.5 px-4 text-sm font-medium text-white transition-colors"
                       style={{ backgroundColor: ACCENT }}
                       onMouseEnter={(e) =>
@@ -430,7 +475,7 @@ export default function DocumentAccessModal({
                     >
                       <span className="min-w-0 truncate">{document.name}</span>
                       <Download className="h-4 w-4 shrink-0" />
-                    </a>
+                    </button>
                   ))}
                 </div>
               </>

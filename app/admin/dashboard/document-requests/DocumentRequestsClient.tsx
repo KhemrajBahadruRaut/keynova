@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ToastNotice } from "@/components/ui/FeedbackProvider";
 
@@ -23,12 +23,24 @@ interface PropertyVisitor {
   name: string;
   email: string;
   phone: string;
-  entry_property_id: number;
+  entry_property_id: number | null;
   entry_property_title: string | null;
   entry_agent_name: string | null;
   entry_source: string;
   created_at: string;
-  expires_at: string;
+}
+
+interface DocumentDownload {
+  id: number;
+  access_session_id: number;
+  visitor_id: number;
+  property_id: number;
+  property_title: string | null;
+  property_agent_name: string | null;
+  document_name: string;
+  document_filename: string;
+  source: string;
+  downloaded_at: string;
 }
 
 const ENDPOINT = "/api/admin/property/get_doc_requests.php";
@@ -54,6 +66,7 @@ export default function DocumentRequestsClient() {
   const router = useRouter();
   const [requests, setRequests] = useState<DocumentRequest[]>([]);
   const [visitors, setVisitors] = useState<PropertyVisitor[]>([]);
+  const [downloads, setDownloads] = useState<DocumentDownload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -71,6 +84,7 @@ export default function DocumentRequestsClient() {
         message?: string;
         data?: DocumentRequest[];
         visitors?: PropertyVisitor[];
+        downloads?: DocumentDownload[];
       };
       if (!response.ok || payload.status !== "success") {
         throw new Error(payload.message || "Unable to load property access activity.");
@@ -78,6 +92,7 @@ export default function DocumentRequestsClient() {
 
       setRequests(payload.data || []);
       setVisitors(payload.visitors || []);
+      setDownloads(payload.downloads || []);
       setError("");
     } catch (requestError) {
       setError(
@@ -99,6 +114,16 @@ export default function DocumentRequestsClient() {
       window.clearInterval(refresh);
     };
   }, [loadRequests]);
+
+  const downloadsByVisitor = useMemo(() => {
+    const grouped = new Map<number, DocumentDownload[]>();
+    downloads.forEach((download) => {
+      const visitorDownloads = grouped.get(download.visitor_id) || [];
+      visitorDownloads.push(download);
+      grouped.set(download.visitor_id, visitorDownloads);
+    });
+    return grouped;
+  }, [downloads]);
 
   return (
     <>
@@ -148,7 +173,10 @@ export default function DocumentRequestsClient() {
                     <div className="text-sm">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">First property viewed</p>
                       <p className="mt-1 font-medium text-slate-700">
-                        {visitor.entry_property_title || `Property #${visitor.entry_property_id}`}
+                        {visitor.entry_property_title ||
+                          (visitor.entry_property_id
+                            ? `Property #${visitor.entry_property_id}`
+                            : "Not recorded")}
                       </p>
                       <p className="mt-1 text-xs font-medium text-[#2f7895]">
                         Agent: {visitor.entry_agent_name || "Not assigned"}
@@ -157,6 +185,37 @@ export default function DocumentRequestsClient() {
                         {sourceLabel(visitor.entry_source)} · {displayDate(visitor.created_at)}
                       </p>
                     </div>
+                  </div>
+                  <div className="mt-4 border-t border-slate-100 pt-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Documents downloaded ({downloadsByVisitor.get(visitor.id)?.length || 0})
+                    </p>
+                    {(downloadsByVisitor.get(visitor.id)?.length || 0) === 0 ? (
+                      <p className="mt-2 text-sm text-slate-400">
+                        No document downloads yet.
+                      </p>
+                    ) : (
+                      <div className="mt-2 space-y-2">
+                        {downloadsByVisitor.get(visitor.id)?.map((download) => (
+                          <div
+                            key={download.id}
+                            className="rounded-lg bg-slate-50 px-3 py-2 text-sm"
+                          >
+                            <p className="font-medium text-slate-700">
+                              {download.document_name}
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-500">
+                              {download.property_title || `Property #${download.property_id}`}
+                              {" · "}
+                              Agent: {download.property_agent_name || "Not assigned"}
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-400">
+                              {sourceLabel(download.source)} · {displayDate(download.downloaded_at)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
