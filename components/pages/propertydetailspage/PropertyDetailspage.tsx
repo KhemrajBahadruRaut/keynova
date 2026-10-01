@@ -757,14 +757,14 @@ export default function PropertyDetailsPage({
       </div>
     </div>
 
-    {property.lat !== null && property.lng !== null && (
+    {/* {property.lat !== null && property.lng !== null && (
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
         <MapPin
           className="h-8 w-8 fill-red-500 text-red-500 drop-shadow"
           strokeWidth={1.5}
         />
       </div>
-    )}
+    )} */}
   </div>
 </div>
 
