@@ -10,7 +10,8 @@ import ImageCropModal from "@/components/ui/ImageCropModal";
 import {
   hasValidationErrors,
   validateEmail,
-  validatePhone,
+  validateContactPhone,
+  validateName,
   validateText,
   type ValidationErrors,
 } from "@/lib/validation";
@@ -163,7 +164,7 @@ export default function TeamAdminClient() {
   }, [loadMembers]);
 
   const errors: ValidationErrors = {
-    name: validateText(form.name, "Name", { required: true, max: 150 }),
+    name: validateName(form.name, "Name", 150),
     slug:
       !form.slug.trim()
         ? "URL slug is required."
@@ -177,7 +178,7 @@ export default function TeamAdminClient() {
     role: validateText(form.role, "Role", { required: true, max: 180 }),
     bio: validateText(form.bio, "Biography", { max: 20000 }),
     email: validateEmail(form.email, false),
-    phone: validatePhone(form.phone, false),
+    phone: form.phone.trim() ? validateContactPhone(form.phone) : "",
     sort_order:
       !/^\d{1,4}$/.test(form.sort_order) || Number(form.sort_order) > 9999
         ? "Display order must be between 0 and 9999."
@@ -240,6 +241,7 @@ export default function TeamAdminClient() {
   };
 
   const updateName = (name: string) => {
+    setTouched((current) => ({ ...current, name: true }));
     setForm((current) => ({
       ...current,
       name,
@@ -249,6 +251,7 @@ export default function TeamAdminClient() {
 
   const updateField = (field: keyof MemberForm, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setTouched((current) => ({ ...current, [field]: true }));
   };
 
   const markTouched = (field: keyof MemberForm) => {
@@ -627,10 +630,12 @@ export default function TeamAdminClient() {
                   <input
                     id="team-phone"
                     type="tel"
+                    inputMode="numeric"
+                    placeholder="10 digits"
                     value={form.phone}
                     onChange={(event) => updateField("phone", event.target.value)}
                     onBlur={() => markTouched("phone")}
-                    maxLength={40}
+                    maxLength={10}
                     className={inputClass("phone")}
                     aria-invalid={Boolean(fieldError("phone"))}
                   />

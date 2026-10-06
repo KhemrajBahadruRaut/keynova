@@ -1,7 +1,8 @@
 export type ValidationErrors = Record<string, string>;
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EMAIL_PATTERN = /^[a-z\d!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z\d!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z]{2,63}$/i;
 const PHONE_CHARACTERS_PATTERN = /^[+\d\s().-]+$/;
+const NAME_PATTERN = /^\p{L}[\p{L}\p{M}]*(?:(?: +|['\u2019-])\p{L}[\p{L}\p{M}]*)*$/u;
 
 export function validateText(
   value: string,
@@ -24,11 +25,48 @@ export function validateText(
 export function validateEmail(value: string, required = true) {
   const trimmed = value.trim();
   if (!trimmed) return required ? "Email address is required." : "";
-  if (trimmed.length > 254 || !EMAIL_PATTERN.test(trimmed)) {
+  if (
+    trimmed.length > 254 ||
+    trimmed.split("@")[0].length > 64 ||
+    !EMAIL_PATTERN.test(trimmed)
+  ) {
     return "Enter a valid email address.";
   }
   return "";
 }
+
+export function validateName(value: string, label = "Name", max = 100) {
+  const error = validateText(value, label, { required: true, max });
+  if (error) return error;
+  return NAME_PATTERN.test(value.trim())
+    ? ""
+    : `${label} must contain letters only, with spaces, hyphens, or apostrophes between words.`;
+}
+
+export function validateContactPhone(value: string) {
+  if (!value.trim()) return "Phone number is required.";
+  return /^[0-9]{10}$/.test(value.trim())
+    ? ""
+    : "Phone number must contain exactly 10 digits.";
+}
+
+export function validateMessage(value: string) {
+  const error = validateText(value, "Message", { required: true, max: 5000 });
+  if (error) return error;
+  const words = value
+    .trim()
+    .split(/\s+/u)
+    .filter((word) => /[\p{L}\p{N}]/u.test(word));
+  return words.length >= 10 ? "" : "Message must contain at least 10 words.";
+}
+
+export const CONTACT_FIELD_VALIDATORS = {
+  firstName: (value: string) => validateName(value, "First name"),
+  lastName: (value: string) => validateName(value, "Last name"),
+  email: validateEmail,
+  message: validateMessage,
+  phone: validateContactPhone,
+};
 
 export function validatePassword(value: string) {
   if (!value) return "Password is required.";

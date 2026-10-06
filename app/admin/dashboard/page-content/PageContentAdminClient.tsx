@@ -1,5 +1,9 @@
 "use client";
 
+import FieldError from "@/components/ui/FieldError";
+import { serviceContentValidation, validateImageUpload } from "@/lib/admin-validation";
+import { useFormValidation } from "@/lib/use-form-validation";
+
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -36,9 +40,8 @@ type ContentRecord = {
 };
 
 const PAGE_KEYS: PageContentKey[] = ["buywithus", "listwithus"];
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#1c878f] focus:ring-2 focus:ring-[#1c878f]/15";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#1c878f] focus:ring-2 focus:ring-[#1c878f]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -48,29 +51,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   }
 }
 
-function validationMessage(content: ServicePageContent) {
-  const topFields = [
-    [content.eyebrow, "Sidebar heading"],
-    [content.contactTitle, "Contact card title"],
-    [content.contactText, "Contact card text"],
-    [content.contactButtonLabel, "Contact button label"],
-    [content.contactButtonHref, "Contact button link"],
-  ];
-  const missingTopField = topFields.find(([value]) => !value.trim());
-  if (missingTopField) return `${missingTopField[1]} is required.`;
-  if (!/^\/(?!\/)[A-Za-z0-9/_?=&%.-]*$/.test(content.contactButtonHref)) {
-    return "Contact button link must be a site path beginning with / (for example, /contact).";
-  }
 
-  for (const step of content.steps) {
-    if (!step.navLabel.trim()) return `Step ${step.id} navigation label is required.`;
-    if (!step.stepLabel.trim()) return `Step ${step.id} progress label is required.`;
-    if (!step.title.trim()) return `Step ${step.id} title is required.`;
-    if (!step.image.trim()) return `Step ${step.id} image is required.`;
-    if (!step.body.trim()) return `Step ${step.id} body is required.`;
-  }
-  return "";
-}
 
 export default function PageContentAdminClient() {
   const router = useRouter();
@@ -86,6 +67,10 @@ export default function PageContentAdminClient() {
   const [uploadingStep, setUploadingStep] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [uploadErrors, setUploadErrors] = useState<Record<number, string>>({});
+  const validation = serviceContentValidation(content);
+  const { errors, validateField, validateForm, resetValidation, fieldAttributes } =
+    useFormValidation(validation.values, validation.validators);
 
   const dirty = useMemo(
     () => baseline !== "" && JSON.stringify(content) !== baseline,
@@ -119,6 +104,8 @@ export default function PageContentAdminClient() {
 
         const nextContent = payload.data?.content || clonePageContent(key);
         setContent(nextContent);
+        resetValidation();
+        setUploadErrors({});
         setBaseline(JSON.stringify(nextContent));
         setUpdatedAt(payload.data?.updated_at || "");
       } catch (loadError) {
@@ -131,7 +118,7 @@ export default function PageContentAdminClient() {
         setLoading(false);
       }
     },
-    [handleUnauthorized],
+    [handleUnauthorized, resetValidation],
   );
 
   useEffect(() => {
@@ -166,6 +153,7 @@ export default function PageContentAdminClient() {
     field: Key,
     value: ServicePageContent[Key],
   ) => {
+    validateField(field);
     setContent((current) => ({ ...current, [field]: value }));
     setNotice("");
   };
@@ -175,6 +163,7 @@ export default function PageContentAdminClient() {
     field: keyof Omit<PageContentStep, "id">,
     value: string,
   ) => {
+    validateField(`step.${content.steps[stepIndex].id}.${field}`);
     setContent((current) => ({
       ...current,
       steps: current.steps.map((step, index) =>
@@ -191,14 +180,9 @@ export default function PageContentAdminClient() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Choose a JPG, PNG, WebP, or GIF image.");
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Images must be 4 MB or smaller.");
-      return;
-    }
+    const fileError = validateImageUpload(file);
+    setUploadErrors((current) => ({ ...current, [stepIndex]: fileError }));
+    if (fileError) return;
 
     setUploadingStep(stepIndex);
     setError("");
@@ -236,12 +220,9 @@ export default function PageContentAdminClient() {
   };
 
   const saveContent = async () => {
-    const invalid = validationMessage(content);
-    if (invalid) {
-      setError(invalid);
-      setNotice("");
-      return;
-    }
+    setError("");
+    setNotice("");
+    if (!validateForm()) return;
 
     setSaving(true);
     setError("");
@@ -263,6 +244,7 @@ export default function PageContentAdminClient() {
       }
 
       setContent(payload.data.content);
+      resetValidation();
       setBaseline(JSON.stringify(payload.data.content));
       setUpdatedAt(payload.data.updated_at);
       setNotice(payload.message || "Page content published.");
@@ -286,6 +268,8 @@ export default function PageContentAdminClient() {
     });
     if (!confirmed) return;
     setContent(clonePageContent(pageKey));
+    resetValidation();
+    setUploadErrors({});
     setError("");
     setNotice("Original content loaded. Save changes to publish it.");
   };
@@ -382,48 +366,58 @@ export default function PageContentAdminClient() {
             <label className="text-sm font-medium text-slate-700">
               Sidebar heading
               <input
+                {...fieldAttributes("eyebrow", "service-eyebrow-error")}
                 value={content.eyebrow}
                 onChange={(event) => updateTopField("eyebrow", event.target.value)}
                 maxLength={80}
                 className={inputClass}
               />
+              <FieldError id={"service-eyebrow-error"} error={errors["eyebrow"]} />
             </label>
             <label className="text-sm font-medium text-slate-700">
               Contact card title
               <input
+                {...fieldAttributes("contactTitle", "service-contactTitle-error")}
                 value={content.contactTitle}
                 onChange={(event) => updateTopField("contactTitle", event.target.value)}
                 maxLength={150}
                 className={inputClass}
               />
+              <FieldError id={"service-contactTitle-error"} error={errors["contactTitle"]} />
             </label>
             <label className="text-sm font-medium text-slate-700">
               Contact card text
               <input
+                {...fieldAttributes("contactText", "service-contactText-error")}
                 value={content.contactText}
                 onChange={(event) => updateTopField("contactText", event.target.value)}
                 maxLength={500}
                 className={inputClass}
               />
+              <FieldError id={"service-contactText-error"} error={errors["contactText"]} />
             </label>
             <label className="text-sm font-medium text-slate-700">
               Contact button label
               <input
+                {...fieldAttributes("contactButtonLabel", "service-contactButtonLabel-error")}
                 value={content.contactButtonLabel}
                 onChange={(event) => updateTopField("contactButtonLabel", event.target.value)}
                 maxLength={80}
                 className={inputClass}
               />
+              <FieldError id={"service-contactButtonLabel-error"} error={errors["contactButtonLabel"]} />
             </label>
             <label className="text-sm font-medium text-slate-700 md:col-span-2">
               Contact button link
               <input
+                {...fieldAttributes("contactButtonHref", "service-contactButtonHref-error")}
                 value={content.contactButtonHref}
                 onChange={(event) => updateTopField("contactButtonHref", event.target.value)}
                 maxLength={255}
                 placeholder="/contact"
                 className={inputClass}
               />
+              <FieldError id={"service-contactButtonHref-error"} error={errors["contactButtonHref"]} />
             </label>
           </div>
 
@@ -444,33 +438,40 @@ export default function PageContentAdminClient() {
                   <label className="text-sm font-medium text-slate-700">
                     Navigation label
                     <input
+                      {...fieldAttributes(`step.${step.id}.navLabel`, `service-step-${step.id}-navLabel-error`)}
                       value={step.navLabel}
                       onChange={(event) => updateStep(stepIndex, "navLabel", event.target.value)}
                       maxLength={80}
                       className={inputClass}
                     />
+                    <FieldError id={`service-step-${step.id}-navLabel-error`} error={errors[`step.${step.id}.navLabel`]} />
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Progress label
                     <input
+                      {...fieldAttributes(`step.${step.id}.stepLabel`, `service-step-${step.id}-stepLabel-error`)}
                       value={step.stepLabel}
                       onChange={(event) => updateStep(stepIndex, "stepLabel", event.target.value)}
                       maxLength={80}
                       className={inputClass}
                     />
+                    <FieldError id={`service-step-${step.id}-stepLabel-error`} error={errors[`step.${step.id}.stepLabel`]} />
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Step title
                     <input
+                      {...fieldAttributes(`step.${step.id}.title`, `service-step-${step.id}-title-error`)}
                       value={step.title}
                       onChange={(event) => updateStep(stepIndex, "title", event.target.value)}
                       maxLength={180}
                       className={inputClass}
                     />
+                    <FieldError id={`service-step-${step.id}-title-error`} error={errors[`step.${step.id}.title`]} />
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Sidebar icon
                     <select
+                      {...fieldAttributes(`step.${step.id}.icon`, `service-step-${step.id}-icon-error`)}
                       value={step.icon}
                       onChange={(event) => updateStep(stepIndex, "icon", event.target.value)}
                       className={inputClass}
@@ -481,16 +482,19 @@ export default function PageContentAdminClient() {
                         </option>
                       ))}
                     </select>
+                    <FieldError id={`service-step-${step.id}-icon-error`} error={errors[`step.${step.id}.icon`]} />
                   </label>
                   <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                     Body content
                     <textarea
+                      {...fieldAttributes(`step.${step.id}.body`, `service-step-${step.id}-body-error`)}
                       value={step.body}
                       onChange={(event) => updateStep(stepIndex, "body", event.target.value)}
                       maxLength={30000}
                       rows={14}
                       className={`${inputClass} resize-y font-mono text-[13px] leading-6`}
                     />
+                    <FieldError id={`service-step-${step.id}-body-error`} error={errors[`step.${step.id}.body`]} />
                     <span className="mt-1.5 block text-xs font-normal leading-5 text-slate-500">
                       Start a heading with <code>### </code>, a bullet with <code>- </code>, or a numbered item with <code>1. </code>. Leave a blank line between sections.
                     </span>
@@ -506,11 +510,13 @@ export default function PageContentAdminClient() {
                   <label className="mt-3 block text-sm font-medium text-slate-700">
                     Image URL or saved path
                     <input
+                      {...fieldAttributes(`step.${step.id}.image`, `service-step-${step.id}-image-error`)}
                       value={step.image}
                       onChange={(event) => updateStep(stepIndex, "image", event.target.value)}
                       maxLength={2048}
                       className={inputClass}
                     />
+                    <FieldError id={`service-step-${step.id}-image-error`} error={errors[`step.${step.id}.image`]} />
                   </label>
                   <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#1c878f] hover:text-[#003251]">
                     {uploadingStep === stepIndex ? (
@@ -520,6 +526,8 @@ export default function PageContentAdminClient() {
                     )}
                     {uploadingStep === stepIndex ? "Uploading…" : "Upload image"}
                     <input
+                      aria-invalid={Boolean(uploadErrors[stepIndex])}
+                      aria-describedby={`service-step-${step.id}-upload-error`}
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif"
                       disabled={uploadingStep !== null || saving}
@@ -527,6 +535,7 @@ export default function PageContentAdminClient() {
                       className="sr-only"
                     />
                   </label>
+                    <FieldError id={`service-step-${step.id}-upload-error`} error={uploadErrors[stepIndex]} />
                   <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
                 </div>
               </div>

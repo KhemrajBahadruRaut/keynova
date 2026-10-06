@@ -1,5 +1,9 @@
 "use client";
 
+import FieldError from "@/components/ui/FieldError";
+import { homepageCardsValidation, validateImageUpload } from "@/lib/admin-validation";
+import { useFormValidation } from "@/lib/use-form-validation";
+
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -32,7 +36,6 @@ type ContentRecord = {
   updated_at: string;
 };
 
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -55,6 +58,10 @@ export default function HomepageActionCardsEditor() {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [uploadErrors, setUploadErrors] = useState<Record<number, string>>({});
+  const validation = homepageCardsValidation(content);
+  const { errors, validateField, validateForm, resetValidation, fieldAttributes } =
+    useFormValidation(validation.values, validation.validators);
 
   const dirty = useMemo(
     () => baseline !== "" && JSON.stringify(content) !== baseline,
@@ -87,6 +94,8 @@ export default function HomepageActionCardsEditor() {
 
       const nextContent = payload.data?.content || cloneHomepageActionContent();
       setContent(nextContent);
+      resetValidation();
+      setUploadErrors({});
       setBaseline(JSON.stringify(nextContent));
       setUpdatedAt(payload.data?.updated_at || "");
     } catch (loadError) {
@@ -98,7 +107,7 @@ export default function HomepageActionCardsEditor() {
     } finally {
       setLoading(false);
     }
-  }, [handleUnauthorized]);
+  }, [handleUnauthorized, resetValidation]);
 
   useEffect(() => {
     const initialLoad = window.setTimeout(() => loadContent(), 0);
@@ -115,6 +124,7 @@ export default function HomepageActionCardsEditor() {
   }, [dirty]);
 
   const updateImage = (index: number, image: string) => {
+    validateField(`card.${content.cards[index].id}.image`);
     setContent((current) => ({
       cards: current.cards.map((card, cardIndex) =>
         cardIndex === index ? { ...card, image } : card,
@@ -130,14 +140,9 @@ export default function HomepageActionCardsEditor() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Choose a JPG, PNG, WebP, or GIF image.");
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Images must be 4 MB or smaller.");
-      return;
-    }
+    const fileError = validateImageUpload(file);
+    setUploadErrors((current) => ({ ...current, [index]: fileError }));
+    if (fileError) return;
 
     setUploadingIndex(index);
     setError("");
@@ -175,11 +180,9 @@ export default function HomepageActionCardsEditor() {
   };
 
   const saveContent = async () => {
-    if (content.cards.some((card) => !card.image.trim())) {
-      setError("All four homepage cards require an image.");
-      setNotice("");
-      return;
-    }
+    setError("");
+    setNotice("");
+    if (!validateForm()) return;
 
     setSaving(true);
     setError("");
@@ -201,6 +204,7 @@ export default function HomepageActionCardsEditor() {
       }
 
       setContent(payload.data.content);
+      resetValidation();
       setBaseline(JSON.stringify(payload.data.content));
       setUpdatedAt(payload.data.updated_at);
       setNotice("Homepage action-card images published.");
@@ -224,6 +228,8 @@ export default function HomepageActionCardsEditor() {
     });
     if (!confirmed) return;
     setContent(cloneHomepageActionContent());
+    resetValidation();
+    setUploadErrors({});
     setError("");
     setNotice("Original images loaded. Publish changes to use them.");
   };
@@ -320,11 +326,13 @@ export default function HomepageActionCardsEditor() {
                 <label className="mt-4 block text-sm font-medium text-slate-700">
                   Image URL or saved path
                   <input
+                    {...fieldAttributes(`card.${card.id}.image`, `homepage-card-${card.id}-image-error`)}
                     value={card.image}
                     onChange={(event) => updateImage(index, event.target.value)}
                     maxLength={2048}
-                    className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15"
+                    className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
                   />
+                  <FieldError id={`homepage-card-${card.id}-image-error`} error={errors[`card.${card.id}.image`]} />
                 </label>
                 <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143c60]">
                   {uploadingIndex === index ? (
@@ -334,6 +342,8 @@ export default function HomepageActionCardsEditor() {
                   )}
                   {uploadingIndex === index ? "Uploading…" : "Upload replacement"}
                   <input
+                    aria-invalid={Boolean(uploadErrors[index])}
+                    aria-describedby={`homepage-card-${card.id}-upload-error`}
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif"
                     disabled={uploadingIndex !== null || saving}
@@ -341,6 +351,7 @@ export default function HomepageActionCardsEditor() {
                     className="sr-only"
                   />
                 </label>
+                  <FieldError id={`homepage-card-${card.id}-upload-error`} error={uploadErrors[index]} />
                 <p className="mt-2 text-xs text-slate-500">
                   Use a landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB.
                 </p>

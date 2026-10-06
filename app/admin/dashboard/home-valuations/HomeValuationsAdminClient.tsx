@@ -1,5 +1,9 @@
 "use client";
 
+import FieldError from "@/components/ui/FieldError";
+import { homeValuationContentValidation, validateImageUpload } from "@/lib/admin-validation";
+import { useFormValidation } from "@/lib/use-form-validation";
+
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -59,9 +63,8 @@ const STATUS_OPTIONS: Array<{ value: RequestStatus; label: string }> = [
   { value: "completed", label: "Completed" },
   { value: "archived", label: "Archived" },
 ];
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#1c878f] focus:ring-2 focus:ring-[#1c878f]/15";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#1c878f] focus:ring-2 focus:ring-[#1c878f]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -71,18 +74,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   }
 }
 
-function validateContent(content: HomeValuationContent) {
-  for (const [field, value] of Object.entries(content)) {
-    if (Array.isArray(value)) {
-      if (!value.length || value.some((item) => !item.trim())) {
-        return `${field === "propertyTypes" ? "Property types" : "Room options"} cannot contain blank lines.`;
-      }
-    } else if (!value.trim()) {
-      return "All page-content fields are required.";
-    }
-  }
-  return "";
-}
+
 
 export default function HomeValuationsAdminClient() {
   const router = useRouter();
@@ -101,6 +93,10 @@ export default function HomeValuationsAdminClient() {
   const [updatedAt, setUpdatedAt] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const validation = homeValuationContentValidation(content);
+  const { errors, validateField, validateForm, resetValidation, fieldAttributes } =
+    useFormValidation(validation.values, validation.validators);
 
   const dirty = useMemo(
     () => baseline !== "" && JSON.stringify(content) !== baseline,
@@ -154,6 +150,8 @@ export default function HomeValuationsAdminClient() {
       }
       const nextContent = payload.data?.content || cloneHomeValuationContent();
       setContent(nextContent);
+      resetValidation();
+      setUploadError("");
       setBaseline(JSON.stringify(nextContent));
       setUpdatedAt(payload.data?.updated_at || "");
     } catch (loadError) {
@@ -165,7 +163,7 @@ export default function HomeValuationsAdminClient() {
     } finally {
       setContentLoading(false);
     }
-  }, [handleUnauthorized]);
+  }, [handleUnauthorized, resetValidation]);
 
   useEffect(() => {
     const initialLoad = window.setTimeout(() => {
@@ -242,6 +240,7 @@ export default function HomeValuationsAdminClient() {
     field: Key,
     value: HomeValuationContent[Key],
   ) => {
+    validateField(field);
     setContent((current) => ({ ...current, [field]: value }));
     setNotice("");
   };
@@ -250,10 +249,9 @@ export default function HomeValuationsAdminClient() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES) {
-      setError("Choose a JPG, PNG, WebP, or GIF image no larger than 4 MB.");
-      return;
-    }
+    const fileError = validateImageUpload(file);
+    setUploadError(fileError);
+    if (fileError) return;
 
     setUploading(true);
     setError("");
@@ -285,11 +283,9 @@ export default function HomeValuationsAdminClient() {
   };
 
   const saveContent = async () => {
-    const invalid = validateContent(content);
-    if (invalid) {
-      setError(invalid);
-      return;
-    }
+    setError("");
+    setNotice("");
+    if (!validateForm()) return;
 
     setSaving(true);
     setError("");
@@ -309,6 +305,7 @@ export default function HomeValuationsAdminClient() {
         throw new Error(payload.message || "Unable to publish home valuation content.");
       }
       setContent(payload.data.content);
+      resetValidation();
       setBaseline(JSON.stringify(payload.data.content));
       setUpdatedAt(payload.data.updated_at);
       setNotice(payload.message || "Home valuation page published.");
@@ -332,6 +329,8 @@ export default function HomeValuationsAdminClient() {
     });
     if (!confirmed) return;
     setContent(cloneHomeValuationContent());
+    resetValidation();
+    setUploadError("");
     setError("");
     setNotice("Original content loaded. Publish to make it live.");
   };
@@ -446,17 +445,58 @@ export default function HomeValuationsAdminClient() {
                 ["privacyPolicyLabel", "Privacy policy label", 100],
                 ["privacyPolicyHref", "Privacy policy link", 2048],
               ] as const).map(([field, label, maxLength]) => (
-                <label key={field} className="text-sm font-medium text-slate-700">{label}<input value={content[field]} onChange={(event) => updateContent(field, event.target.value)} maxLength={maxLength} className={inputClass} /></label>
+                <label key={field} className="text-sm font-medium text-slate-700">
+                  {label}
+                  <input
+                    {...fieldAttributes(field, `valuation-${field}-error`)}
+                    value={content[field]}
+                    onChange={(event) => updateContent(field, event.target.value)}
+                    maxLength={maxLength}
+                    className={inputClass}
+                  />
+                  <FieldError id={`valuation-${field}-error`} error={errors[field]} />
+                </label>
               ))}
-              <label className="text-sm font-medium text-slate-700">Property types (one per line)<textarea value={content.propertyTypes.join("\n")} onChange={(event) => updateContent("propertyTypes", event.target.value.replace(/\r/g, "").split("\n"))} rows={6} className={`${inputClass} resize-y`} /></label>
-              <label className="text-sm font-medium text-slate-700">Room options (one per line)<textarea value={content.roomOptions.join("\n")} onChange={(event) => updateContent("roomOptions", event.target.value.replace(/\r/g, "").split("\n"))} rows={6} className={`${inputClass} resize-y`} /></label>
+              <label className="text-sm font-medium text-slate-700">
+                Property types (one per line)
+                <textarea
+                  {...fieldAttributes("propertyTypes", "valuation-propertyTypes-error")}
+                  value={content.propertyTypes.join("\n")}
+                  onChange={(event) => updateContent("propertyTypes", event.target.value.replace(/\r/g, "").split("\n"))}
+                  rows={6}
+                  className={`${inputClass} resize-y`}
+                />
+                <FieldError id="valuation-propertyTypes-error" error={errors.propertyTypes} />
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                Room options (one per line)
+                <textarea
+                  {...fieldAttributes("roomOptions", "valuation-roomOptions-error")}
+                  value={content.roomOptions.join("\n")}
+                  onChange={(event) => updateContent("roomOptions", event.target.value.replace(/\r/g, "").split("\n"))}
+                  rows={6}
+                  className={`${inputClass} resize-y`}
+                />
+                <FieldError id="valuation-roomOptions-error" error={errors.roomOptions} />
+              </label>
               {([
                 ["consentText", "Consent text", 3000],
                 ["privacyText", "Privacy note", 3000],
                 ["footerDisclosure", "Footer disclosure", 3000],
                 ["successText", "Success message", 1000],
               ] as const).map(([field, label, maxLength]) => (
-                <label key={field} className="text-sm font-medium text-slate-700 sm:col-span-2">{label}<textarea value={content[field]} onChange={(event) => updateContent(field, event.target.value)} maxLength={maxLength} rows={4} className={`${inputClass} resize-y`} /></label>
+                <label key={field} className="text-sm font-medium text-slate-700 sm:col-span-2">
+                  {label}
+                  <textarea
+                    {...fieldAttributes(field, `valuation-${field}-error`)}
+                    value={content[field]}
+                    onChange={(event) => updateContent(field, event.target.value)}
+                    maxLength={maxLength}
+                    rows={4}
+                    className={`${inputClass} resize-y`}
+                  />
+                  <FieldError id={`valuation-${field}-error`} error={errors[field]} />
+                </label>
               ))}
             </div>
             <div>
@@ -465,8 +505,31 @@ export default function HomeValuationsAdminClient() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={resolvePageImage(content.image)} alt="" className="h-full w-full object-cover" />
               </div>
-              <label className="mt-3 block text-sm font-medium text-slate-700">Image URL or saved path<input value={content.image} onChange={(event) => updateContent("image", event.target.value)} maxLength={2048} className={inputClass} /></label>
-              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"><ImageUp className="h-4 w-4" />{uploading ? "Uploading…" : "Upload image"}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={uploading || saving} onChange={uploadImage} className="sr-only" /></label>
+              <label className="mt-3 block text-sm font-medium text-slate-700">
+                Image URL or saved path
+                <input
+                  {...fieldAttributes("image", "valuation-image-error")}
+                  value={content.image}
+                  onChange={(event) => updateContent("image", event.target.value)}
+                  maxLength={2048}
+                  className={inputClass}
+                />
+                <FieldError id="valuation-image-error" error={errors.image} />
+              </label>
+              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">
+                <ImageUp className="h-4 w-4" />
+                {uploading ? "Uploading…" : "Upload image"}
+                <input
+                  aria-invalid={Boolean(uploadError)}
+                  aria-describedby="valuation-image-upload-error"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={uploading || saving}
+                  onChange={uploadImage}
+                  className="sr-only"
+                />
+              </label>
+              <FieldError id="valuation-image-upload-error" error={uploadError} />
               <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
             </div>
           </div>

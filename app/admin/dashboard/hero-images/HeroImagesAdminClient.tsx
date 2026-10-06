@@ -1,5 +1,9 @@
 "use client";
 
+import FieldError from "@/components/ui/FieldError";
+import { heroContentValidation, validateImageUpload } from "@/lib/admin-validation";
+import { useFormValidation } from "@/lib/use-form-validation";
+
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -34,10 +38,9 @@ type ContentRecord = {
   updated_at: string;
 };
 
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_SLIDES = 8;
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -47,19 +50,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   }
 }
 
-function validationMessage(content: HeroContent) {
-  if (content.slides.length < 1 || content.slides.length > MAX_SLIDES) {
-    return `Add between 1 and ${MAX_SLIDES} hero images.`;
-  }
 
-  for (const [index, slide] of content.slides.entries()) {
-    const number = index + 1;
-    if (!slide.image.trim()) return `Image ${number} is required.`;
-    if (!slide.alt.trim()) return `Image ${number} description is required.`;
-    if (!slide.location.trim()) return `Image ${number} location is required.`;
-  }
-  return "";
-}
 
 export default function HeroImagesAdminClient() {
   const router = useRouter();
@@ -72,6 +63,10 @@ export default function HeroImagesAdminClient() {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [uploadErrors, setUploadErrors] = useState<Record<number, string>>({});
+  const validation = heroContentValidation(content);
+  const { errors, validateField, validateForm, resetValidation, fieldAttributes } =
+    useFormValidation(validation.values, validation.validators);
 
   const dirty = useMemo(
     () => baseline !== "" && JSON.stringify(content) !== baseline,
@@ -105,6 +100,8 @@ export default function HeroImagesAdminClient() {
 
       const nextContent = payload.data?.content || cloneHeroContent();
       setContent(nextContent);
+      resetValidation();
+      setUploadErrors({});
       setBaseline(JSON.stringify(nextContent));
       setUpdatedAt(payload.data?.updated_at || "");
     } catch (loadError) {
@@ -116,7 +113,7 @@ export default function HeroImagesAdminClient() {
     } finally {
       setLoading(false);
     }
-  }, [handleUnauthorized]);
+  }, [handleUnauthorized, resetValidation]);
 
   useEffect(() => {
     const initialLoad = window.setTimeout(() => loadContent(), 0);
@@ -133,6 +130,7 @@ export default function HeroImagesAdminClient() {
   }, [dirty]);
 
   const updateSlide = (index: number, field: keyof HeroSlide, value: string) => {
+    validateField(`slide.${index}.${field}`);
     setContent((current) => ({
       slides: current.slides.map((slide, slideIndex) =>
         slideIndex === index ? { ...slide, [field]: value } : slide,
@@ -148,14 +146,9 @@ export default function HeroImagesAdminClient() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Choose a JPG, PNG, WebP, or GIF image.");
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Images must be 4 MB or smaller.");
-      return;
-    }
+    const fileError = validateImageUpload(file);
+    setUploadErrors((current) => ({ ...current, [index]: fileError }));
+    if (fileError) return;
 
     setUploadingIndex(index);
     setError("");
@@ -213,6 +206,8 @@ export default function HeroImagesAdminClient() {
       tone: "danger",
     });
     if (!confirmed) return;
+    resetValidation();
+    setUploadErrors({});
     setContent((current) => ({
       slides: current.slides.filter((_, slideIndex) => slideIndex !== index),
     }));
@@ -221,12 +216,14 @@ export default function HeroImagesAdminClient() {
   };
 
   const saveContent = async () => {
-    const invalid = validationMessage(content);
-    if (invalid) {
-      setError(invalid);
-      setNotice("");
+    setError("");
+    setNotice("");
+    const fieldsValid = validateForm();
+    if (content.slides.length < 1 || content.slides.length > MAX_SLIDES) {
+      setError(`Add between 1 and ${MAX_SLIDES} hero images.`);
       return;
     }
+    if (!fieldsValid) return;
 
     setSaving(true);
     setError("");
@@ -248,6 +245,7 @@ export default function HeroImagesAdminClient() {
       }
 
       setContent(payload.data.content);
+      resetValidation();
       setBaseline(JSON.stringify(payload.data.content));
       setUpdatedAt(payload.data.updated_at);
       setNotice(payload.message || "Homepage hero published.");
@@ -271,6 +269,8 @@ export default function HeroImagesAdminClient() {
     });
     if (!confirmed) return;
     setContent(cloneHeroContent());
+    resetValidation();
+    setUploadErrors({});
     setError("");
     setNotice("Original hero images loaded. Publish changes to use them.");
   };
@@ -396,6 +396,8 @@ export default function HeroImagesAdminClient() {
                     )}
                     {uploadingIndex === index ? "Uploading…" : "Upload replacement"}
                     <input
+                      aria-invalid={Boolean(uploadErrors[index])}
+                      aria-describedby={`hero-${index}-upload-error`}
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif"
                       disabled={uploadingIndex !== null || saving}
@@ -403,6 +405,7 @@ export default function HeroImagesAdminClient() {
                       className="sr-only"
                     />
                   </label>
+                    <FieldError id={`hero-${index}-upload-error`} error={uploadErrors[index]} />
                   <p className="mt-2 text-xs text-slate-500">
                     Use a wide landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB.
                   </p>
@@ -412,21 +415,25 @@ export default function HeroImagesAdminClient() {
                   <label className="block text-sm font-medium text-slate-700">
                     Image URL or saved path
                     <input
+                      {...fieldAttributes(`slide.${index}.image`, `hero-${index}-image-error`)}
                       value={slide.image}
                       onChange={(event) => updateSlide(index, "image", event.target.value)}
                       maxLength={2048}
                       className={inputClass}
                     />
+                    <FieldError id={`hero-${index}-image-error`} error={errors[`slide.${index}.image`]} />
                   </label>
                   <label className="block text-sm font-medium text-slate-700">
                     Image description
                     <input
+                      {...fieldAttributes(`slide.${index}.alt`, `hero-${index}-alt-error`)}
                       value={slide.alt}
                       onChange={(event) => updateSlide(index, "alt", event.target.value)}
                       maxLength={250}
                       placeholder="Describe what is visible in the image"
                       className={inputClass}
                     />
+                    <FieldError id={`hero-${index}-alt-error`} error={errors[`slide.${index}.alt`]} />
                     <span className="mt-1.5 block text-xs font-normal text-slate-500">
                       Used by screen readers and shown if the image cannot load.
                     </span>
@@ -434,12 +441,14 @@ export default function HeroImagesAdminClient() {
                   <label className="block text-sm font-medium text-slate-700">
                     Location label
                     <input
+                      {...fieldAttributes(`slide.${index}.location`, `hero-${index}-location-error`)}
                       value={slide.location}
                       onChange={(event) => updateSlide(index, "location", event.target.value)}
                       maxLength={120}
                       placeholder="Beacon Hill, Boston"
                       className={inputClass}
                     />
+                    <FieldError id={`hero-${index}-location-error`} error={errors[`slide.${index}.location`]} />
                   </label>
                 </div>
               </div>

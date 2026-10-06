@@ -31,6 +31,12 @@ import {
   type PropertyRecord,
 } from "@/lib/property-data";
 import DocumentAccessModal from "./DocumentAccessModal";
+import ContactField from "@/components/ui/ContactField";
+import { useFormValidation } from "@/lib/use-form-validation";
+import { CONTACT_FIELD_VALIDATORS } from "@/lib/validation";
+
+const INQUIRY_FIELD_CLASS_NAME =
+  "w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
 
 type AccessStatus = "checking" | "required" | "granted";
 type InquiryFormValues = {
@@ -171,6 +177,8 @@ export default function PropertyDetailsPage({
     phone: "",
   });
   const [formStatus, setFormStatus] = useState<InquiryStatus>(null);
+  const { errors, validateField, validateForm, resetValidation } =
+    useFormValidation(form, CONTACT_FIELD_VALIDATORS);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [carouselStart, setCarouselStart] = useState(0);
   const [mobileVisibleCount, setMobileVisibleCount] = useState(3);
@@ -303,12 +311,23 @@ export default function PropertyDetailsPage({
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((previous) => ({ ...previous, [field]: value }));
+    validateField(field);
     setFormStatus(null);
   }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!property) return;
+
+    setFormStatus(null);
+    if (!validateForm()) return;
+    if (!agreed) {
+      setFormStatus({
+        type: "error",
+        message: "Please agree to the contact terms before submitting.",
+      });
+      return;
+    }
 
     setFormSubmitting(true);
     setFormStatus(null);
@@ -354,6 +373,7 @@ export default function PropertyDetailsPage({
       }
 
       setForm({ firstName: "", lastName: "", email: "", message: "", phone: "" });
+      resetValidation();
       setAgreed(false);
       setFormStatus({
         type: "success",
@@ -611,54 +631,94 @@ export default function PropertyDetailsPage({
               Read Document
             </button>
 
-            <form onSubmit={handleSubmit} className="mt-8">
+            <form onSubmit={handleSubmit} className="mt-8" noValidate>
               <h3 className="mb-4 text-base font-semibold text-[#003251]">Interested?</h3>
 
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  required
-                  type="text"
-                  placeholder="First Name"
-                  value={form.firstName}
-                  onChange={(event) => updateField("firstName", event.target.value)}
-                  className="border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
-                />
-                <input
-                  required
-                  type="text"
-                  placeholder="Last Name"
-                  value={form.lastName}
-                  onChange={(event) => updateField("lastName", event.target.value)}
-                  className="border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
-                />
+                <ContactField error={errors.firstName} errorId="inquiry-first-name-error">
+                  <input
+                    required
+                    type="text"
+                    placeholder="First Name"
+                    aria-label="First name"
+                    autoComplete="given-name"
+                    maxLength={100}
+                    value={form.firstName}
+                    onChange={(event) => updateField("firstName", event.target.value)}
+                    onBlur={() => validateField("firstName")}
+                    aria-invalid={Boolean(errors.firstName)}
+                    aria-describedby="inquiry-first-name-error"
+                    className={INQUIRY_FIELD_CLASS_NAME}
+                  />
+                </ContactField>
+                <ContactField error={errors.lastName} errorId="inquiry-last-name-error">
+                  <input
+                    required
+                    type="text"
+                    placeholder="Last Name"
+                    aria-label="Last name"
+                    autoComplete="family-name"
+                    maxLength={100}
+                    value={form.lastName}
+                    onChange={(event) => updateField("lastName", event.target.value)}
+                    onBlur={() => validateField("lastName")}
+                    aria-invalid={Boolean(errors.lastName)}
+                    aria-describedby="inquiry-last-name-error"
+                    className={INQUIRY_FIELD_CLASS_NAME}
+                  />
+                </ContactField>
               </div>
 
-              <input
-                required
-                type="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={(event) => updateField("email", event.target.value)}
-                className="mt-5 w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
-              />
+              <ContactField error={errors.email} errorId="inquiry-email-error" className="mt-5">
+                <input
+                  required
+                  type="email"
+                  placeholder="Email"
+                  aria-label="Email"
+                  autoComplete="email"
+                  maxLength={254}
+                  value={form.email}
+                  onChange={(event) => updateField("email", event.target.value)}
+                  onBlur={() => validateField("email")}
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby="inquiry-email-error"
+                  className={INQUIRY_FIELD_CLASS_NAME}
+                />
+              </ContactField>
 
-              <textarea
-                required
-                minLength={10}
-                placeholder="Type your message here ..."
-                value={form.message}
-                onChange={(event) => updateField("message", event.target.value)}
-                rows={3}
-                className="mt-5 w-full resize-none border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
-              />
+              <ContactField error={errors.message} errorId="inquiry-message-error" className="mt-5">
+                <textarea
+                  required
+                  maxLength={5000}
+                  placeholder="Type your message here (at least 10 words) ..."
+                  aria-label="Message"
+                  value={form.message}
+                  onChange={(event) => updateField("message", event.target.value)}
+                  onBlur={() => validateField("message")}
+                  aria-invalid={Boolean(errors.message)}
+                  aria-describedby="inquiry-message-error"
+                  rows={3}
+                  className={`${INQUIRY_FIELD_CLASS_NAME} resize-none`}
+                />
+              </ContactField>
 
-              <input
-                type="tel"
-                placeholder="Phone"
-                value={form.phone}
-                onChange={(event) => updateField("phone", event.target.value)}
-                className="mt-5 w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none"
-              />
+              <ContactField error={errors.phone} errorId="inquiry-phone-error" className="mt-5">
+                <input
+                  required
+                  type="tel"
+                  placeholder="Phone (10 digits)"
+                  aria-label="Phone"
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={form.phone}
+                  onChange={(event) => updateField("phone", event.target.value)}
+                  onBlur={() => validateField("phone")}
+                  aria-invalid={Boolean(errors.phone)}
+                  aria-describedby="inquiry-phone-error"
+                  className={INQUIRY_FIELD_CLASS_NAME}
+                />
+              </ContactField>
 
               <label className="mt-5 flex items-start gap-2 text-xs text-gray-600">
                 <input

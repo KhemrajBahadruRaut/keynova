@@ -4,7 +4,9 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { teamPhotoUrl } from "@/lib/team-data";
-import { validateEmail, validatePhone, validateText } from "@/lib/validation";
+import ContactField from "@/components/ui/ContactField";
+import { useFormValidation } from "@/lib/use-form-validation";
+import { CONTACT_FIELD_VALIDATORS, validateText } from "@/lib/validation";
 
 const BACKGROUND_IMAGE_URL = "/contacts/contact-bg.png";
 
@@ -21,6 +23,15 @@ const HELP_OPTIONS = [
 
 const ACCENT = "#003251";
 const ACCENT_HOVER = "#0c2f4d";
+const FIELD_CLASS_NAME =
+  "w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
+const FORM_VALIDATORS = {
+  ...CONTACT_FIELD_VALIDATORS,
+  subject: (value: string) =>
+    validateText(value, "Subject", { required: true, max: 180 }),
+  helpWith: (value: string) =>
+    HELP_OPTIONS.includes(value) ? "" : "Choose what we can help with.",
+};
 
 interface ContactForm {
   firstName: string;
@@ -62,27 +73,25 @@ export default function LetsTalkPage({
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState<FormStatus>(null);
+  const { errors, validateField, validateForm, resetValidation } =
+    useFormValidation(form, FORM_VALIDATORS);
 
   function updateField<K extends keyof ContactForm>(field: K, value: ContactForm[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    validateField(field);
     setFormStatus(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const validationError =
-      validateText(form.firstName, "First name", { required: true, max: 100 }) ||
-      validateText(form.lastName, "Last name", { required: true, max: 100 }) ||
-      validateEmail(form.email) ||
-      validateText(form.subject, "Subject", { required: true, max: 180 }) ||
-      validateText(form.message, "Message", { required: true, min: 10, max: 5000 }) ||
-      (!form.helpWith ? "Choose what we can help with." : "") ||
-      validatePhone(form.phone) ||
-      (!agreed ? "Please agree to the contact terms before submitting." : "");
-
-    if (validationError) {
-      setFormStatus({ type: "error", message: validationError });
+    setFormStatus(null);
+    if (!validateForm()) return;
+    if (!agreed) {
+      setFormStatus({
+        type: "error",
+        message: "Please agree to the contact terms before submitting.",
+      });
       return;
     }
 
@@ -124,6 +133,7 @@ export default function LetsTalkPage({
       }
 
       setForm({ ...INITIAL_FORM, subject: initialSubject });
+      resetValidation();
       setAgreed(false);
       setFormStatus({
         type: "success",
@@ -195,88 +205,112 @@ export default function LetsTalkPage({
             </p>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div className="grid grid-cols-2 gap-6">
-              <label htmlFor="contact-first-name" className="sr-only">
-                First name
-              </label>
-              <input
-                id="contact-first-name"
-                name="firstName"
-                type="text"
-                placeholder="First Name"
-                autoComplete="given-name"
-                required
-                maxLength={100}
-                value={form.firstName}
-                onChange={(e) => updateField("firstName", e.target.value)}
-                className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
-              />
-              <label htmlFor="contact-last-name" className="sr-only">
-                Last name
-              </label>
-              <input
-                id="contact-last-name"
-                name="lastName"
-                type="text"
-                placeholder="Last Name"
-                autoComplete="family-name"
-                required
-                maxLength={100}
-                value={form.lastName}
-                onChange={(e) => updateField("lastName", e.target.value)}
-                className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
-              />
+              <ContactField error={errors.firstName} errorId="contact-first-name-error">
+                <label htmlFor="contact-first-name" className="sr-only">
+                  First name
+                </label>
+                <input
+                  id="contact-first-name"
+                  name="firstName"
+                  type="text"
+                  placeholder="First Name"
+                  autoComplete="given-name"
+                  required
+                  maxLength={100}
+                  value={form.firstName}
+                  onChange={(e) => updateField("firstName", e.target.value)}
+                  onBlur={() => validateField("firstName")}
+                  aria-invalid={Boolean(errors.firstName)}
+                  aria-describedby="contact-first-name-error"
+                  className={FIELD_CLASS_NAME}
+                />
+              </ContactField>
+              <ContactField error={errors.lastName} errorId="contact-last-name-error">
+                <label htmlFor="contact-last-name" className="sr-only">
+                  Last name
+                </label>
+                <input
+                  id="contact-last-name"
+                  name="lastName"
+                  type="text"
+                  placeholder="Last Name"
+                  autoComplete="family-name"
+                  required
+                  maxLength={100}
+                  value={form.lastName}
+                  onChange={(e) => updateField("lastName", e.target.value)}
+                  onBlur={() => validateField("lastName")}
+                  aria-invalid={Boolean(errors.lastName)}
+                  aria-describedby="contact-last-name-error"
+                  className={FIELD_CLASS_NAME}
+                />
+              </ContactField>
             </div>
 
-            <label htmlFor="contact-email" className="sr-only">
-              Email
-            </label>
-            <input
-              id="contact-email"
-              name="email"
-              type="email"
-              placeholder="Email"
-              autoComplete="email"
-              required
-              maxLength={254}
-              value={form.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
-            />
+            <ContactField error={errors.email} errorId="contact-email-error">
+              <label htmlFor="contact-email" className="sr-only">
+                Email
+              </label>
+              <input
+                id="contact-email"
+                name="email"
+                type="email"
+                placeholder="Email"
+                autoComplete="email"
+                required
+                maxLength={254}
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                onBlur={() => validateField("email")}
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby="contact-email-error"
+                className={FIELD_CLASS_NAME}
+              />
+            </ContactField>
 
-            <label htmlFor="contact-subject" className="sr-only">
-              Subject
-            </label>
-            <input
-              id="contact-subject"
-              name="subject"
-              type="text"
-              placeholder="Subject"
-              required
-              maxLength={180}
-              value={form.subject}
-              onChange={(e) => updateField("subject", e.target.value)}
-              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
-            />
+            <ContactField error={errors.subject} errorId="contact-subject-error">
+              <label htmlFor="contact-subject" className="sr-only">
+                Subject
+              </label>
+              <input
+                id="contact-subject"
+                name="subject"
+                type="text"
+                placeholder="Subject"
+                required
+                maxLength={180}
+                value={form.subject}
+                onChange={(e) => updateField("subject", e.target.value)}
+                onBlur={() => validateField("subject")}
+                aria-invalid={Boolean(errors.subject)}
+                aria-describedby="contact-subject-error"
+                className={FIELD_CLASS_NAME}
+              />
+            </ContactField>
 
-            <label htmlFor="contact-message" className="sr-only">
-              Message
-            </label>
-            <textarea
-              id="contact-message"
-              name="message"
-              placeholder="Type your message here ..."
-              required
-              minLength={10}
-              maxLength={5000}
-              value={form.message}
-              onChange={(e) => updateField("message", e.target.value)}
-              rows={3}
-              className="w-full resize-none border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
-            />
+            <ContactField error={errors.message} errorId="contact-message-error">
+              <label htmlFor="contact-message" className="sr-only">
+                Message
+              </label>
+              <textarea
+                id="contact-message"
+                name="message"
+                placeholder="Type your message here (at least 10 words) ..."
+                required
+                maxLength={5000}
+                value={form.message}
+                onChange={(e) => updateField("message", e.target.value)}
+                onBlur={() => validateField("message")}
+                aria-invalid={Boolean(errors.message)}
+                aria-describedby="contact-message-error"
+                rows={3}
+                className={`${FIELD_CLASS_NAME} resize-none`}
+              />
+            </ContactField>
 
-            <div>
+            <ContactField error={errors.helpWith} errorId="contact-help-with-error">
               <label
                 htmlFor="contact-help-with"
                 className="mb-2 block text-sm font-semibold text-[#003251]"
@@ -290,7 +324,10 @@ export default function LetsTalkPage({
                   required
                   value={form.helpWith}
                   onChange={(e) => updateField("helpWith", e.target.value)}
-                  className="w-full cursor-pointer border-b border-gray-400 bg-transparent pb-1.5 pr-8 text-sm text-gray-700 focus:border-[#003251] focus:outline-none"
+                  onBlur={() => validateField("helpWith")}
+                  aria-invalid={Boolean(errors.helpWith)}
+                  aria-describedby="contact-help-with-error"
+                  className={`${FIELD_CLASS_NAME} cursor-pointer pr-8`}
                   style={{
                     appearance: "none",
                     WebkitAppearance: "none",
@@ -308,22 +345,29 @@ export default function LetsTalkPage({
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-[#003251]" />
               </div>
-            </div>
+            </ContactField>
 
-            <label htmlFor="contact-phone" className="sr-only">
-              Phone
-            </label>
-            <input
-              id="contact-phone"
-              name="phone"
-              type="tel"
-              placeholder="Phone"
-              autoComplete="tel"
-              maxLength={30}
-              value={form.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
-              className="w-full border-b border-gray-400 bg-transparent pb-1.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#003251] focus:outline-none"
-            />
+            <ContactField error={errors.phone} errorId="contact-phone-error">
+              <label htmlFor="contact-phone" className="sr-only">
+                Phone
+              </label>
+              <input
+                id="contact-phone"
+                name="phone"
+                type="tel"
+                placeholder="Phone (10 digits)"
+                autoComplete="tel"
+                inputMode="numeric"
+                required
+                maxLength={10}
+                value={form.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                onBlur={() => validateField("phone")}
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby="contact-phone-error"
+                className={FIELD_CLASS_NAME}
+              />
+            </ContactField>
 
             <label className="flex items-start gap-2 text-sm text-gray-700">
               <input

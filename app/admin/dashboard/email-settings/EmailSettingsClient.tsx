@@ -14,6 +14,11 @@ import {
 import { ToastNotice } from "@/components/ui/FeedbackProvider";
 
 import { validateEmail, validatePassword } from "@/lib/validation";
+import FieldError from "@/components/ui/FieldError";
+import { validateRecipientEmail } from "@/lib/admin-validation";
+import { useFormValidation } from "@/lib/use-form-validation";
+
+const UNLOCK_VALIDATORS = { password: validatePassword };
 
 const GET_SETTINGS_ENDPOINT = "/api/admin/settings/get_mail_settings.php";
 const UPDATE_SETTINGS_ENDPOINT = "/api/admin/settings/update_mail_settings.php";
@@ -71,6 +76,17 @@ export default function EmailSettingsClient() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [touchedRecipients, setTouchedRecipients] = useState<Record<RecipientGroup, boolean[]>>({
+    contact: [],
+    property: [],
+  });
+  const {
+    errors: unlockErrors,
+    validateField: validateUnlockField,
+    validateForm: validateUnlockForm,
+    resetValidation: resetUnlockValidation,
+    fieldAttributes: unlockFieldAttributes,
+  } = useFormValidation({ password }, UNLOCK_VALIDATORS);
 
   const handleUnauthorized = useCallback(() => {
     router.replace("/admin");
@@ -98,6 +114,11 @@ export default function EmailSettingsClient() {
 
       setContactRecipients(payload.data.contact_recipients || []);
       setPropertyRecipients(payload.data.property_recipients || []);
+      setTouchedRecipients({
+        contact: (payload.data.contact_recipients || []).map(() => false),
+        property: (payload.data.property_recipients || []).map(() => false),
+      });
+      setSubmitted(false);
       setAccessState("unlocked");
     } catch (loadError) {
       setError(
@@ -114,11 +135,8 @@ export default function EmailSettingsClient() {
 
   async function unlockSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
+    setError("");
+    if (!validateUnlockForm()) return;
 
     setUnlocking(true);
     setError("");
@@ -139,6 +157,7 @@ export default function EmailSettingsClient() {
       }
 
       setPassword("");
+      resetUnlockValidation();
       setAccessState("checking");
       await loadSettings();
     } catch (unlockError) {
@@ -159,6 +178,7 @@ export default function EmailSettingsClient() {
       await fetch(LOCK_ENDPOINT, { method: "POST" });
     } finally {
       setPassword("");
+      resetUnlockValidation();
       setContactRecipients([]);
       setPropertyRecipients([]);
       setAccessState("locked");
@@ -177,6 +197,7 @@ export default function EmailSettingsClient() {
   }
 
   function updateRecipient(group: RecipientGroup, index: number, value: string) {
+    markRecipientTouched(group, index);
     setRecipientsFor(
       group,
       recipientsFor(group).map((email, emailIndex) =>
@@ -185,10 +206,19 @@ export default function EmailSettingsClient() {
     );
   }
 
+  function markRecipientTouched(group: RecipientGroup, index: number) {
+    setTouchedRecipients((current) => {
+      const touched = [...current[group]];
+      touched[index] = true;
+      return { ...current, [group]: touched };
+    });
+  }
+
   function addRecipient(group: RecipientGroup) {
     const recipients = recipientsFor(group);
     if (recipients.length >= MAX_RECIPIENTS) return;
     setRecipientsFor(group, [...recipients, ""]);
+    setTouchedRecipients((current) => ({ ...current, [group]: [...current[group], false] }));
   }
 
   function removeRecipient(group: RecipientGroup, index: number) {
@@ -198,6 +228,12 @@ export default function EmailSettingsClient() {
       group,
       recipients.filter((_, emailIndex) => emailIndex !== index),
     );
+    setTouchedRecipients((current) => ({
+      ...current,
+      [group]: recipients
+        .map((_, emailIndex) => current[group][emailIndex] || false)
+        .filter((_, emailIndex) => emailIndex !== index),
+    }));
   }
 
   async function saveSettings(event: FormEvent<HTMLFormElement>) {
@@ -242,6 +278,10 @@ export default function EmailSettingsClient() {
       setContactRecipients(payload.data?.contact_recipients || contactRecipients);
       setPropertyRecipients(payload.data?.property_recipients || propertyRecipients);
       setSubmitted(false);
+      setTouchedRecipients({
+        contact: (payload.data?.contact_recipients || contactRecipients).map(() => false),
+        property: (payload.data?.property_recipients || propertyRecipients).map(() => false),
+      });
       setNotice(payload.message || "Email recipients updated.");
     } catch (saveError) {
       setError(
@@ -272,7 +312,9 @@ export default function EmailSettingsClient() {
 
         <div className="mt-4 space-y-3">
           {recipients.map((email, index) => {
-            const inputError = submitted ? validateEmail(email) : "";
+            const inputError = submitted || touchedRecipients[group][index]
+              ? validateRecipientEmail(email, recipients, index)
+              : "";
             return (
               <div key={`${group}-${index}`}>
                 <div className="flex items-center gap-2">
@@ -287,6 +329,8 @@ export default function EmailSettingsClient() {
                     maxLength={254}
                     value={email}
                     onChange={(event) => updateRecipient(group, index, event.target.value)}
+                    onBlur={() => markRecipientTouched(group, index)}
+                    aria-describedby={`${group}-recipient-${index}-error`}
                     className={`min-w-0 flex-1 rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/25 ${
                       inputError
                         ? "border-red-300 focus:border-red-400"
@@ -305,7 +349,7 @@ export default function EmailSettingsClient() {
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
-                {inputError && <p className="mt-1 text-xs text-red-600">{inputError}</p>}
+                <FieldError id={`${group}-recipient-${index}-error`} error={inputError} />
               </div>
             );
           })}
@@ -398,17 +442,20 @@ export default function EmailSettingsClient() {
             </label>
             <input
               id="email-settings-password"
+              {...unlockFieldAttributes("password", "email-settings-password-error")}
               type="password"
               autoComplete="current-password"
               maxLength={128}
               value={password}
               onChange={(event) => {
                 setPassword(event.target.value);
+                validateUnlockField("password");
                 setError("");
               }}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#2f87a8] focus:ring-2 focus:ring-[#2f87a8]/25"
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#2f87a8] focus:ring-2 focus:ring-[#2f87a8]/25 aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
               autoFocus
             />
+            <FieldError id="email-settings-password-error" error={unlockErrors.password} />
             <button
               type="submit"
               disabled={unlocking}
