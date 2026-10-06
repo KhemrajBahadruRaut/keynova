@@ -59,7 +59,7 @@ export default function TestimonialsPage() {
     <section className="bg-[#003251] px-4 py-14 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)] lg:gap-14 xl:gap-20">
         <div className="min-w-0">
-           <p className="text-xs font-bold uppercase tracking-[0.25em] text-sky-200">
+           <p className="text-xs font-bold uppercase tracking-[0.25em] ">
             Client stories
           </p>
           <h2 className="mt-4 text-3xl font-bold leading-snug sm:text-4xl">
