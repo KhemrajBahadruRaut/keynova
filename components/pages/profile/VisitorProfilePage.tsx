@@ -4,6 +4,8 @@ import { ChangeEvent, FormEvent, ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { ToastNotice } from "@/components/ui/FeedbackProvider";
 import ImageCropModal from "@/components/ui/ImageCropModal";
+import PhoneInput from "@/components/ui/PhoneInput";
+import { phoneDigits } from "@/lib/phone";
 import {
   ArrowRight,
   Camera,
@@ -486,7 +488,7 @@ function PersonalDetails({
   onVisitorChange: (visitor: PropertyAccessVisitor) => void;
 }) {
   const [name, setName] = useState(visitor.name);
-  const [phone, setPhone] = useState(visitor.phone);
+  const [phone, setPhone] = useState(() => phoneDigits(visitor.phone));
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
   const [errors, setErrors] = useState({ name: "", phone: "" });
@@ -533,9 +535,14 @@ function PersonalDetails({
           Phone number
           <span className="mt-2 flex items-center rounded-xl border border-slate-300 px-3 focus-within:border-[#003251]">
             <Phone className="h-4 w-4 text-slate-400" aria-hidden="true" />
-            <input
+            <PhoneInput
               value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              onValueChange={(value) => {
+                setPhone(value);
+                setErrors((current) => ({ ...current, phone: validatePhone(value, true) }));
+              }}
+              onBlur={() => setErrors((current) => ({ ...current, phone: validatePhone(phone, true) }))}
+              aria-invalid={Boolean(errors.phone)}
               autoComplete="tel"
               className="w-full px-3 py-2.5 font-normal outline-none"
             />

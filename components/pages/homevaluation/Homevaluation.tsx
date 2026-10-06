@@ -3,6 +3,10 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
+import FieldError from "@/components/ui/FieldError";
+import PhoneInput from "@/components/ui/PhoneInput";
+import { useFormValidation } from "@/lib/use-form-validation";
+import { validateContactPhone } from "@/lib/validation";
 
 import type { HomeValuationContent } from "@/lib/home-valuation-content";
 import { resolvePageImage } from "@/lib/page-content";
@@ -23,6 +27,8 @@ type ApiPayload = {
   status?: string;
   message?: string;
 };
+
+const PHONE_VALIDATORS = { phone: validateContactPhone };
 
 function initialForm(content: HomeValuationContent): ValuationForm {
   const firstRoomOption = content.roomOptions[0] || "1";
@@ -46,6 +52,8 @@ export default function HomeValuation({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const { errors, validateField, validateForm, resetValidation } =
+    useFormValidation({ phone: form.phone }, PHONE_VALIDATORS);
 
   const updateField = <Key extends keyof ValuationForm>(
     field: Key,
@@ -54,10 +62,12 @@ export default function HomeValuation({
     setForm((current) => ({ ...current, [field]: value }));
     setError("");
     setSubmitted(false);
+    if (field === "phone") validateField("phone");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!validateForm()) return;
     const apiBase = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
     if (!apiBase) {
       setError("The valuation service is not configured. Please contact us directly.");
@@ -94,6 +104,7 @@ export default function HomeValuation({
       }
 
       setForm(initialForm(content));
+      resetValidation();
       setSubmitted(true);
     } catch (submitError) {
       setError(
@@ -249,17 +260,22 @@ export default function HomeValuation({
               required
               className={fieldClass}
             />
-            <input
-              type="tel"
-              name="phone"
-              autoComplete="tel"
-              value={form.phone}
-              onChange={(event) => updateField("phone", event.target.value)}
-              placeholder={content.phonePlaceholder}
-              maxLength={40}
-              required
-              className={fieldClass}
-            />
+            <div>
+              <PhoneInput
+                name="phone"
+                autoComplete="tel"
+                value={form.phone}
+                onValueChange={(value) => updateField("phone", value)}
+                onBlur={() => validateField("phone")}
+                placeholder={`${content.phonePlaceholder} (774) 287-6819`}
+                aria-label="Phone"
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby="valuation-phone-error"
+                required
+                className={`${fieldClass} aria-invalid:border-red-500`}
+              />
+              <FieldError id="valuation-phone-error" error={errors.phone} />
+            </div>
 
             <label className="flex cursor-pointer gap-3">
               <input

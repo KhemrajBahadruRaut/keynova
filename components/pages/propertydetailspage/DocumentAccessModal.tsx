@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
+import PhoneInput from "@/components/ui/PhoneInput";
 import {
   hasValidationErrors,
   validateEmail,
@@ -563,17 +564,14 @@ export default function DocumentAccessModal({
               </p>
             </div>
             <div>
-              <input
+              <PhoneInput
                 id="document-access-phone"
                 name="phone"
-                type="tel"
                 autoComplete="tel"
-                maxLength={40}
                 className={inputClass("phone")}
-                placeholder="Phone Number"
                 value={phone}
-                onChange={(event) => {
-                  setPhone(event.target.value);
+                onValueChange={(value) => {
+                  setPhone(value);
                   setTouched((current) => ({ ...current, phone: true }));
                   setError("");
                 }}

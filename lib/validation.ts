@@ -80,10 +80,9 @@ export function validatePhone(value: string, required = false) {
   const digits = trimmed.replace(/\D/g, "");
   if (
     !PHONE_CHARACTERS_PATTERN.test(trimmed) ||
-    digits.length < 7 ||
-    digits.length > 15
+    digits.length !== 10
   ) {
-    return "Enter a valid phone number with 7 to 15 digits.";
+    return "Phone number must contain exactly 10 digits.";
   }
   return "";
 }

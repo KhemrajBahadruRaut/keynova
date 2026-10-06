@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2, UsersRound, X } from "lucide-react";
 import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
 import ImageCropModal from "@/components/ui/ImageCropModal";
+import PhoneInput from "@/components/ui/PhoneInput";
+import { phoneDigits } from "@/lib/phone";
 
 import {
   hasValidationErrors,
@@ -225,7 +227,7 @@ export default function TeamAdminClient() {
       role: member.role,
       bio: member.bio || "",
       email: member.email || "",
-      phone: member.phone || "",
+      phone: phoneDigits(member.phone || ""),
       sort_order: String(member.sort_order),
       is_active: member.is_active,
     });
@@ -627,15 +629,11 @@ export default function TeamAdminClient() {
 
                 <div>
                   <label htmlFor="team-phone" className="text-sm font-medium text-slate-700">Phone <span className="font-normal text-slate-400">(optional)</span></label>
-                  <input
+                  <PhoneInput
                     id="team-phone"
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="10 digits"
                     value={form.phone}
-                    onChange={(event) => updateField("phone", event.target.value)}
+                    onValueChange={(value) => updateField("phone", value)}
                     onBlur={() => markTouched("phone")}
-                    maxLength={10}
                     className={inputClass("phone")}
                     aria-invalid={Boolean(fieldError("phone"))}
                   />

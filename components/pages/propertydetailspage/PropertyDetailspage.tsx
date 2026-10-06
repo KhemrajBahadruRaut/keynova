@@ -32,6 +32,8 @@ import {
 } from "@/lib/property-data";
 import DocumentAccessModal from "./DocumentAccessModal";
 import ContactField from "@/components/ui/ContactField";
+import PhoneInput from "@/components/ui/PhoneInput";
+import { phoneDigits } from "@/lib/phone";
 import { useFormValidation } from "@/lib/use-form-validation";
 import { CONTACT_FIELD_VALIDATORS } from "@/lib/validation";
 
@@ -59,7 +61,7 @@ function prefilledInquiryForm(
     firstName: current.firstName || firstName,
     lastName: current.lastName || lastName,
     email: current.email || visitor.email,
-    phone: current.phone || visitor.phone,
+    phone: current.phone || phoneDigits(visitor.phone),
   };
 }
 type InquiryStatus = {
@@ -703,16 +705,12 @@ export default function PropertyDetailsPage({
               </ContactField>
 
               <ContactField error={errors.phone} errorId="inquiry-phone-error" className="mt-5">
-                <input
+                <PhoneInput
                   required
-                  type="tel"
-                  placeholder="Phone (10 digits)"
                   aria-label="Phone"
                   autoComplete="tel"
-                  inputMode="numeric"
-                  maxLength={10}
                   value={form.phone}
-                  onChange={(event) => updateField("phone", event.target.value)}
+                  onValueChange={(value) => updateField("phone", value)}
                   onBlur={() => validateField("phone")}
                   aria-invalid={Boolean(errors.phone)}
                   aria-describedby="inquiry-phone-error"

@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 
 import { teamPhotoUrl } from "@/lib/team-data";
 import ContactField from "@/components/ui/ContactField";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { useFormValidation } from "@/lib/use-form-validation";
 import { CONTACT_FIELD_VALIDATORS, validateText } from "@/lib/validation";
 
@@ -351,17 +352,13 @@ export default function LetsTalkPage({
               <label htmlFor="contact-phone" className="sr-only">
                 Phone
               </label>
-              <input
+              <PhoneInput
                 id="contact-phone"
                 name="phone"
-                type="tel"
-                placeholder="Phone (10 digits)"
                 autoComplete="tel"
-                inputMode="numeric"
                 required
-                maxLength={10}
                 value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
+                onValueChange={(value) => updateField("phone", value)}
                 onBlur={() => validateField("phone")}
                 aria-invalid={Boolean(errors.phone)}
                 aria-describedby="contact-phone-error"
