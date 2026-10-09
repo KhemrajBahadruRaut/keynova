@@ -1,5 +1,11 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## API documentation
+
+See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for endpoint paths, authentication,
+request and response formats, validation rules, upload limits, and usage examples
+for this app and its companion PHP backend.
+
 ## Lead email configuration
 
 The PHP backend stores every contact, home-valuation, and agent-search lead in
