@@ -1,4 +1,5 @@
 import { ChevronRight } from "lucide-react";
+import OptimizedImage from "@/components/ui/OptimizedImage";
 
 import {
   HOMEPAGE_ACTION_CARD_DETAILS,
@@ -20,10 +21,12 @@ export default function ActionCardsPage({
               href={details.href}
               className="group relative block overflow-hidden rounded-lg aspect-16/10"
             >
-              <img
+              <OptimizedImage
                 src={resolveHomepageActionImage(card.image)}
                 alt={details.title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                fill
+                sizes="(min-width: 1152px) 542px, (min-width: 640px) calc((100vw - 68px) / 2), calc(100vw - 48px)"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
 

@@ -93,17 +93,17 @@ function ProfileAccordion({
   const contentId = `profile-${title.toLowerCase().replace(/\s+/g, "-")}`;
 
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+    <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-controls={contentId}
-        className="flex w-full items-center justify-between gap-4 text-left"
+        className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
       >
-        <span className="flex items-center gap-2 text-base font-semibold text-[#003251]">
-          {icon}
-          {title}
+        <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[#003251] sm:text-base">
+          <span className="shrink-0">{icon}</span>
+          <span className="[overflow-wrap:anywhere]">{title}</span>
         </span>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[#003251]">
           <ChevronDown
@@ -262,7 +262,7 @@ export default function VisitorProfilePage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-6 pt-28">
+      <main className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4 pt-24 sm:px-6 sm:pt-28">
         <div className="flex items-center gap-3 text-[#003251]">
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
           <span className="text-sm font-semibold">Loading your profile…</span>
@@ -273,9 +273,9 @@ export default function VisitorProfilePage() {
 
   if (!access || !profile) {
     return (
-      <main className="min-h-screen bg-[#f4f7f8] px-5 pb-16 pt-28 sm:px-8">
-        <div className="mx-auto grid max-w-4xl overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-900/8 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="bg-[#003251] px-7 py-10 text-white sm:px-10 lg:py-14">
+      <main className="min-h-screen bg-[#f4f7f8] px-3 pb-12 pt-24 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8">
+        <div className="mx-auto grid max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-900/8 sm:rounded-3xl lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <section className="min-w-0 bg-[#003251] px-5 py-8 text-white sm:px-10 sm:py-10 lg:py-14">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
               <User className="h-5 w-5" aria-hidden="true" />
             </div>
@@ -295,7 +295,7 @@ export default function VisitorProfilePage() {
             </Link>
           </section>
 
-          <section className="px-7 py-10 sm:px-10 lg:py-14">
+          <section className="min-w-0 px-5 py-8 sm:px-10 sm:py-10 lg:py-14">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#003251]/55">
               Returning visitor
             </p>
@@ -310,7 +310,7 @@ export default function VisitorProfilePage() {
                     autoComplete="email"
                     value={loginEmail}
                     onChange={(event) => setLoginEmail(event.target.value)}
-                    className="w-full bg-transparent px-3 py-2.5 font-normal outline-none"
+                    className="min-w-0 w-full bg-transparent px-3 py-2.5 text-base font-normal outline-none sm:text-sm"
                     placeholder="you@example.com"
                   />
                 </span>
@@ -324,7 +324,7 @@ export default function VisitorProfilePage() {
                     autoComplete="current-password"
                     value={loginPassword}
                     onChange={(event) => setLoginPassword(event.target.value)}
-                    className="w-full bg-transparent px-3 py-2.5 font-normal outline-none"
+                    className="min-w-0 w-full bg-transparent px-3 py-2.5 text-base font-normal outline-none sm:text-sm"
                     placeholder="Your password"
                   />
                 </span>
@@ -352,7 +352,7 @@ export default function VisitorProfilePage() {
   const profileImageUrl = propertyUploadUrl(profile.visitor.profile_image);
 
   return (
-    <main className="min-h-screen bg-[#f4f7f8] px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f4f7f8] px-3 pb-12 pt-24 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8">
       {profileCropFile && (
         <ImageCropModal
           file={profileCropFile}
@@ -365,8 +365,8 @@ export default function VisitorProfilePage() {
         />
       )}
       <div className="mx-auto max-w-6xl">
-        <header className="relative overflow-hidden rounded-3xl bg-[#003251] px-5 py-6 text-white shadow-xl shadow-[#003251]/10 sm:px-7 md:flex md:items-center md:justify-between md:gap-6">
-          <div className="relative flex items-center gap-4">
+        <header className="relative flex flex-col gap-5 rounded-2xl bg-[#003251] p-4 text-white shadow-xl shadow-[#003251]/10 sm:rounded-3xl sm:px-7 sm:py-6 md:flex-row md:items-center md:justify-between md:gap-6">
+          <div className="relative flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
             <div className="relative h-16 w-16 shrink-0">
               <div
                 role={profileImageUrl ? "img" : undefined}
@@ -385,7 +385,7 @@ export default function VisitorProfilePage() {
                     .toUpperCase() || "K")}
               </div>
               <label
-                className={`absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#003251] bg-white text-[#003251] shadow-md transition hover:bg-slate-100 ${
+                className={`absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#003251] bg-white text-[#003251] shadow-md transition hover:bg-slate-100 ${
                   photoBusy || profileCropFile
                     ? "cursor-wait opacity-70"
                     : "cursor-pointer"
@@ -407,11 +407,11 @@ export default function VisitorProfilePage() {
                 />
               </label>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em]">My account</p>
-              <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{profile.visitor.name}</h1>
+              <h1 className="mt-1 text-xl font-semibold [overflow-wrap:anywhere] sm:text-2xl">{profile.visitor.name}</h1>
               <p className="mt-1 flex items-center gap-1.5 text-xs text-white/65">
-                <Shield className="h-3.5 w-3.5" aria-hidden="true" /> Verified visitor
+                <Shield className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> Verified visitor
               </p>
               <NoticeBox notice={photoNotice} />
             </div>
@@ -419,14 +419,14 @@ export default function VisitorProfilePage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="relative mt-5 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20  px-4 py-2.5 text-sm font-semibold transition hover:bg-white hover:text-[#003251] md:mt-0"
+            className="relative inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold transition hover:bg-white hover:text-[#003251] sm:w-auto md:self-center"
           >
             <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
           </button>
         </header>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[0.82fr_1.5fr]">
-          <div className="space-y-6">
+        <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.5fr)]">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
             <PersonalDetails
               access={access}
               visitor={profile.visitor}
@@ -440,18 +440,18 @@ export default function VisitorProfilePage() {
                 setProfile((current) => (current ? { ...current, has_password: true } : current))
               }
             />
-            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+            <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold text-[#003251]">
                 <Clock className="h-4.5 w-4.5" aria-hidden="true" /> Account status
               </h2>
               <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 <div>
                   <dt className="text-slate-500">Member since</dt>
-                  <dd className="mt-1 font-semibold text-slate-800">{formatDate(profile.member_since)}</dd>
+                  <dd className="mt-1 font-semibold text-slate-800 [overflow-wrap:anywhere]">{formatDate(profile.member_since)}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Session expires</dt>
-                  <dd className="mt-1 font-semibold text-slate-800">
+                  <dd className="mt-1 font-semibold text-slate-800 [overflow-wrap:anywhere]">
                     {formatDate(profile.session_expires_at)}
                   </dd>
                 </div>
@@ -459,7 +459,7 @@ export default function VisitorProfilePage() {
             </section>
           </div>
 
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
             <SavedHomes
               access={access}
               homes={profile.saved_homes || []}
@@ -527,14 +527,14 @@ function PersonalDetails({
             value={name}
             onChange={(event) => setName(event.target.value)}
             autoComplete="name"
-            className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5 font-normal outline-none focus:border-[#003251]"
+            className="mt-2 min-w-0 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-base font-normal outline-none focus:border-[#003251] sm:text-sm"
           />
           <FieldError>{errors.name}</FieldError>
         </label>
         <label className="block text-sm font-semibold text-slate-700">
           Phone number
           <span className="mt-2 flex items-center rounded-xl border border-slate-300 px-3 focus-within:border-[#003251]">
-            <Phone className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            <Phone className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             <PhoneInput
               value={phone}
               onValueChange={(value) => {
@@ -544,7 +544,7 @@ function PersonalDetails({
               onBlur={() => setErrors((current) => ({ ...current, phone: validatePhone(phone, true) }))}
               aria-invalid={Boolean(errors.phone)}
               autoComplete="tel"
-              className="w-full px-3 py-2.5 font-normal outline-none"
+              className="min-w-0 w-full px-3 py-2.5 text-base font-normal outline-none sm:text-sm"
             />
           </span>
           <FieldError>{errors.phone}</FieldError>
@@ -552,11 +552,11 @@ function PersonalDetails({
         <label className="block text-sm font-semibold text-slate-700">
           Verified email
           <span className="mt-2 flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-slate-500">
-            <Mail className="h-4 w-4" aria-hidden="true" />
+            <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
             <input
               value={visitor.email}
               readOnly
-              className="w-full bg-transparent px-3 py-2.5 font-normal outline-none"
+              className="min-w-0 w-full bg-transparent px-3 py-2.5 text-base font-normal outline-none sm:text-sm"
             />
           </span>
         </label>
@@ -564,7 +564,7 @@ function PersonalDetails({
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#003251] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#004b78] disabled:opacity-60"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#003251] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#004b78] disabled:opacity-60 sm:w-auto"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           Save details
@@ -680,7 +680,7 @@ function AccountSecurity({
   }
 
   const inputClass =
-    "mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5 font-normal outline-none focus:border-[#003251]";
+    "mt-2 min-w-0 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-base font-normal outline-none focus:border-[#003251] sm:text-sm";
 
   return (
     <ProfileAccordion
@@ -707,7 +707,7 @@ function AccountSecurity({
             <button
               type="submit"
               disabled={emailBusy}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#003251] px-4 py-2.5 text-sm font-bold text-[#003251] transition hover:bg-[#003251] hover:text-white disabled:opacity-60"
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#003251] px-4 py-2.5 text-sm font-bold text-[#003251] transition hover:bg-[#003251] hover:text-white disabled:opacity-60 sm:w-auto"
             >
               {emailBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               Send verification code
@@ -715,7 +715,7 @@ function AccountSecurity({
           </form>
         ) : (
           <form onSubmit={verifyEmail} className="mt-4" noValidate>
-            <label className="block text-sm font-semibold text-slate-700">
+            <label className="block text-sm font-semibold text-slate-700 [overflow-wrap:anywhere]">
               Verification code sent to {newEmail}
               <input
                 inputMode="numeric"
@@ -726,11 +726,11 @@ function AccountSecurity({
                 placeholder="000000"
               />
             </label>
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 type="submit"
                 disabled={emailBusy}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#003251] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#003251] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
               >
                 {emailBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                 Verify and change
@@ -742,7 +742,7 @@ function AccountSecurity({
                   setEmailCode("");
                   setEmailNotice(null);
                 }}
-                className="px-3 py-2.5 text-sm font-semibold text-slate-600"
+                className="min-h-11 px-3 py-2.5 text-sm font-semibold text-slate-600"
               >
                 Use another email
               </button>
@@ -799,7 +799,7 @@ function AccountSecurity({
         <button
           type="submit"
           disabled={passwordBusy}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#003251] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#004b78] disabled:opacity-60"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#003251] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#004b78] disabled:opacity-60 sm:w-auto"
         >
           {passwordBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           {profile.has_password ? "Update password" : "Create password"}
@@ -836,14 +836,14 @@ function SavedHomes({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+    <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#003251]/55">
             Your favourites
           </p>
-          <h2 className="mt-1.5 flex items-center gap-2 text-xl font-semibold text-[#003251]">
-            <Heart className="h-5 w-5" aria-hidden="true" /> Saved Homes
+          <h2 className="mt-1.5 flex items-center gap-2 text-lg font-semibold text-[#003251] sm:text-xl">
+            <Heart className="h-5 w-5 shrink-0" aria-hidden="true" /> Saved Homes
           </h2>
         </div>
         <span className="text-sm text-slate-500">
@@ -874,7 +874,7 @@ function SavedHomes({
             return (
               <article
                 key={property.id}
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <div className="relative aspect-16/10 overflow-hidden bg-slate-200">
                   <Link
@@ -895,7 +895,7 @@ function SavedHomes({
                       </div>
                     )}
                   </Link>
-                  <span className="absolute bottom-3 left-3 bg-[#003251] px-3 py-1.5 text-sm font-bold text-white">
+                  <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white [overflow-wrap:anywhere]">
                     {displayPrice(property.price)}
                   </span>
                   <button
@@ -903,7 +903,7 @@ function SavedHomes({
                     onClick={() => removeHome(property.id)}
                     disabled={removingId === property.id}
                     aria-label={`Remove ${property.title} from Saved Homes`}
-                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#1c878f] shadow disabled:opacity-60"
+                    className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#1c878f] shadow disabled:opacity-60"
                   >
                     {removingId === property.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -915,13 +915,13 @@ function SavedHomes({
                 <div className="p-4">
                   <Link
                     href={`/details?id=${property.id}&source=profile`}
-                    className="text-base font-semibold leading-snug text-[#003251] hover:underline"
+                    className="block text-base font-semibold leading-snug text-[#003251] [overflow-wrap:anywhere] hover:underline"
                   >
                     {property.title}
                   </Link>
                   <p className="mt-2 flex items-start gap-1.5 text-sm leading-5 text-slate-500">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                    {property.address}
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{property.address}</span>
                   </p>
                   <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
                     Saved {formatDate(property.saved_at)}
@@ -938,14 +938,14 @@ function SavedHomes({
 
 function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+    <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#003251]/55">
             Saved automatically
           </p>
-          <h2 className="mt-1.5 flex items-center gap-2 text-xl font-semibold text-[#003251]">
-            <History className="h-5 w-5" aria-hidden="true" /> Recently viewed
+          <h2 className="mt-1.5 flex items-center gap-2 text-lg font-semibold text-[#003251] sm:text-xl">
+            <History className="h-5 w-5 shrink-0" aria-hidden="true" /> Recently viewed
           </h2>
         </div>
         <span className="text-sm text-slate-500">
@@ -974,7 +974,7 @@ function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
             return (
               <article
                 key={property.id}
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <Link
                   href={`/details?id=${property.id}&source=profile`}
@@ -994,22 +994,22 @@ function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
                         <Home className="h-10 w-10 text-slate-400" aria-hidden="true" />
                       </div>
                     )}
-                    <span className="absolute bottom-3 left-3 bg-[#003251] px-3 py-1.5 text-sm font-bold text-white">
+                    <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white [overflow-wrap:anywhere]">
                       {displayPrice(property.price)}
                     </span>
                   </div>
                   <div className="p-4">
-                    <h3 className="text-base font-semibold leading-snug text-[#003251]">
+                    <h3 className="text-base font-semibold leading-snug text-[#003251] [overflow-wrap:anywhere]">
                       {property.title}
                     </h3>
                     <p className="mt-2 flex items-start gap-1.5 text-sm leading-5 text-slate-500">
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                      {property.address}
+                      <span className="min-w-0 [overflow-wrap:anywhere]">{property.address}</span>
                     </p>
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-                      <span>Viewed {formatDate(property.last_visited_at)}</span>
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                      <span className="min-w-0 [overflow-wrap:anywhere]">Viewed {formatDate(property.last_visited_at)}</span>
                       <ArrowRight
-                        className="h-4 w-4 text-[#003251] transition-transform group-hover:translate-x-1"
+                        className="h-4 w-4 shrink-0 text-[#003251] transition-transform group-hover:translate-x-1"
                         aria-hidden="true"
                       />
                     </div>
@@ -1026,14 +1026,14 @@ function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
 
 function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] }) {
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+    <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#003251]/55">
             Messages you sent
           </p>
-          <h2 className="mt-1.5 flex items-center gap-2 text-xl font-semibold text-[#003251]">
-            <MessageSquare className="h-5 w-5" aria-hidden="true" /> Property inquiries
+          <h2 className="mt-1.5 flex items-center gap-2 text-lg font-semibold text-[#003251] sm:text-xl">
+            <MessageSquare className="h-5 w-5 shrink-0" aria-hidden="true" /> Property inquiries
           </h2>
         </div>
         <span className="text-sm text-slate-500">
@@ -1056,7 +1056,7 @@ function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] 
             const content = (
               <>
                 <div
-                  className="h-24 w-28 shrink-0 bg-slate-200 bg-cover bg-center sm:h-28 sm:w-36"
+                  className="aspect-16/10 w-full shrink-0 rounded-lg bg-slate-200 bg-cover bg-center sm:aspect-auto sm:h-28 sm:w-36"
                   style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : undefined}
                   aria-hidden="true"
                 >
@@ -1068,25 +1068,25 @@ function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] 
                 </div>
                 <div className="min-w-0 flex-1 py-0.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-snug text-[#003251]">{inquiry.title}</h3>
+                    <h3 className="min-w-0 font-semibold leading-snug text-[#003251] [overflow-wrap:anywhere]">{inquiry.title}</h3>
                     <time className="shrink-0 text-xs text-slate-400">
                       {formatDate(inquiry.created_at)}
                     </time>
                   </div>
                   {inquiry.address && (
-                    <p className="mt-1 truncate text-xs text-slate-500">{inquiry.address}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-500 [overflow-wrap:anywhere]">{inquiry.address}</p>
                   )}
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]">
                     “{inquiry.message}”
                   </p>
                   <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                    <Send className="h-3.5 w-3.5 text-[#003251]" aria-hidden="true" />
+                    <Send className="h-3.5 w-3.5 shrink-0 text-[#003251]" aria-hidden="true" />
                     Inquiry contact
-                    <span className="font-semibold text-slate-700">{inquiry.recipient_name}</span>
+                    <span className="min-w-0 font-semibold text-slate-700 [overflow-wrap:anywhere]">{inquiry.recipient_name}</span>
                     {inquiry.recipient_email && (
                       <a
                         href={`mailto:${inquiry.recipient_email}`}
-                        className="text-[#003251] hover:underline"
+                        className="min-w-0 max-w-full text-[#003251] [overflow-wrap:anywhere] hover:underline"
                         onClick={(event) => event.stopPropagation()}
                       >
                         ({inquiry.recipient_email})
@@ -1108,7 +1108,7 @@ function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] 
             return (
               <article
                 key={inquiry.id}
-                className="flex gap-4 rounded-xl border border-slate-200 p-3 transition hover:border-[#003251]/40 hover:shadow-md"
+                className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-[#003251]/40 hover:shadow-md sm:flex-row sm:gap-4"
               >
                 {content}
               </article>

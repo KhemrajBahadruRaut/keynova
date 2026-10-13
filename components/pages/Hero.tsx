@@ -1,40 +1,19 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
 import Navbar from "../navbar/Navbar";
 import { Search } from "lucide-react";
 import Link from "next/link";
-import { resolveHeroImage, type HeroContent } from "@/lib/hero-content";
+import type { HeroContent } from "@/lib/hero-content";
+import HeroSlideshow from "./HeroSlideshow";
 
 export default function Hero({ content }: Readonly<{ content: HeroContent }>) {
   const { slides } = content;
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveSlide((current) => (current + 1) % slides.length);
-    }, 6000);
-
-    return () => window.clearInterval(interval);
-  }, [slides.length]);
 
   return (
     <div className="min-h-screen bg-slate-900 font-sans">
       <Navbar />
       {/* HERO */}
       <section className="relative w-full h-screen min-h-160 overflow-hidden">
-        {slides.map((slide, index) => (
-          <img
-            key={`${slide.image}-${index}`}
-            src={resolveHeroImage(slide.image)}
-            alt={index === activeSlide ? slide.alt : ""}
-            aria-hidden={index !== activeSlide}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-              index === activeSlide ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        ))}
-        <div className="absolute inset-0 bg-[#001d2f]/45" />
+        <HeroSlideshow slides={slides} />
+        <div className="pointer-events-none absolute inset-0 bg-[#001d2f]/45" />
 
         <div className="relative z-10 h-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center px-6">
           <h1 className="text-white font-semibold leading-[1.05] text-4xl sm:text-5xl lg:text-6xl">
@@ -90,29 +69,6 @@ export default function Hero({ content }: Readonly<{ content: HeroContent }>) {
           </div>
         </div>
 
-        <p className="absolute bottom-8 left-8 z-10 hidden text-xs font-semibold uppercase tracking-[0.2em] text-white/85 sm:block">
-          {slides[activeSlide].location}
-        </p>
-
-        <div
-          className="absolute bottom-8 right-8 z-10 flex gap-2"
-          aria-label="Hero images"
-        >
-          {slides.map((slide, index) => (
-            <button
-              key={`${slide.image}-${index}`}
-              type="button"
-              onClick={() => setActiveSlide(index)}
-              aria-label={`Show image ${index + 1}: ${slide.location}`}
-              aria-current={index === activeSlide ? "true" : undefined}
-              className={`h-2.5 rounded-full transition-all ${
-                index === activeSlide
-                  ? "w-8 bg-white"
-                  : "w-2.5 bg-white/45 hover:bg-white/75"
-              }`}
-            />
-          ))}
-        </div>
       </section>
     </div>
   );

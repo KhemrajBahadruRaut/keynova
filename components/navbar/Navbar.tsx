@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import logo from "@/public/logo/logo.webp";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, User, X } from "lucide-react";
 import {
@@ -116,11 +118,21 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <img src="/logo/logo.avif" alt="Logo" width={200} />
+          <Image
+            src={logo}
+            alt="KeyNova Group home"
+            width={200}
+            sizes="(min-width: 1024px) 200px, (min-width: 768px) 176px, (min-width: 640px) 144px, 112px"
+            loading="eager"
+            className="w-28 sm:w-36 md:w-44 lg:w-50 h-auto object-contain"
+          />
         </Link>
 
         {/* Desktop navigation */}
-        <nav className="hidden items-center gap-5 lg:flex xl:gap-8" aria-label="Main navigation">
+        <nav
+          className="hidden items-center gap-5 lg:flex xl:gap-8"
+          aria-label="Main navigation"
+        >
           {navLinks.map((link) => {
             const isActive =
               pathIsActive(link.path) ||
@@ -214,7 +226,9 @@ export default function Navbar() {
 
           <Link
             href="/profile"
-            aria-label={visitor ? `Open ${visitor.name}'s profile` : "Open profile"}
+            aria-label={
+              visitor ? `Open ${visitor.name}'s profile` : "Open profile"
+            }
             className={`hidden items-center gap-2 border px-2 py-2 text-sm font-semibold transition lg:flex xl:px-3 ${
               pathIsActive("/profile")
                 ? "border-white bg-white text-[#003251]"
@@ -262,7 +276,9 @@ export default function Navbar() {
             href="/profile"
             onClick={() => setMobileOpen(false)}
             className={`mb-2 flex items-center gap-3 border border-white/20 px-4 py-3 text-sm font-semibold ${
-              pathIsActive("/profile") ? "bg-white text-[#003251]" : "text-white"
+              pathIsActive("/profile")
+                ? "bg-white text-[#003251]"
+                : "text-white"
             }`}
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
@@ -276,10 +292,15 @@ export default function Navbar() {
                 <User className="h-4 w-4" aria-hidden="true" />
               )}
             </span>
-            <span>{visitor ? `${visitor.name}'s profile` : "Profile / Sign in"}</span>
+            <span>
+              {visitor ? `${visitor.name}'s profile` : "Profile / Sign in"}
+            </span>
           </Link>
           {navLinks.map((link) => (
-            <div key={link.name} className="border-b border-white/10 last:border-b-0">
+            <div
+              key={link.name}
+              className="border-b border-white/10 last:border-b-0"
+            >
               <Link
                 href={link.path}
                 onClick={() => setMobileOpen(false)}

@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import OptimizedImage from "@/components/ui/OptimizedImage";
+import contactBackground from "@/public/contacts/contact-bg.png";
+import contactPortrait from "@/public/letstalk/image.png";
 
 import { teamPhotoUrl } from "@/lib/team-data";
 import ContactField from "@/components/ui/ContactField";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { useFormValidation } from "@/lib/use-form-validation";
 import { CONTACT_FIELD_VALIDATORS, validateText } from "@/lib/validation";
-
-const BACKGROUND_IMAGE_URL = "/contacts/contact-bg.png";
-
-// Portrait photo of the person, shown on the left.
-const PORTRAIT_IMAGE_URL = "/letstalk/image.png";
 
 const HELP_OPTIONS = [
   "Buying a home",
@@ -66,7 +64,7 @@ export default function LetsTalkPage({
   agent?: { slug: string; name: string; photo: string | null } | null;
   initialSubject?: string;
 }>) {
-  const portraitUrl = agent ? teamPhotoUrl(agent.photo) : PORTRAIT_IMAGE_URL;
+  const portraitUrl = agent ? teamPhotoUrl(agent.photo) : contactPortrait;
   const [form, setForm] = useState<ContactForm>(() => ({
     ...INITIAL_FORM,
     subject: initialSubject,
@@ -156,23 +154,19 @@ export default function LetsTalkPage({
   }
 
   return (
-    <div
-      className=" bg-gray-100 bg-cover bg-center"
-      style={
-        BACKGROUND_IMAGE_URL
-          ? { backgroundImage: `url(${BACKGROUND_IMAGE_URL})` }
-          : undefined
-      }
-    >
-      <div className="mx-auto pt-30 grid  max-w-6xl grid-cols-1 items-center gap-10 px-6  md:grid-cols-[1fr_1.2fr] md:px-10">
+    <div className="relative bg-gray-100">
+      <OptimizedImage src={contactBackground} alt="" fill sizes="100vw" className="pointer-events-none object-cover" />
+      <div className="relative mx-auto pt-30 grid  max-w-6xl grid-cols-1 items-center gap-10 px-6  md:grid-cols-[1fr_1.2fr] md:px-10">
         {/* Portrait */}
         <div className="flex justify-center md:justify-start">
-          <div className="h-105 w-full max-w-md overflow-hidden md:h-178">
+          <div className="relative h-105 w-full max-w-md overflow-hidden md:h-178">
             {portraitUrl ? (
-              <img
+              <OptimizedImage
                 src={portraitUrl}
                 alt={agent ? `${agent.name}, KeyNova Group` : "Contact KeyNova Group"}
-                className="h-full w-full object-cover object-top"
+                fill
+                sizes="(min-width: 1152px) 469px, (min-width: 768px) calc((100vw - 120px) / 2.2), (min-width: 496px) 448px, calc(100vw - 48px)"
+                className="object-cover object-top"
               />
             ) : agent ? (
               <div

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import OptimizedImage from "@/components/ui/OptimizedImage";
 import {
   ArrowRight,
   Bath,
@@ -77,7 +78,7 @@ function PropertyCard({
     >
       <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
         {imageUrl ? (
-          <img
+          <OptimizedImage
             src={imageUrl}
             alt={
               duplicate
@@ -85,7 +86,9 @@ function PropertyCard({
                 : property.title || property.address || "KeyNova property"
             }
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(min-width: 640px) 360px, 290px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-[#eef3f5] px-6 text-center text-sm text-slate-400">
@@ -196,6 +199,7 @@ export default function PropertyShowcaseSection({
     let animationFrameId = 0;
     let previousTime: number | null = null;
     let loopPoint = 0;
+    let visible = false;
 
     const updateLoopPoint = () => {
       const firstCard = node.children[0] as HTMLElement | undefined;
@@ -226,13 +230,28 @@ export default function PropertyShowcaseSection({
       animationFrameId = window.requestAnimationFrame(animate);
     };
 
+    const updateAnimation = () => {
+      window.cancelAnimationFrame(animationFrameId);
+      previousTime = null;
+      if (visible && !document.hidden) {
+        animationFrameId = window.requestAnimationFrame(animate);
+      }
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      updateAnimation();
+    });
+
     updateLoopPoint();
     window.addEventListener("resize", updateLoopPoint);
-    animationFrameId = window.requestAnimationFrame(animate);
+    document.addEventListener("visibilitychange", updateAnimation);
+    observer.observe(node);
 
     return () => {
       window.cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateLoopPoint);
+      document.removeEventListener("visibilitychange", updateAnimation);
+      observer.disconnect();
     };
   }, [isExclusive, loading, properties.length]);
 
@@ -246,8 +265,11 @@ export default function PropertyShowcaseSection({
     });
   };
 
-  const carouselProperties = isExclusive
-    ? Array.from({ length: 6 }, () => properties).flat()
+  const carouselProperties = isExclusive && properties.length > 0
+    ? Array.from(
+        { length: Math.max(2, Math.ceil(1280 / (properties.length * 314)) + 1) },
+        () => properties,
+      ).flat()
     : properties;
 
   return (

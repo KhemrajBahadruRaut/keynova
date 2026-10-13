@@ -1,5 +1,7 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
+import footerLogo from "@/public/logo/logofooter.png";
 import { Phone, Mail, MapPin } from "lucide-react";
 
 const socialLinks = [
@@ -23,27 +25,27 @@ const socialLinks = [
 const FooterPage: React.FC = () => {
   return (
     <footer className="bg-[#003251] px-6 py-12 text-white">
-      <div className="mx-auto grid max-w-4xl grid-cols-1 gap-10 sm:grid-cols-[auto_1px_1fr_1px_auto] sm:items-start">
+      <div className="mx-auto grid max-w-4xl grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[auto_1px_minmax(0,1fr)_1px_auto] lg:items-start">
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:col-span-2 lg:col-span-1">
             
-            <img src="/logo/logofooter.png" alt="" height={10} width={120} />
+            <Image src={footerLogo} alt="KeyNova Group" width={120} sizes="120px" className="h-auto w-30" />
           </div>
 
 
-        <div className="hidden self-stretch bg-white/20 sm:block" />
+        <div className="hidden self-stretch bg-white/20 lg:block" />
 
         {/* Contact */}
-        <div className="flex justify-center">
-          <div className=" flex flex-col gap-4 text-sm text-white/90">
+        <div className="flex min-w-0 justify-start lg:justify-center">
+          <div className="flex min-w-0 flex-col gap-4 text-sm text-white/90">
           <h2 className="text-sm font-bold tracking-wide">Contact</h2>
             <div className="flex items-center gap-3">
-              <Phone size={16} />
+              <Phone size={16} className="shrink-0" />
               <a href="tel:19782457392">(978) 245-7392</a>
             </div>
             <div className="flex items-center gap-3">
-              <Mail size={16} />
-              <a href="mailto:management@keynovagrp.com">
+              <Mail size={16} className="shrink-0" />
+              <a href="mailto:management@keynovagrp.com" className="min-w-0 [overflow-wrap:anywhere]">
                 management@keynovagrp.com
               </a>
             </div>
@@ -62,7 +64,7 @@ const FooterPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="hidden self-stretch bg-white/20 sm:block" />
+        <div className="hidden self-stretch bg-white/20 lg:block" />
 
         {/* Navigation */}
         <div>
