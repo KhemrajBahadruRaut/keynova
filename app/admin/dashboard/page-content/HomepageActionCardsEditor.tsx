@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  AdminButton,
+  AdminCard,
+  AdminInput,
+  AdminLoading,
+  AdminNotice as ToastNotice,
+  AdminUploadInput,
+  useAdminFeedback as useFeedback,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import FieldError from "@/components/ui/FieldError";
 import { homepageCardsValidation, validateImageUpload } from "@/lib/admin-validation";
 import { useFormValidation } from "@/lib/use-form-validation";
@@ -10,12 +20,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink,
-  ImageUp,
   LoaderCircle,
   RotateCcw,
   Save,
 } from "lucide-react";
-import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+
 
 import {
   cloneHomepageActionContent,
@@ -236,7 +245,7 @@ export default function HomepageActionCardsEditor() {
 
   return (
     <section aria-labelledby="homepage-action-cards-heading">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <AdminCard className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#003251]">
@@ -271,7 +280,7 @@ export default function HomepageActionCardsEditor() {
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               Preview homepage
             </Link>
-            <button
+            <AdminButton
               type="button"
               onClick={restoreDefaults}
               disabled={loading || saving}
@@ -279,8 +288,8 @@ export default function HomepageActionCardsEditor() {
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Load originals
-            </button>
-            <button
+            </AdminButton>
+            <AdminButton
               type="button"
               onClick={saveContent}
               disabled={loading || saving || !dirty}
@@ -292,24 +301,22 @@ export default function HomepageActionCardsEditor() {
                 <Save className="h-4 w-4" aria-hidden="true" />
               )}
               {saving ? "Publishing…" : "Publish images"}
-            </button>
+            </AdminButton>
           </div>
         </div>
-      </div>
+      </AdminCard>
 
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
       {loading ? (
-        <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">
-          <LoaderCircle className="h-7 w-7 animate-spin text-[#003251]" aria-label="Loading homepage card images" />
-        </div>
+        <AdminLoading className="mt-5">Loading homepage card images…</AdminLoading>
       ) : (
         <div className="mt-5 grid gap-5 md:grid-cols-2">
           {content.cards.map((card, index) => {
             const details = HOMEPAGE_ACTION_CARD_DETAILS[card.id];
             return (
-              <article
+              <AdminCard
                 key={card.id}
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
@@ -325,7 +332,7 @@ export default function HomepageActionCardsEditor() {
                 <p className="mt-1 text-sm text-slate-500">{details.description}</p>
                 <label className="mt-4 block text-sm font-medium text-slate-700">
                   Image URL or saved path
-                  <input
+                  <AdminInput
                     {...fieldAttributes(`card.${card.id}.image`, `homepage-card-${card.id}-image-error`)}
                     value={card.image}
                     onChange={(event) => updateImage(index, event.target.value)}
@@ -334,28 +341,20 @@ export default function HomepageActionCardsEditor() {
                   />
                   <FieldError id={`homepage-card-${card.id}-image-error`} error={errors[`card.${card.id}.image`]} />
                 </label>
-                <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143c60]">
-                  {uploadingIndex === index ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <ImageUp className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  {uploadingIndex === index ? "Uploading…" : "Upload replacement"}
-                  <input
-                    aria-invalid={Boolean(uploadErrors[index])}
-                    aria-describedby={`homepage-card-${card.id}-upload-error`}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    disabled={uploadingIndex !== null || saving}
-                    onChange={(event) => uploadImage(index, event)}
-                    className="sr-only"
-                  />
-                </label>
-                  <FieldError id={`homepage-card-${card.id}-upload-error`} error={uploadErrors[index]} />
+                <AdminUploadInput
+                  aria-invalid={Boolean(uploadErrors[index])}
+                  aria-describedby={`homepage-card-${card.id}-upload-error`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={uploadingIndex !== null || saving}
+                  onChange={(event) => uploadImage(index, event)}
+                  className="mt-3"
+                  buttonLabel={uploadingIndex === index ? "Uploading…" : "Upload replacement"} loading={uploadingIndex === index} />
+                <FieldError id={`homepage-card-${card.id}-upload-error`} error={uploadErrors[index]} />
                 <p className="mt-2 text-xs text-slate-500">
                   Use a landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB.
                 </p>
-              </article>
+              </AdminCard>
             );
           })}
         </div>

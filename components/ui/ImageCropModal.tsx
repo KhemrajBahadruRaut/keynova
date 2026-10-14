@@ -21,6 +21,7 @@ interface ImageCropModalProps {
   outputWidth: number;
   title: string;
   circularPreview?: boolean;
+  zIndex?: number;
   freeCrop?: boolean;
   showFullImageAroundCrop?: boolean;
   onCancel: () => void;
@@ -52,6 +53,7 @@ export default function ImageCropModal({
   outputWidth,
   title,
   circularPreview = false,
+  zIndex,
   freeCrop = false,
   showFullImageAroundCrop = false,
   onCancel,
@@ -407,6 +409,7 @@ export default function ImageCropModal({
   return (
     <div
       className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-slate-950/75 p-4 sm:items-center"
+      style={zIndex === undefined ? undefined : { zIndex }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="image-crop-title"

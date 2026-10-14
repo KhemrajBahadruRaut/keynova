@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 import { getAdminSession } from "@/lib/auth/session";
 
@@ -10,5 +11,9 @@ export default async function AdminDashboardLayout({
   const session = await getAdminSession();
   if (!session || session.role !== "admin") redirect("/admin");
 
-  return <AdminShell adminEmail={session.email}>{children}</AdminShell>;
+  return (
+    <AntdRegistry>
+      <AdminShell adminEmail={session.email}>{children}</AdminShell>
+    </AntdRegistry>
+  );
 }

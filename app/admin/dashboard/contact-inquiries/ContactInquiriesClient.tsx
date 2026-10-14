@@ -1,8 +1,15 @@
 "use client";
 
+import { Space, Tag, Typography } from "antd";
+import {
+  AdminTable,
+  AdminCard,
+  AdminNotice as ToastNotice,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ToastNotice } from "@/components/ui/FeedbackProvider";
+
 
 interface Inquiry {
   id: number;
@@ -85,77 +92,26 @@ export default function ContactInquiriesClient() {
 
       <ToastNotice message={error} kind="error" />
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-5 text-lg font-semibold text-gray-900">
             Contact Inquiries
           </h2>
 
-          {loading ? (
-            <div className="py-12 text-center text-gray-400">Loading…</div>
-          ) : inquiries.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">No inquiries yet.</div>
-          ) : (
-            <div className="space-y-4">
-              {inquiries.map((inquiry) => (
-                <article
-                  key={inquiry.id}
-                  className="rounded-xl border border-gray-100 p-4"
-                >
-                  <div className="mb-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
-                    <div>
-                      <span className="font-medium text-gray-900">{inquiry.name}</span>
-                      <span className="mx-2 text-gray-400">·</span>
-                      <a
-                        href={`mailto:${inquiry.email}`}
-                        className="text-sm text-[#2f7895] hover:underline"
-                      >
-                        {inquiry.email}
-                      </a>
-                      {inquiry.phone && (
-                        <>
-                          <span className="mx-2 text-gray-400">·</span>
-                          <a
-                            href={`tel:${inquiry.phone}`}
-                            className="text-sm text-gray-500 hover:underline"
-                          >
-                            {inquiry.phone}
-                          </a>
-                        </>
-                      )}
-                    </div>
-                    <time className="text-xs text-gray-400" dateTime={inquiry.created_at}>
-                      {new Date(inquiry.created_at).toLocaleDateString()}
-                    </time>
-                  </div>
-                  <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-full bg-sky-50 px-2 py-1 font-medium text-[#2f7895]">
-                      {inquiry.source === "property"
-                        ? "Property inquiry"
-                        : inquiry.source === "agent"
-                          ? `Agent inquiry${inquiry.agent_name ? ` · ${inquiry.agent_name}` : ""}`
-                        : "Website contact"}
-                    </span>
-                    {inquiry.help_with && (
-                      <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-                        {inquiry.help_with}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mb-1 text-sm font-medium text-gray-800">
-                    {inquiry.source === "property"
-                      ? `Re: ${inquiry.property_title || "Property no longer available"}`
-                      : inquiry.subject || "General inquiry"}
-                  </h3>
-                  <p className="whitespace-pre-wrap text-sm text-gray-600">
-                    {inquiry.message}
-                  </p>
-                </article>
-              ))}
-            </div>
-          )}
+          <AdminTable<Inquiry>
+            dataSource={inquiries}
+            loading={loading}
+            locale={{ emptyText: "No inquiries yet." }}
+            columns={[
+              { title: "Visitor", key: "visitor", width: 270, render: (_, inquiry) => <div><Typography.Text strong>{inquiry.name}</Typography.Text><p><a href={`mailto:${inquiry.email}`}>{inquiry.email}</a></p>{inquiry.phone && <a href={`tel:${inquiry.phone}`}>{inquiry.phone}</a>}</div> },
+              { title: "Source", key: "source", width: 220, render: (_, inquiry) => <Space orientation="vertical" size={4}><Tag color="blue">{inquiry.source === "property" ? "Property inquiry" : inquiry.source === "agent" ? "Agent inquiry" : "Website contact"}</Tag>{inquiry.agent_name && <Typography.Text type="secondary">{inquiry.agent_name}</Typography.Text>}{inquiry.help_with && <Tag>{inquiry.help_with}</Tag>}</Space> },
+              { title: "Subject", key: "subject", width: 300, render: (_, inquiry) => inquiry.source === "property" ? `Re: ${inquiry.property_title || "Property no longer available"}` : inquiry.subject || "General inquiry" },
+              { title: "Submitted", dataIndex: "created_at", key: "created_at", width: 170, render: (value: string) => new Date(value.replace(" ", "T")).toLocaleDateString() },
+            ]}
+            expandable={{ expandedRowRender: (inquiry) => <div><Typography.Text strong>Message</Typography.Text><p className="mt-2 whitespace-pre-wrap">{inquiry.message}</p></div> }}
+          />
         </div>
-      </section>
+      </AdminCard>
     </>
   );
 }

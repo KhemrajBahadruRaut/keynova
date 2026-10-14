@@ -103,7 +103,7 @@ function ProfileAccordion({
       >
         <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[#003251] sm:text-base">
           <span className="shrink-0">{icon}</span>
-          <span className="[overflow-wrap:anywhere]">{title}</span>
+          <span className="wrap-anywhere">{title}</span>
         </span>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[#003251]">
           <ChevronDown
@@ -409,7 +409,7 @@ export default function VisitorProfilePage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em]">My account</p>
-              <h1 className="mt-1 text-xl font-semibold [overflow-wrap:anywhere] sm:text-2xl">{profile.visitor.name}</h1>
+              <h1 className="mt-1 text-xl font-semibold wrap-anywhere sm:text-2xl">{profile.visitor.name}</h1>
               <p className="mt-1 flex items-center gap-1.5 text-xs text-white/65">
                 <Shield className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> Verified visitor
               </p>
@@ -447,11 +447,11 @@ export default function VisitorProfilePage() {
               <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 <div>
                   <dt className="text-slate-500">Member since</dt>
-                  <dd className="mt-1 font-semibold text-slate-800 [overflow-wrap:anywhere]">{formatDate(profile.member_since)}</dd>
+                  <dd className="mt-1 font-semibold text-slate-800 wrap-anywhere">{formatDate(profile.member_since)}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Session expires</dt>
-                  <dd className="mt-1 font-semibold text-slate-800 [overflow-wrap:anywhere]">
+                  <dd className="mt-1 font-semibold text-slate-800 wrap-anywhere">
                     {formatDate(profile.session_expires_at)}
                   </dd>
                 </div>
@@ -715,7 +715,7 @@ function AccountSecurity({
           </form>
         ) : (
           <form onSubmit={verifyEmail} className="mt-4" noValidate>
-            <label className="block text-sm font-semibold text-slate-700 [overflow-wrap:anywhere]">
+            <label className="block text-sm font-semibold text-slate-700 wrap-anywhere">
               Verification code sent to {newEmail}
               <input
                 inputMode="numeric"
@@ -895,7 +895,7 @@ function SavedHomes({
                       </div>
                     )}
                   </Link>
-                  <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white [overflow-wrap:anywhere]">
+                  <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white wrap-anywhere">
                     {displayPrice(property.price)}
                   </span>
                   <button
@@ -915,13 +915,13 @@ function SavedHomes({
                 <div className="p-4">
                   <Link
                     href={`/details?id=${property.id}&source=profile`}
-                    className="block text-base font-semibold leading-snug text-[#003251] [overflow-wrap:anywhere] hover:underline"
+                    className="block text-base font-semibold leading-snug text-[#003251] wrap-anywhere hover:underline"
                   >
                     {property.title}
                   </Link>
                   <p className="mt-2 flex items-start gap-1.5 text-sm leading-5 text-slate-500">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span className="min-w-0 [overflow-wrap:anywhere]">{property.address}</span>
+                    <span className="min-w-0 wrap-anywhere">{property.address}</span>
                   </p>
                   <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
                     Saved {formatDate(property.saved_at)}
@@ -994,20 +994,20 @@ function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
                         <Home className="h-10 w-10 text-slate-400" aria-hidden="true" />
                       </div>
                     )}
-                    <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white [overflow-wrap:anywhere]">
+                    <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white wrap-anywhere">
                       {displayPrice(property.price)}
                     </span>
                   </div>
                   <div className="p-4">
-                    <h3 className="text-base font-semibold leading-snug text-[#003251] [overflow-wrap:anywhere]">
+                    <h3 className="text-base font-semibold leading-snug text-[#003251] wrap-anywhere">
                       {property.title}
                     </h3>
                     <p className="mt-2 flex items-start gap-1.5 text-sm leading-5 text-slate-500">
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span className="min-w-0 [overflow-wrap:anywhere]">{property.address}</span>
+                      <span className="min-w-0 wrap-anywhere">{property.address}</span>
                     </p>
                     <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
-                      <span className="min-w-0 [overflow-wrap:anywhere]">Viewed {formatDate(property.last_visited_at)}</span>
+                      <span className="min-w-0 wrap-anywhere">Viewed {formatDate(property.last_visited_at)}</span>
                       <ArrowRight
                         className="h-4 w-4 shrink-0 text-[#003251] transition-transform group-hover:translate-x-1"
                         aria-hidden="true"
@@ -1068,25 +1068,25 @@ function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] 
                 </div>
                 <div className="min-w-0 flex-1 py-0.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="min-w-0 font-semibold leading-snug text-[#003251] [overflow-wrap:anywhere]">{inquiry.title}</h3>
+                    <h3 className="min-w-0 font-semibold leading-snug text-[#003251] wrap-anywhere">{inquiry.title}</h3>
                     <time className="shrink-0 text-xs text-slate-400">
                       {formatDate(inquiry.created_at)}
                     </time>
                   </div>
                   {inquiry.address && (
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-500 [overflow-wrap:anywhere]">{inquiry.address}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-500 wrap-anywhere">{inquiry.address}</p>
                   )}
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]">
+                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600 wrap-anywhere">
                     “{inquiry.message}”
                   </p>
                   <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                     <Send className="h-3.5 w-3.5 shrink-0 text-[#003251]" aria-hidden="true" />
                     Inquiry contact
-                    <span className="min-w-0 font-semibold text-slate-700 [overflow-wrap:anywhere]">{inquiry.recipient_name}</span>
+                    <span className="min-w-0 font-semibold text-slate-700 wrap-anywhere">{inquiry.recipient_name}</span>
                     {inquiry.recipient_email && (
                       <a
                         href={`mailto:${inquiry.recipient_email}`}
-                        className="min-w-0 max-w-full text-[#003251] [overflow-wrap:anywhere] hover:underline"
+                        className="min-w-0 max-w-full text-[#003251] wrap-anywhere hover:underline"
                         onClick={(event) => event.stopPropagation()}
                       >
                         ({inquiry.recipient_email})

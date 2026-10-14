@@ -1,5 +1,19 @@
 "use client";
 
+import { Tabs, Tag, Typography } from "antd";
+import {
+  AdminTable,
+  AdminButton,
+  AdminCard,
+  AdminInput,
+  AdminLoading,
+  AdminNotice as ToastNotice,
+  AdminSelect,
+  AdminTextArea,
+  AdminUploadInput,
+  useAdminFeedback as useFeedback,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import FieldError from "@/components/ui/FieldError";
 import { homeValuationContentValidation, validateImageUpload } from "@/lib/admin-validation";
 import { useFormValidation } from "@/lib/use-form-validation";
@@ -10,15 +24,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink,
-  ImageUp,
   LoaderCircle,
-  Mail,
-  MapPin,
-  Phone,
   RotateCcw,
   Save,
 } from "lucide-react";
-import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+
 
 import {
   cloneHomeValuationContent,
@@ -73,8 +83,6 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
     return { status: "error", message: "The server returned an invalid response." };
   }
 }
-
-
 
 export default function HomeValuationsAdminClient() {
   const router = useRouter();
@@ -337,7 +345,7 @@ export default function HomeValuationsAdminClient() {
 
   return (
     <section>
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <AdminCard className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1c878f]">
@@ -361,68 +369,36 @@ export default function HomeValuationsAdminClient() {
           </Link>
         </div>
 
-        <div className="mt-5 flex gap-2 border-t border-slate-200 pt-5" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === "requests"} onClick={() => selectTab("requests")} className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "requests" ? "bg-[#003251] text-white" : "bg-slate-100 text-slate-600"}`}>
-            Requests ({requests.filter((request) => request.status === "new").length} new)
-          </button>
-          <button type="button" role="tab" aria-selected={tab === "content"} onClick={() => selectTab("content")} className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "content" ? "bg-[#003251] text-white" : "bg-slate-100 text-slate-600"}`}>
-            Page content
-          </button>
-        </div>
-      </div>
+        <Tabs className="mt-5" activeKey={tab} onChange={(key) => { void selectTab(key as AdminTab); }} items={[{ key: "requests", label: `Requests (${requests.filter((request) => request.status === "new").length} new)` }, { key: "content", label: "Page content" }]} />
+      </AdminCard>
 
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
       {tab === "requests" ? (
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          {requestsLoading ? (
-            <div className="flex min-h-48 items-center justify-center"><LoaderCircle className="h-7 w-7 animate-spin text-[#1c878f]" aria-label="Loading valuation requests" /></div>
-          ) : requests.length === 0 ? (
-            <div className="py-14 text-center text-sm text-slate-500">No home valuation requests yet.</div>
-          ) : (
-            <div className="space-y-4">
-              {requests.map((request) => (
-                <article key={request.id} className="rounded-xl border border-slate-200 p-4 sm:p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-semibold text-[#003251]">{request.name}</h2>
-                        {request.status === "new" && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">New</span>}
-                      </div>
-                      <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="h-4 w-4" aria-hidden="true" />{request.address}, {request.zip}</p>
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                        <a href={`mailto:${request.email}`} className="inline-flex items-center gap-1.5 text-[#1c878f] hover:underline"><Mail className="h-4 w-4" />{request.email}</a>
-                        <a href={`tel:${request.phone}`} className="inline-flex items-center gap-1.5 text-slate-600 hover:underline"><Phone className="h-4 w-4" />{request.phone}</a>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <time className="text-xs text-slate-400" dateTime={request.created_at}>{new Date(request.created_at.replace(" ", "T")).toLocaleString()}</time>
-                      <select value={request.status} disabled={updatingId === request.id} onChange={(event) => updateStatus(request.id, event.target.value as RequestStatus)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#1c878f]">
-                        {STATUS_OPTIONS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <dl className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-4 text-sm sm:grid-cols-4">
-                    <div><dt className="text-xs uppercase tracking-wide text-slate-400">Property</dt><dd className="mt-1 font-medium text-slate-700">{request.property_type}</dd></div>
-                    <div><dt className="text-xs uppercase tracking-wide text-slate-400">Bedrooms</dt><dd className="mt-1 font-medium text-slate-700">{request.bedrooms}</dd></div>
-                    <div><dt className="text-xs uppercase tracking-wide text-slate-400">Bathrooms</dt><dd className="mt-1 font-medium text-slate-700">{request.bathrooms}</dd></div>
-                    <div><dt className="text-xs uppercase tracking-wide text-slate-400">Consent</dt><dd className="mt-1 font-medium text-slate-700">{request.consent_given ? "Given" : "Not given"}</dd></div>
-                  </dl>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
+        <AdminCard className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <AdminTable<ValuationRequest>
+            dataSource={requests}
+            loading={requestsLoading}
+            locale={{ emptyText: "No home valuation requests yet." }}
+            columns={[
+              { title: "Contact", key: "contact", width: 260, render: (_, request) => <div><Typography.Text strong>{request.name}</Typography.Text><p><a href={`mailto:${request.email}`}>{request.email}</a></p><a href={`tel:${request.phone}`}>{request.phone}</a></div> },
+              { title: "Property", key: "property", width: 280, render: (_, request) => <div>{request.address}, {request.zip}<p className="mt-1 text-xs text-slate-500">{request.property_type} · {request.bedrooms} bedrooms · {request.bathrooms} bathrooms</p></div> },
+              { title: "Consent", key: "consent", width: 130, render: (_, request) => <Tag color={request.consent_given ? "success" : "default"}>{request.consent_given ? "Given" : "Not given"}</Tag> },
+              { title: "Submitted", dataIndex: "created_at", key: "created", width: 200, render: (value: string) => new Date(value.replace(" ", "T")).toLocaleString() },
+              { title: "Status", key: "status", width: 180, render: (_, request) => <AdminSelect value={request.status} disabled={updatingId === request.id} aria-label={`Status for ${request.name}`} onChange={(event) => updateStatus(request.id, event.target.value as RequestStatus)}>{STATUS_OPTIONS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}</AdminSelect> },
+            ]}
+          />
+        </AdminCard>
       ) : contentLoading ? (
-        <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white"><LoaderCircle className="h-7 w-7 animate-spin text-[#1c878f]" /></div>
+        <AdminLoading className="mt-5">Loading valuation page content…</AdminLoading>
       ) : (
         <div className="mt-5 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">{dirty ? "Unpublished changes" : updatedAt ? `Last published ${new Date(updatedAt.replace(" ", "T")).toLocaleString()}` : "Using original content"}</p>
-            <div className="flex gap-2">
-              <button type="button" onClick={restoreDefaults} disabled={saving} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 disabled:opacity-50"><RotateCcw className="h-4 w-4" />Load originals</button>
-              <button type="button" onClick={saveContent} disabled={saving || !dirty} className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{saving ? "Publishing…" : "Publish changes"}</button>
+            <div className="flex flex-wrap gap-2">
+              <AdminButton type="button" onClick={restoreDefaults} disabled={saving} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 disabled:opacity-50"><RotateCcw className="h-4 w-4" />Load originals</AdminButton>
+              <AdminButton type="button" onClick={saveContent} disabled={saving || !dirty} className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{saving ? "Publishing…" : "Publish changes"}</AdminButton>
             </div>
           </div>
 
@@ -447,7 +423,7 @@ export default function HomeValuationsAdminClient() {
               ] as const).map(([field, label, maxLength]) => (
                 <label key={field} className="text-sm font-medium text-slate-700">
                   {label}
-                  <input
+                  <AdminInput
                     {...fieldAttributes(field, `valuation-${field}-error`)}
                     value={content[field]}
                     onChange={(event) => updateContent(field, event.target.value)}
@@ -459,7 +435,7 @@ export default function HomeValuationsAdminClient() {
               ))}
               <label className="text-sm font-medium text-slate-700">
                 Property types (one per line)
-                <textarea
+                <AdminTextArea
                   {...fieldAttributes("propertyTypes", "valuation-propertyTypes-error")}
                   value={content.propertyTypes.join("\n")}
                   onChange={(event) => updateContent("propertyTypes", event.target.value.replace(/\r/g, "").split("\n"))}
@@ -470,7 +446,7 @@ export default function HomeValuationsAdminClient() {
               </label>
               <label className="text-sm font-medium text-slate-700">
                 Room options (one per line)
-                <textarea
+                <AdminTextArea
                   {...fieldAttributes("roomOptions", "valuation-roomOptions-error")}
                   value={content.roomOptions.join("\n")}
                   onChange={(event) => updateContent("roomOptions", event.target.value.replace(/\r/g, "").split("\n"))}
@@ -487,7 +463,7 @@ export default function HomeValuationsAdminClient() {
               ] as const).map(([field, label, maxLength]) => (
                 <label key={field} className="text-sm font-medium text-slate-700 sm:col-span-2">
                   {label}
-                  <textarea
+                  <AdminTextArea
                     {...fieldAttributes(field, `valuation-${field}-error`)}
                     value={content[field]}
                     onChange={(event) => updateContent(field, event.target.value)}
@@ -507,7 +483,7 @@ export default function HomeValuationsAdminClient() {
               </div>
               <label className="mt-3 block text-sm font-medium text-slate-700">
                 Image URL or saved path
-                <input
+                <AdminInput
                   {...fieldAttributes("image", "valuation-image-error")}
                   value={content.image}
                   onChange={(event) => updateContent("image", event.target.value)}
@@ -516,19 +492,15 @@ export default function HomeValuationsAdminClient() {
                 />
                 <FieldError id="valuation-image-error" error={errors.image} />
               </label>
-              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">
-                <ImageUp className="h-4 w-4" />
-                {uploading ? "Uploading…" : "Upload image"}
-                <input
-                  aria-invalid={Boolean(uploadError)}
-                  aria-describedby="valuation-image-upload-error"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  disabled={uploading || saving}
-                  onChange={uploadImage}
-                  className="sr-only"
-                />
-              </label>
+              <AdminUploadInput
+                aria-invalid={Boolean(uploadError)}
+                aria-describedby="valuation-image-upload-error"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                disabled={uploading || saving}
+                onChange={uploadImage}
+                className="mt-3"
+                buttonLabel={uploading ? "Uploading…" : "Upload image"} loading={uploading} />
               <FieldError id="valuation-image-upload-error" error={uploadError} />
               <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
             </div>

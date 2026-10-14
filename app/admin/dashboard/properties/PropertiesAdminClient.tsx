@@ -1,10 +1,26 @@
 "use client";
 
+import { Button, Checkbox, Space, Tag, Typography } from "antd";
+import {
+  AdminTable,
+  AdminButton,
+  AdminCard,
+  AdminDialog,
+  AdminForm,
+  AdminInput,
+  AdminNotice as ToastNotice,
+  AdminSelect,
+  AdminTextArea,
+  AdminUploadInput,
+  useAdminFeedback as useFeedback,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
+
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Plus, X } from "lucide-react";
-import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+import { Plus } from "lucide-react";
+
 import {
   hasValidationErrors,
   validateBuildingSize,
@@ -371,12 +387,10 @@ export default function PropertiesAdminClient() {
     touchedFields[field] ? formErrors[field] : "";
 
   const fieldClass = (field: PropertyFormField, resize = false) =>
-    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
-      resize ? "resize-none " : ""
-    }${
-      fieldError(field)
-        ? "border-red-500 focus:ring-red-200"
-        : "border-slate-200 bg-slate-50 focus:border-[#6E9CAE] focus:bg-white focus:ring-[#6E9CAE]/25"
+    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${resize ? "resize-none " : ""
+    }${fieldError(field)
+      ? "border-red-500 focus:ring-red-200"
+      : "border-slate-200 bg-slate-50 focus:border-[#6E9CAE] focus:bg-white focus:ring-[#6E9CAE]/25"
     }`;
 
   const openCreateForm = () => {
@@ -785,651 +799,580 @@ export default function PropertiesAdminClient() {
         </p>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <div>
-                <div className="flex justify-between items-center mb-5">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    All Properties
-                  </h2>
-                  <button
-                    onClick={openCreateForm}
-                    className="flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c]"
-                  >
-                    <Plus className="h-4 w-4" /> Add Property
-                  </button>
-                </div>
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg font-semibold text-gray-900">
+                All Properties
+              </h2>
+              <AdminButton
+                onClick={openCreateForm}
+                className="flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c]"
+              >
+                <Plus className="h-4 w-4" /> Add Property
+              </AdminButton>
+            </div>
 
-                {loading ? (
-                  <div className="text-center py-12 text-gray-400">
-                    Loading…
-                  </div>
-                ) : properties.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-4xl mb-3">🏢</div>
-                    <p className="text-gray-500">
-                      No properties yet. Add your first listing.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {properties.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex flex-col gap-4 rounded-xl border border-slate-100 p-4 transition-colors hover:border-[#b9ccd4] hover:bg-[#f7fafb] sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">
-                            {p.title}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate">
-                            {p.address}
-                          </div>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-sm font-semibold text-[#003251]">
-                              {p.price}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {p.building_size} · {p.units} units
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 sm:ml-4 sm:flex-nowrap">
-                          <Link
-                            href={`/details?id=${p.id}&source=${
-                              p.show_off_market && !p.show_on_listing
-                                ? "exclusive"
-                                : "listing"
-                            }`}
-                            target="_blank"
-                            className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                          >
-                            View
-                          </Link>
-                          <button
-                            onClick={() => openEditForm(p)}
-                            className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <AdminTable<Property>
+              dataSource={properties}
+              loading={loading}
+              locale={{ emptyText: "No properties yet. Add your first listing." }}
+              columns={[
+                { title: "Property", key: "property", width: 300, render: (_, property) => <div><Typography.Text strong>{property.title}</Typography.Text><p className="mt-1 text-sm text-slate-500">{property.address}</p></div> },
+                { title: "Price", dataIndex: "price", key: "price", width: 150 },
+                { title: "Details", key: "details", width: 200, render: (_, property) => <div>{property.building_size || "—"}<p className="text-xs text-slate-500">{property.units || "—"} units</p></div> },
+                { title: "Published to", key: "destination", width: 200, render: (_, property) => <Space wrap>{property.show_on_listing && <Tag color="blue">Listings</Tag>}{property.show_off_market && <Tag color="purple">Exclusive</Tag>}{!property.show_on_listing && !property.show_off_market && <Tag>Hidden</Tag>}</Space> },
+                {
+                  title: "Actions", key: "actions", width: 220, render: (_, property) => <Space wrap>
+                    <Button href={`/details?id=${property.id}&source=${property.show_off_market && !property.show_on_listing ? "exclusive" : "listing"}`} target="_blank" rel="noreferrer">View</Button>
+                    <Button onClick={() => openEditForm(property)}>Edit</Button>
+                    <Button danger onClick={() => handleDelete(property.id)}>Delete</Button>
+                  </Space>
+                },
+              ]}
+            />
+          </div>
         </div>
-      </section>
+      </AdminCard>
 
       {/* Property Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#071a2a]/70 p-4 backdrop-blur-sm">
-          <div className="my-6 w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b-4 border-[#2f87a8] bg-[#003251] px-6 py-5">
-              <h3 className="text-lg font-semibold text-white">
-                {editProperty ? "Edit Property" : "Add New Property"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                aria-label="Close property form"
-                className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
+        <AdminDialog title={editProperty ? "Edit Property" : "Add New Property"} onClose={() => setShowForm(false)} busy={formLoading} width={900} >
+          <AdminForm
+            onSubmit={handleSubmit}
+            className="space-y-5"
+            noValidate
+          >
+            <fieldset>
+              <legend className="text-sm font-semibold uppercase tracking-wide text-[#003251]">
+                Publish To *
+              </legend>
+              <p className="mt-1 text-xs text-gray-500">
+                Select one page or both pages for this property.
+              </p>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Checkbox
+                  name="show_on_listing"
+                  checked={showOnListing}
+                  onChange={(event) => {
+                    setShowOnListing(event.target.checked);
+                    setFormMsg({ type: "", text: "" });
+                  }}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${showOnListing
+                    ? "border-[#6E9CAE] bg-[#edf4f6]"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
+                >
+                  <span>
+                    <span className="block text-sm font-medium text-gray-900">
+                      Property Listing
+                    </span>
+                    <span className="block text-xs text-gray-500">
+                      Show on the main listings page.
+                    </span>
+                  </span>
+                </Checkbox>
+                <Checkbox
+                  name="show_off_market"
+                  checked={showOffMarket}
+                  onChange={(event) => {
+                    setShowOffMarket(event.target.checked);
+                    setFormMsg({ type: "", text: "" });
+                  }}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${showOffMarket
+                    ? "border-[#6E9CAE] bg-[#edf4f6]"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
+                >
+                  <span>
+                    <span className="block text-sm font-medium text-gray-900">
+                      Exclusive
+                    </span>
+                    <span className="block text-xs text-gray-500">
+                      Show on the Exclusive page.
+                    </span>
+                  </span>
+                </Checkbox>
+              </div>
+              {!showOnListing && !showOffMarket && (
+                <p className="mt-2 text-xs text-red-600" role="alert">
+                  Select at least one page.
+                </p>
+              )}
+            </fieldset>
+
+            {/* Property Info */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                Property Info
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="md:col-span-2">
+                  <label htmlFor="property-title" className="block text-xs font-medium text-gray-600 mb-1">
+                    Property Title *
+                  </label>
+                  <AdminInput
+                    id="property-title"
+                    name="title"
+                    required
+                    minLength={3}
+                    maxLength={120}
+                    className={fieldClass("title")}
+                    value={form.title}
+                    onChange={(e) => updateFormField("title", e.target.value)}
+                    onBlur={() => markFieldTouched("title")}
+                    aria-invalid={Boolean(fieldError("title"))}
+                    aria-describedby="property-title-error"
+                    placeholder="South End Plaza"
+                  />
+                  <p
+                    id="property-title-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
+                    {fieldError("title")}
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label htmlFor="property-address" className="block text-xs font-medium text-gray-600 mb-1">
+                    Address *
+                  </label>
+                  <AdminInput
+                    id="property-address"
+                    name="address"
+                    required
+                    minLength={8}
+                    maxLength={250}
+                    autoComplete="street-address"
+                    className={fieldClass("address")}
+                    value={form.address}
+                    onChange={(e) =>
+                      updateFormField("address", e.target.value)
+                    }
+                    onBlur={() => markFieldTouched("address")}
+                    aria-invalid={Boolean(fieldError("address"))}
+                    aria-describedby="property-address-error property-geocode-status"
+                    placeholder="310 S Main St, Thomaston, CT 06787"
+                  />
+
+                  <p
+                    id="property-address-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
+                    {fieldError("address")}
+                  </p>
+
+                  {/* Geocode status badge */}
+                  <div id="property-geocode-status" aria-live="polite">
+                    {geocodeBadge()}
+                  </div>
+
+                  {/* Map preview — only shown once geocode succeeds */}
+                  {geocodeStatus === "ok" &&
+                    geocodedLat &&
+                    geocodedLng && (
+                      <div className="mt-2 rounded-lg overflow-hidden h-40 border border-gray-200">
+                        <iframe
+                          title="Address preview"
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          src={`https://www.google.com/maps?q=${geocodedLat},${geocodedLng}&z=14&output=embed`}
+                        />
+                      </div>
+                    )}
+                </div>
+
+                <div>
+                  <label htmlFor="property-price" className="block text-xs font-medium text-gray-600 mb-1">
+                    Sale Price *
+                  </label>
+                  <AdminInput
+                    id="property-price"
+                    name="price"
+                    required
+                    inputMode="decimal"
+                    maxLength={24}
+                    pattern="\$?[\d,]+(\.\d{1,2})?"
+                    className={fieldClass("price")}
+                    value={form.price}
+                    onChange={(e) => updateFormField("price", e.target.value)}
+                    onBlur={() => markFieldTouched("price")}
+                    aria-invalid={Boolean(fieldError("price"))}
+                    aria-describedby="property-price-error"
+                    placeholder="$2,450,000"
+                  />
+                  <p
+                    id="property-price-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
+                    {fieldError("price")}
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="property-building-size" className="block text-xs font-medium text-gray-600 mb-1">
+                    Building Size
+                  </label>
+                  <AdminInput
+                    id="property-building-size"
+                    name="building_size"
+                    inputMode="decimal"
+                    maxLength={24}
+                    className={fieldClass("building_size")}
+                    value={form.building_size}
+                    onChange={(e) =>
+                      updateFormField("building_size", e.target.value)
+                    }
+                    onBlur={() => markFieldTouched("building_size")}
+                    aria-invalid={Boolean(fieldError("building_size"))}
+                    aria-describedby="property-building-size-error"
+                    placeholder="14,614 SF"
+                  />
+                  <p
+                    id="property-building-size-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
+                    {fieldError("building_size")}
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="property-units" className="block text-xs font-medium text-gray-600 mb-1">
+                    Units
+                  </label>
+                  <AdminInput
+                    id="property-units"
+                    name="units"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    className={fieldClass("units")}
+                    value={form.units}
+                    onChange={(e) => updateFormField("units", e.target.value)}
+                    onBlur={() => markFieldTouched("units")}
+                    aria-invalid={Boolean(fieldError("units"))}
+                    aria-describedby="property-units-error"
+                    placeholder="17"
+                  />
+                  <p
+                    id="property-units-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
+                    {fieldError("units")}
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="property-year-built" className="block text-xs font-medium text-gray-600 mb-1">
+                    Year Built
+                  </label>
+                  <AdminInput
+                    id="property-year-built"
+                    name="year_built"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    maxLength={4}
+                    className={fieldClass("year_built")}
+                    value={form.year_built}
+                    onChange={(e) =>
+                      updateFormField("year_built", e.target.value)
+                    }
+                    onBlur={() => markFieldTouched("year_built")}
+                    aria-invalid={Boolean(fieldError("year_built"))}
+                    aria-describedby="property-year-built-error"
+                    placeholder="1971"
+                  />
+                  <p
+                    id="property-year-built-error"
+                    className="mt-1 min-h-4 text-xs text-red-600"
+                    aria-live="polite"
+                  >
+                    {fieldError("year_built")}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="p-6 space-y-5"
-              noValidate
-            >
-              <fieldset>
-                <legend className="text-sm font-semibold uppercase tracking-wide text-[#003251]">
-                  Publish To *
-                </legend>
-                <p className="mt-1 text-xs text-gray-500">
-                  Select one page or both pages for this property.
-                </p>
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <label
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-                      showOnListing
-                        ? "border-[#6E9CAE] bg-[#edf4f6]"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      name="show_on_listing"
-                      checked={showOnListing}
-                      onChange={(event) => {
-                        setShowOnListing(event.target.checked);
-                        setFormMsg({ type: "", text: "" });
-                      }}
-                      className="mt-0.5 h-4 w-4 accent-[#003251]"
-                    />
-                    <span>
-                      <span className="block text-sm font-medium text-gray-900">
-                        Property Listing
-                      </span>
-                      <span className="block text-xs text-gray-500">
-                        Show on the main listings page.
-                      </span>
-                    </span>
+            {/* Description & Highlights */}
+            <div>
+              <label htmlFor="property-description" className="block text-xs font-medium text-gray-600 mb-1">
+                Property Description
+              </label>
+              <AdminTextArea
+                id="property-description"
+                name="description"
+                rows={4}
+                maxLength={5000}
+                className={fieldClass("description", true)}
+                value={form.description}
+                onChange={(e) =>
+                  updateFormField("description", e.target.value)
+                }
+                onBlur={() => markFieldTouched("description")}
+                aria-invalid={Boolean(fieldError("description"))}
+                aria-describedby="property-description-error"
+                placeholder="Describe the property…"
+              />
+              <p
+                id="property-description-error"
+                className="mt-1 min-h-4 text-xs text-red-600"
+                aria-live="polite"
+              >
+                {fieldError("description")}
+              </p>
+            </div>
+            <div>
+              <label htmlFor="property-highlights" className="block text-xs font-medium text-gray-600 mb-1">
+                Highlights (one per line)
+              </label>
+              <AdminTextArea
+                id="property-highlights"
+                name="highlights"
+                rows={4}
+                maxLength={3000}
+                className={fieldClass("highlights", true)}
+                value={form.highlights}
+                onChange={(e) =>
+                  updateFormField("highlights", e.target.value)
+                }
+                onBlur={() => markFieldTouched("highlights")}
+                aria-invalid={Boolean(fieldError("highlights"))}
+                aria-describedby="property-highlights-error"
+                placeholder={
+                  "Residential Rents Below Achievable Levels\nCommercial Lease-Up and Mark-to-Market"
+                }
+              />
+              <p
+                id="property-highlights-error"
+                className="mt-1 min-h-4 text-xs text-red-600"
+                aria-live="polite"
+              >
+                {fieldError("highlights")}
+              </p>
+            </div>
+
+            {/* Agent relationship */}
+            <div>
+              <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                Listing Agent
+              </h4>
+              <label htmlFor="property-agent" className="mb-1 block text-xs font-medium text-gray-600">
+                Assign an existing team member
+              </label>
+              <AdminSelect
+                id="property-agent"
+                name="agent_id"
+                value={form.agent_id}
+                onChange={(event) => updateFormField("agent_id", event.target.value)}
+                className={fieldClass("agent_id")}
+              >
+                <option value="">No agent assigned</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name} — {agent.role}{agent.is_active ? "" : " (hidden)"}
+                  </option>
+                ))}
+              </AdminSelect>
+              <p className="mt-2 text-xs leading-5 text-gray-500">
+                Agent contact details, photo, and profile URL come from the Team section, so they only need to be maintained once.
+              </p>
+              {form.agent_id && (() => {
+                const selectedAgent = agents.find((agent) => String(agent.id) === form.agent_id);
+                return selectedAgent ? (
+                  <div className="mt-3 rounded-xl border border-[#dbe5ea] bg-[#f7fafb] px-4 py-3">
+                    <p className="text-sm font-semibold text-[#003251]">{selectedAgent.name}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{selectedAgent.role}</p>
+                    <p className="mt-2 text-xs text-[#2f7895]">/{selectedAgent.slug}</p>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+
+            {/* Files */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                Files
+              </h4>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="property-images" className="block text-xs font-medium text-gray-600 mb-1">
+                    Property Images
                   </label>
-                  <label
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-                      showOffMarket
-                        ? "border-[#6E9CAE] bg-[#edf4f6]"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      name="show_off_market"
-                      checked={showOffMarket}
-                      onChange={(event) => {
-                        setShowOffMarket(event.target.checked);
-                        setFormMsg({ type: "", text: "" });
-                      }}
-                      className="mt-0.5 h-4 w-4 accent-[#003251]"
-                    />
-                    <span>
-                      <span className="block text-sm font-medium text-gray-900">
-                        Exclusive
-                      </span>
-                      <span className="block text-xs text-gray-500">
-                        Show on the Exclusive page.
-                      </span>
-                    </span>
-                  </label>
-                </div>
-                {!showOnListing && !showOffMarket && (
-                  <p className="mt-2 text-xs text-red-600" role="alert">
-                    Select at least one page.
+                  <p id="property-images-help" className="mb-2 text-xs text-gray-500">
+                    JPG, PNG, WebP, or GIF. Maximum 20 images and 4 MB per image.
                   </p>
-                )}
-              </fieldset>
-
-              {/* Property Info */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                  Property Info
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="md:col-span-2">
-                    <label htmlFor="property-title" className="block text-xs font-medium text-gray-600 mb-1">
-                      Property Title *
-                    </label>
-                    <input
-                      id="property-title"
-                      name="title"
-                      required
-                      minLength={3}
-                      maxLength={120}
-                      className={fieldClass("title")}
-                      value={form.title}
-                      onChange={(e) => updateFormField("title", e.target.value)}
-                      onBlur={() => markFieldTouched("title")}
-                      aria-invalid={Boolean(fieldError("title"))}
-                      aria-describedby="property-title-error"
-                      placeholder="South End Plaza"
-                    />
-                    <p
-                      id="property-title-error"
-                      className="mt-1 min-h-4 text-xs text-red-600"
-                      aria-live="polite"
-                    >
-                      {fieldError("title")}
-                    </p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="property-address" className="block text-xs font-medium text-gray-600 mb-1">
-                      Address *
-                    </label>
-                    <input
-                      id="property-address"
-                      name="address"
-                      required
-                      minLength={8}
-                      maxLength={250}
-                      autoComplete="street-address"
-                      className={fieldClass("address")}
-                      value={form.address}
-                      onChange={(e) =>
-                        updateFormField("address", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("address")}
-                      aria-invalid={Boolean(fieldError("address"))}
-                      aria-describedby="property-address-error property-geocode-status"
-                      placeholder="310 S Main St, Thomaston, CT 06787"
-                    />
-
-                    <p
-                      id="property-address-error"
-                      className="mt-1 min-h-4 text-xs text-red-600"
-                      aria-live="polite"
-                    >
-                      {fieldError("address")}
-                    </p>
-
-                    {/* Geocode status badge */}
-                    <div id="property-geocode-status" aria-live="polite">
-                      {geocodeBadge()}
-                    </div>
-
-                    {/* Map preview — only shown once geocode succeeds */}
-                    {geocodeStatus === "ok" &&
-                      geocodedLat &&
-                      geocodedLng && (
-                        <div className="mt-2 rounded-lg overflow-hidden h-40 border border-gray-200">
-                          <iframe
-                            title="Address preview"
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0 }}
-                            loading="lazy"
-                            src={`https://www.google.com/maps?q=${geocodedLat},${geocodedLng}&z=14&output=embed`}
+                  {editProperty && existingImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {existingImages.map((img) => (
+                        <div
+                          key={img}
+                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
+                        >
+                          <img
+                            src={`${API}/uploads/${img}`}
+                            alt=""
+                            className="w-full h-full object-cover"
                           />
+                          <AdminButton
+                            type="button"
+                            onClick={() => handleDeleteExistingImage(img)}
+                            className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
+                          >
+                            ✕
+                          </AdminButton>
                         </div>
-                      )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="property-price" className="block text-xs font-medium text-gray-600 mb-1">
-                      Sale Price *
-                    </label>
-                    <input
-                      id="property-price"
-                      name="price"
-                      required
-                      inputMode="decimal"
-                      maxLength={24}
-                      pattern="\$?[\d,]+(\.\d{1,2})?"
-                      className={fieldClass("price")}
-                      value={form.price}
-                      onChange={(e) => updateFormField("price", e.target.value)}
-                      onBlur={() => markFieldTouched("price")}
-                      aria-invalid={Boolean(fieldError("price"))}
-                      aria-describedby="property-price-error"
-                      placeholder="$2,450,000"
-                    />
-                    <p
-                      id="property-price-error"
-                      className="mt-1 min-h-4 text-xs text-red-600"
-                      aria-live="polite"
-                    >
-                      {fieldError("price")}
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="property-building-size" className="block text-xs font-medium text-gray-600 mb-1">
-                      Building Size
-                    </label>
-                    <input
-                      id="property-building-size"
-                      name="building_size"
-                      inputMode="decimal"
-                      maxLength={24}
-                      className={fieldClass("building_size")}
-                      value={form.building_size}
-                      onChange={(e) =>
-                        updateFormField("building_size", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("building_size")}
-                      aria-invalid={Boolean(fieldError("building_size"))}
-                      aria-describedby="property-building-size-error"
-                      placeholder="14,614 SF"
-                    />
-                    <p
-                      id="property-building-size-error"
-                      className="mt-1 min-h-4 text-xs text-red-600"
-                      aria-live="polite"
-                    >
-                      {fieldError("building_size")}
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="property-units" className="block text-xs font-medium text-gray-600 mb-1">
-                      Units
-                    </label>
-                    <input
-                      id="property-units"
-                      name="units"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={6}
-                      className={fieldClass("units")}
-                      value={form.units}
-                      onChange={(e) => updateFormField("units", e.target.value)}
-                      onBlur={() => markFieldTouched("units")}
-                      aria-invalid={Boolean(fieldError("units"))}
-                      aria-describedby="property-units-error"
-                      placeholder="17"
-                    />
-                    <p
-                      id="property-units-error"
-                      className="mt-1 min-h-4 text-xs text-red-600"
-                      aria-live="polite"
-                    >
-                      {fieldError("units")}
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="property-year-built" className="block text-xs font-medium text-gray-600 mb-1">
-                      Year Built
-                    </label>
-                    <input
-                      id="property-year-built"
-                      name="year_built"
-                      inputMode="numeric"
-                      pattern="[0-9]{4}"
-                      maxLength={4}
-                      className={fieldClass("year_built")}
-                      value={form.year_built}
-                      onChange={(e) =>
-                        updateFormField("year_built", e.target.value)
-                      }
-                      onBlur={() => markFieldTouched("year_built")}
-                      aria-invalid={Boolean(fieldError("year_built"))}
-                      aria-describedby="property-year-built-error"
-                      placeholder="1971"
-                    />
-                    <p
-                      id="property-year-built-error"
-                      className="mt-1 min-h-4 text-xs text-red-600"
-                      aria-live="polite"
-                    >
-                      {fieldError("year_built")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description & Highlights */}
-              <div>
-                <label htmlFor="property-description" className="block text-xs font-medium text-gray-600 mb-1">
-                  Property Description
-                </label>
-                <textarea
-                  id="property-description"
-                  name="description"
-                  rows={4}
-                  maxLength={5000}
-                  className={fieldClass("description", true)}
-                  value={form.description}
-                  onChange={(e) =>
-                    updateFormField("description", e.target.value)
-                  }
-                  onBlur={() => markFieldTouched("description")}
-                  aria-invalid={Boolean(fieldError("description"))}
-                  aria-describedby="property-description-error"
-                  placeholder="Describe the property…"
-                />
-                <p
-                  id="property-description-error"
-                  className="mt-1 min-h-4 text-xs text-red-600"
-                  aria-live="polite"
-                >
-                  {fieldError("description")}
-                </p>
-              </div>
-              <div>
-                <label htmlFor="property-highlights" className="block text-xs font-medium text-gray-600 mb-1">
-                  Highlights (one per line)
-                </label>
-                <textarea
-                  id="property-highlights"
-                  name="highlights"
-                  rows={4}
-                  maxLength={3000}
-                  className={fieldClass("highlights", true)}
-                  value={form.highlights}
-                  onChange={(e) =>
-                    updateFormField("highlights", e.target.value)
-                  }
-                  onBlur={() => markFieldTouched("highlights")}
-                  aria-invalid={Boolean(fieldError("highlights"))}
-                  aria-describedby="property-highlights-error"
-                  placeholder={
-                    "Residential Rents Below Achievable Levels\nCommercial Lease-Up and Mark-to-Market"
-                  }
-                />
-                <p
-                  id="property-highlights-error"
-                  className="mt-1 min-h-4 text-xs text-red-600"
-                  aria-live="polite"
-                >
-                  {fieldError("highlights")}
-                </p>
-              </div>
-
-              {/* Agent relationship */}
-              <div>
-                <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
-                  Listing Agent
-                </h4>
-                <label htmlFor="property-agent" className="mb-1 block text-xs font-medium text-gray-600">
-                  Assign an existing team member
-                </label>
-                <select
-                  id="property-agent"
-                  name="agent_id"
-                  value={form.agent_id}
-                  onChange={(event) => updateFormField("agent_id", event.target.value)}
-                  className={fieldClass("agent_id")}
-                >
-                  <option value="">No agent assigned</option>
-                  {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.name} — {agent.role}{agent.is_active ? "" : " (hidden)"}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 text-xs leading-5 text-gray-500">
-                  Agent contact details, photo, and profile URL come from the Team section, so they only need to be maintained once.
-                </p>
-                {form.agent_id && (() => {
-                  const selectedAgent = agents.find((agent) => String(agent.id) === form.agent_id);
-                  return selectedAgent ? (
-                    <div className="mt-3 rounded-xl border border-[#dbe5ea] bg-[#f7fafb] px-4 py-3">
-                      <p className="text-sm font-semibold text-[#003251]">{selectedAgent.name}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{selectedAgent.role}</p>
-                      <p className="mt-2 text-xs text-[#2f7895]">/{selectedAgent.slug}</p>
+                      ))}
                     </div>
-                  ) : null;
-                })()}
-              </div>
+                  )}
+                  <AdminUploadInput
+                    id="property-images"
+                    name="images"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    multiple
+                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
+                    onChange={handleAddImages}
+                    onClick={() =>
+                      setFileErrors((current) => ({
+                        ...current,
+                        images: "",
+                      }))
+                    }
+                    aria-invalid={Boolean(fileErrors.images)}
+                    aria-describedby="property-images-help property-images-error"
+                  />
+                  <p id="property-images-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                    {fileErrors.images}
+                  </p>
+                  {images.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {images.map((file, i) => (
+                        <div
+                          key={i}
+                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
+                        >
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute inset-x-0 bottom-0 bg-black/65 px-1 py-0.5 text-center text-[9px] text-white">
+                            {formatFileSize(file.size)}
+                          </span>
+                          <AdminButton
+                            type="button"
+                            onClick={() => removeImage(i)}
+                            className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
+                          >
+                            ✕
+                          </AdminButton>
+                        </div>
+                      ))}
+                      <p className="w-full text-xs text-gray-400 mt-1">
+                        {images.length} new image(s), {formatFileSize(
+                          images.reduce((total, file) => total + file.size, 0),
+                        )} total
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-              {/* Files */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                  Files
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <label htmlFor="property-images" className="block text-xs font-medium text-gray-600 mb-1">
-                      Property Images
-                    </label>
-                    <p id="property-images-help" className="mb-2 text-xs text-gray-500">
-                      JPG, PNG, WebP, or GIF. Maximum 20 images and 4 MB per image.
-                    </p>
-                    {editProperty && existingImages.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {existingImages.map((img) => (
-                          <div
-                            key={img}
-                            className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
+                <div>
+                  <label htmlFor="property-documents" className="block text-xs font-medium text-gray-600 mb-1">
+                    Secure Documents
+                  </label>
+                  <p id="property-documents-help" className="mb-2 text-xs text-gray-500">
+                    PDF, DOC, or DOCX. Maximum file size: 10 MB per document.
+                  </p>
+                  {editProperty && existingDocuments.length > 0 && (
+                    <ul className="space-y-1 mb-3">
+                      {existingDocuments.map((doc) => (
+                        <li
+                          key={doc.file}
+                          className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded-lg"
+                        >
+                          <span className="text-gray-700 truncate">
+                            📄 {doc.name}
+                          </span>
+                          <AdminButton
+                            type="button"
+                            onClick={() =>
+                              handleDeleteExistingDocument(doc.file)
+                            }
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
                           >
-                            <img
-                              src={`${API}/uploads/${img}`}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteExistingImage(img)}
-                              className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <input
-                      id="property-images"
-                      name="images"
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.webp,.gif"
-                      multiple
-                      className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
-                      onChange={handleAddImages}
-                      onClick={() =>
-                        setFileErrors((current) => ({
-                          ...current,
-                          images: "",
-                        }))
-                      }
-                      aria-invalid={Boolean(fileErrors.images)}
-                      aria-describedby="property-images-help property-images-error"
-                    />
-                    <p id="property-images-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fileErrors.images}
-                    </p>
-                    {images.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {images.map((file, i) => (
-                          <div
-                            key={i}
-                            className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
-                          >
-                            <img
-                              src={URL.createObjectURL(file)}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                            <span className="absolute inset-x-0 bottom-0 bg-black/65 px-1 py-0.5 text-center text-[9px] text-white">
-                              {formatFileSize(file.size)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => removeImage(i)}
-                              className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                        <p className="w-full text-xs text-gray-400 mt-1">
-                          {images.length} new image(s), {formatFileSize(
-                            images.reduce((total, file) => total + file.size, 0),
-                          )} total
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="property-documents" className="block text-xs font-medium text-gray-600 mb-1">
-                      Secure Documents
-                    </label>
-                    <p id="property-documents-help" className="mb-2 text-xs text-gray-500">
-                      PDF, DOC, or DOCX. Maximum file size: 10 MB per document.
-                    </p>
-                    {editProperty && existingDocuments.length > 0 && (
-                      <ul className="space-y-1 mb-3">
-                        {existingDocuments.map((doc) => (
-                          <li
-                            key={doc.file}
-                            className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded-lg"
-                          >
-                            <span className="text-gray-700 truncate">
-                              📄 {doc.name}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleDeleteExistingDocument(doc.file)
-                              }
-                              className="text-red-500 hover:text-red-700 text-xs font-medium"
-                            >
-                              Remove
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <input
-                      id="property-documents"
-                      name="documents"
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      multiple
-                      className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
-                      onChange={handleDocuments}
-                      onClick={() =>
-                        setFileErrors((current) => ({
-                          ...current,
-                          documents: "",
-                        }))
-                      }
-                      aria-invalid={Boolean(fileErrors.documents)}
-                      aria-describedby="property-documents-help property-documents-error"
-                    />
-                    <p id="property-documents-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
-                      {fileErrors.documents}
-                    </p>
-                    {documents.length > 0 && (
-                      <ul className="mt-2 space-y-1 text-xs text-gray-600">
-                        {documents.map((file) => (
-                          <li
-                            key={`${file.name}-${file.lastModified}`}
-                            className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-2 py-1.5"
-                          >
-                            <span className="min-w-0 truncate">{file.name}</span>
-                            <span className="shrink-0 text-gray-400">
-                              {formatFileSize(file.size)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                            Remove
+                          </AdminButton>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <AdminUploadInput
+                    id="property-documents"
+                    name="documents"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    multiple
+                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
+                    onChange={handleDocuments}
+                    onClick={() =>
+                      setFileErrors((current) => ({
+                        ...current,
+                        documents: "",
+                      }))
+                    }
+                    aria-invalid={Boolean(fileErrors.documents)}
+                    aria-describedby="property-documents-help property-documents-error"
+                  />
+                  <p id="property-documents-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                    {fileErrors.documents}
+                  </p>
+                  {documents.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-xs text-gray-600">
+                      {documents.map((file) => (
+                        <li
+                          key={`${file.name}-${file.lastModified}`}
+                          className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-2 py-1.5"
+                        >
+                          <span className="min-w-0 truncate">{file.name}</span>
+                          <span className="shrink-0 text-gray-400">
+                            {formatFileSize(file.size)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
+            </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading || formHasErrors}
-                  className="flex-1 rounded-lg bg-[#003251] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {formLoading
-                    ? "Saving…"
-                    : editProperty
-                      ? "Update Property"
-                      : "Create Property"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex gap-3 pt-2">
+              <AdminButton
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Cancel
+              </AdminButton>
+              <AdminButton
+                type="submit"
+                disabled={formLoading || formHasErrors}
+                className="flex-1 rounded-lg bg-[#003251] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {formLoading
+                  ? "Saving…"
+                  : editProperty
+                    ? "Update Property"
+                    : "Create Property"}
+              </AdminButton>
+            </div>
+          </AdminForm>
+        </AdminDialog>
       )}
     </>
   );

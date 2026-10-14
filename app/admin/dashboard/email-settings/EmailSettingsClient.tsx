@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  AdminButton,
+  AdminCard,
+  AdminForm,
+  AdminInput,
+  AdminNotice as ToastNotice,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,7 +19,7 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-import { ToastNotice } from "@/components/ui/FeedbackProvider";
+
 
 import { validateEmail, validatePassword } from "@/lib/validation";
 import FieldError from "@/components/ui/FieldError";
@@ -321,7 +329,7 @@ export default function EmailSettingsClient() {
                   <label htmlFor={`${group}-recipient-${index}`} className="sr-only">
                     {title} recipient {index + 1}
                   </label>
-                  <input
+                  <AdminInput
                     id={`${group}-recipient-${index}`}
                     type="email"
                     autoComplete="off"
@@ -331,15 +339,14 @@ export default function EmailSettingsClient() {
                     onChange={(event) => updateRecipient(group, index, event.target.value)}
                     onBlur={() => markRecipientTouched(group, index)}
                     aria-describedby={`${group}-recipient-${index}-error`}
-                    className={`min-w-0 flex-1 rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/25 ${
-                      inputError
-                        ? "border-red-300 focus:border-red-400"
-                        : "border-slate-200 focus:border-[#2f87a8]"
-                    }`}
+                    className={`min-w-0 flex-1 rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/25 ${inputError
+                      ? "border-red-300 focus:border-red-400"
+                      : "border-slate-200 focus:border-[#2f87a8]"
+                      }`}
                     placeholder={`recipient${index + 1}@example.com`}
                     aria-invalid={Boolean(inputError)}
                   />
-                  <button
+                  <AdminButton
                     type="button"
                     onClick={() => removeRecipient(group, index)}
                     disabled={recipients.length <= 1}
@@ -347,7 +354,7 @@ export default function EmailSettingsClient() {
                     aria-label={`Remove recipient ${index + 1} from ${title}`}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                  </AdminButton>
                 </div>
                 <FieldError id={`${group}-recipient-${index}-error`} error={inputError} />
               </div>
@@ -356,14 +363,14 @@ export default function EmailSettingsClient() {
         </div>
 
         {recipients.length < MAX_RECIPIENTS && (
-          <button
+          <AdminButton
             type="button"
             onClick={() => addRecipient(group)}
             className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#2f87a8]/25 bg-white px-3 py-2 text-sm font-semibold text-[#2f7895] transition hover:border-[#2f87a8] hover:bg-sky-50"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add recipient
-          </button>
+          </AdminButton>
         )}
       </section>
     );
@@ -387,14 +394,14 @@ export default function EmailSettingsClient() {
           </p>
         </div>
         {accessState === "unlocked" && (
-          <button
+          <AdminButton
             type="button"
             onClick={lockSettings}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
           >
             <LockKeyhole className="h-4 w-4" aria-hidden="true" />
             Lock settings
-          </button>
+          </AdminButton>
         )}
       </div>
 
@@ -408,9 +415,9 @@ export default function EmailSettingsClient() {
       )}
 
       {accessState === "error" && (
-        <section className="rounded-xl border border-red-100 bg-white p-6 text-center shadow-sm">
+        <AdminCard className="rounded-xl border border-red-100 bg-white p-6 text-center shadow-sm">
           <p className="text-sm font-semibold text-slate-700">Unable to load secure settings.</p>
-          <button
+          <AdminButton
             type="button"
             onClick={() => {
               setAccessState("checking");
@@ -419,12 +426,12 @@ export default function EmailSettingsClient() {
             className="mt-4 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white"
           >
             Try again
-          </button>
-        </section>
+          </AdminButton>
+        </AdminCard>
       )}
 
       {accessState === "locked" && (
-        <section className="mx-auto max-w-lg rounded-xl border border-[#dbe5ea] bg-white p-6 shadow-sm sm:p-8">
+        <AdminCard className="mx-auto max-w-lg rounded-xl border border-[#dbe5ea] bg-white p-6 shadow-sm sm:p-8">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-[#2f7895]">
             <LockKeyhole className="h-7 w-7" aria-hidden="true" />
           </div>
@@ -436,11 +443,11 @@ export default function EmailSettingsClient() {
             </p>
           </div>
 
-          <form onSubmit={unlockSettings} className="mt-6" noValidate>
+          <AdminForm onSubmit={unlockSettings} className="mt-6" noValidate>
             <label htmlFor="email-settings-password" className="text-sm font-medium text-slate-700">
               Admin password
             </label>
-            <input
+            <AdminInput
               id="email-settings-password"
               {...unlockFieldAttributes("password", "email-settings-password-error")}
               type="password"
@@ -456,7 +463,7 @@ export default function EmailSettingsClient() {
               autoFocus
             />
             <FieldError id="email-settings-password-error" error={unlockErrors.password} />
-            <button
+            <AdminButton
               type="submit"
               disabled={unlocking}
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
@@ -467,13 +474,13 @@ export default function EmailSettingsClient() {
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" />
               )}
               {unlocking ? "Verifying…" : "Unlock email settings"}
-            </button>
-          </form>
-        </section>
+            </AdminButton>
+          </AdminForm>
+        </AdminCard>
       )}
 
       {accessState === "unlocked" && (
-        <form onSubmit={saveSettings} className="rounded-xl border border-[#dbe5ea] bg-white p-4 shadow-sm shadow-[#003251]/5 sm:p-6" noValidate>
+        <AdminForm onSubmit={saveSettings} className="rounded-xl border border-[#dbe5ea] bg-white p-4 shadow-sm shadow-[#003251]/5 sm:p-6" noValidate>
           <div className="mb-6 flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
             <p>
@@ -504,16 +511,16 @@ export default function EmailSettingsClient() {
           </div>
 
           <div className="mt-6 flex justify-end border-t border-slate-100 pt-5">
-            <button
+            <AdminButton
               type="submit"
               disabled={saving}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {saving ? "Saving…" : "Save email recipients"}
-            </button>
+            </AdminButton>
           </div>
-        </form>
+        </AdminForm>
       )}
     </>
   );

@@ -1,12 +1,27 @@
 "use client";
 
+import { Avatar, Button, Checkbox, Space, Tag, Typography } from "antd";
+import {
+  AdminTable,
+  AdminButton,
+  AdminCard,
+  AdminDialog,
+  AdminForm,
+  AdminInput,
+  AdminNotice as ToastNotice,
+  AdminPhoneInput as PhoneInput,
+  AdminTextArea,
+  AdminUploadInput,
+  useAdminFeedback as useFeedback,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import type { ChangeEvent, FormEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2, UsersRound, X } from "lucide-react";
-import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+import { Pencil, Plus, Trash2, UsersRound } from "lucide-react";
+
 import ImageCropModal from "@/components/ui/ImageCropModal";
-import PhoneInput from "@/components/ui/PhoneInput";
+
 import { phoneDigits } from "@/lib/phone";
 
 import {
@@ -392,16 +407,15 @@ export default function TeamAdminClient() {
   };
 
   const inputClass = (field: keyof MemberForm) =>
-    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/30 ${
-      fieldError(field)
-        ? "border-red-300 focus:border-red-400"
-        : "border-slate-200 focus:border-[#2f87a8]"
+    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/30 ${fieldError(field)
+      ? "border-red-300 focus:border-red-400"
+      : "border-slate-200 focus:border-[#2f87a8]"
     }`;
 
   return (
     <>
       {cropFile && (
-        <ImageCropModal
+        <ImageCropModal zIndex={1200}
           file={cropFile}
           outputWidth={800}
           title="Crop the team member photo"
@@ -422,306 +436,227 @@ export default function TeamAdminClient() {
             Manage the people shown on the website and their individual profiles.
           </p>
         </div>
-        <button
+        <AdminButton
           type="button"
           onClick={openCreate}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c]"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Add team member
-        </button>
+        </AdminButton>
       </div>
 
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
-        {loading ? (
-          <div className="py-16 text-center text-sm text-slate-400">Loading team members…</div>
-        ) : members.length === 0 ? (
-          <div className="flex flex-col items-center px-6 py-16 text-center">
-            <UsersRound className="h-10 w-10 text-slate-300" aria-hidden="true" />
-            <h2 className="mt-4 font-semibold text-[#003251]">No team members yet</h2>
-            <p className="mt-1 text-sm text-slate-500">Add the first profile to publish it on the website.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {members.map((member) => {
-              const imageUrl = memberPhotoUrl(member.photo);
-              return (
-                <article
-                  key={member.id}
-                  className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5"
-                >
-                  {imageUrl ? (
-                    // The image host is configured by the PHP API at runtime.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={imageUrl}
-                      alt={member.name}
-                      className="h-24 w-24 shrink-0 border border-slate-200 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-24 w-24 shrink-0 items-center justify-center border border-slate-200 bg-slate-50">
-                      <UsersRound className="h-7 w-7 text-slate-300" aria-hidden="true" />
-                    </div>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-semibold text-[#003251]">{member.name}</h2>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          member.is_active
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        {member.is_active ? "Published" : "Hidden"}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-sm text-slate-600">{member.role}</p>
-                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
-                      {member.bio || "No biography has been added yet."}
-                    </p>
-                    <p className="mt-2 text-xs text-slate-400">
-                      /{member.slug} · display order {member.sort_order}
-                    </p>
-                  </div>
-
-                  <div className="flex shrink-0 gap-2 sm:self-start">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(member)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#2f87a8] hover:text-[#2f7895]"
-                      aria-label={`Edit ${member.name}`}
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteMember(member)}
-                      disabled={deletingId === member.id}
-                      className="inline-flex items-center gap-2 rounded-lg border border-red-100 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
-                      aria-label={`Delete ${member.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      {deletingId === member.id ? "Deleting…" : "Delete"}
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+        <AdminTable<TeamMember>
+          dataSource={members}
+          loading={loading}
+          locale={{ emptyText: "No team members yet. Add the first profile to publish it on the website." }}
+          columns={[
+            {
+              title: "Team member", key: "member", width: 400, render: (_, member) => <Space align="start">
+                <Avatar shape="square" size={64} src={memberPhotoUrl(member.photo) || undefined} icon={<UsersRound size={24} />} />
+                <div><Typography.Text strong>{member.name}</Typography.Text><p className="mt-1 text-sm text-slate-600">{member.role}</p><p className="mt-1 max-w-72 line-clamp-2 text-xs text-slate-500">{member.bio || "No biography has been added yet."}</p></div>
+              </Space>
+            },
+            { title: "Status", key: "status", width: 130, render: (_, member) => <Tag color={member.is_active ? "success" : "default"}>{member.is_active ? "Published" : "Hidden"}</Tag> },
+            { title: "Profile", key: "profile", width: 220, render: (_, member) => <div><Typography.Link href={`/${member.slug}`} target="_blank" rel="noreferrer">/{member.slug}</Typography.Link><p className="mt-1 text-xs text-slate-500">Display order {member.sort_order}</p></div> },
+            {
+              title: "Actions", key: "actions", width: 210, render: (_, member) => <Space>
+                <Button onClick={() => openEdit(member)} icon={<Pencil size={16} />} aria-label={`Edit ${member.name}`}>Edit</Button>
+                <Button danger loading={deletingId === member.id} onClick={() => deleteMember(member)} icon={<Trash2 size={16} />} aria-label={`Delete ${member.name}`}>Delete</Button>
+              </Space>
+            },
+          ]}
+        />
+      </AdminCard>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/55 px-4 py-8 sm:py-12">
-          <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="team-form-title">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
+        <AdminDialog title={editingMember ? "Edit team member" : "Add team member"} onClose={closeForm} busy={saving} width={800} open={!cropFile}><p className="mb-4 text-sm text-slate-500">Changes appear on the public team pages.</p>
+          <AdminForm onSubmit={submitMember} className="space-y-6 p-5 sm:p-6" noValidate>
+            <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
               <div>
-                <h2 id="team-form-title" className="text-lg font-semibold text-[#003251]">
-                  {editingMember ? "Edit team member" : "Add team member"}
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-500">Changes appear on the public team pages.</p>
+                <label htmlFor="team-name" className="text-sm font-medium text-slate-700">Name</label>
+                <AdminInput
+                  id="team-name"
+                  value={form.name}
+                  onChange={(event) => updateName(event.target.value)}
+                  onBlur={() => markTouched("name")}
+                  maxLength={150}
+                  className={inputClass("name")}
+                  aria-invalid={Boolean(fieldError("name"))}
+                />
+                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("name")}</p>
               </div>
-              <button
-                type="button"
-                onClick={closeForm}
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Close team member form"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
+
+              <div>
+                <label htmlFor="team-role" className="text-sm font-medium text-slate-700">Role or title</label>
+                <AdminInput
+                  id="team-role"
+                  value={form.role}
+                  onChange={(event) => updateField("role", event.target.value)}
+                  onBlur={() => markTouched("role")}
+                  maxLength={180}
+                  className={inputClass("role")}
+                  aria-invalid={Boolean(fieldError("role"))}
+                />
+                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("role")}</p>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Agent profile URL</label>
+                <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#2f87a8] focus-within:ring-2 focus-within:ring-[#2f87a8]/30">
+                  <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400">/</span>
+                  <AdminInput
+                    id="team-slug"
+                    value={form.slug}
+                    onChange={(event) => {
+                      setSlugEdited(true);
+                      updateField("slug", slugify(event.target.value));
+                    }}
+                    onBlur={() => markTouched("slug")}
+                    maxLength={63}
+                    className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
+                    aria-invalid={Boolean(fieldError("slug"))}
+                  />
+                </div>
+                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("slug")}</p>
+                <p className="text-xs text-slate-400">
+                  Local preview: http://localhost:3000/{form.slug || "agent-slug"}
+                </p>
+                <p className="text-xs text-slate-400">
+                  Property site: http://{form.slug || "agent-slug"}.localhost:3000
+                </p>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="team-bio" className="text-sm font-medium text-slate-700">Biography</label>
+                <AdminTextArea
+                  id="team-bio"
+                  value={form.bio}
+                  onChange={(event) => updateField("bio", event.target.value)}
+                  onBlur={() => markTouched("bio")}
+                  maxLength={20000}
+                  rows={7}
+                  className={inputClass("bio")}
+                  aria-invalid={Boolean(fieldError("bio"))}
+                  placeholder="Write the profile description shown on the individual member page."
+                />
+                <div className="mt-1 flex justify-between gap-4 text-xs">
+                  <span className="text-red-600">{fieldError("bio")}</span>
+                  <span className="text-slate-400">{form.bio.length.toLocaleString()} / 20,000</span>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="team-email" className="text-sm font-medium text-slate-700">Email <span className="font-normal text-slate-400">(optional)</span></label>
+                <AdminInput
+                  id="team-email"
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField("email", event.target.value)}
+                  onBlur={() => markTouched("email")}
+                  maxLength={254}
+                  className={inputClass("email")}
+                  aria-invalid={Boolean(fieldError("email"))}
+                />
+                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("email")}</p>
+              </div>
+
+              <div>
+                <label htmlFor="team-phone" className="text-sm font-medium text-slate-700">Phone <span className="font-normal text-slate-400">(optional)</span></label>
+                <PhoneInput
+                  id="team-phone"
+                  value={form.phone}
+                  onValueChange={(value) => updateField("phone", value)}
+                  onBlur={() => markTouched("phone")}
+                  className={inputClass("phone")}
+                  aria-invalid={Boolean(fieldError("phone"))}
+                />
+                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("phone")}</p>
+              </div>
+
+              <div>
+                <label htmlFor="team-order" className="text-sm font-medium text-slate-700">Display order</label>
+                <AdminInput
+                  id="team-order"
+                  type="number"
+                  min="0"
+                  max="9999"
+                  step="1"
+                  value={form.sort_order}
+                  onChange={(event) => updateField("sort_order", event.target.value)}
+                  onBlur={() => markTouched("sort_order")}
+                  className={inputClass("sort_order")}
+                  aria-invalid={Boolean(fieldError("sort_order"))}
+                />
+                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("sort_order")}</p>
+                <p className="text-xs text-slate-400">Lower numbers appear first.</p>
+              </div>
+
+              <div className="flex items-start pt-6">
+                <Checkbox
+                  checked={form.is_active}
+                  onChange={(event) => updateField("is_active", event.target.checked)}
+                  className="flex cursor-pointer items-start gap-3"
+                >
+                  <span>
+                    <span className="block text-sm font-medium text-slate-700">Publish this member</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">Hidden profiles remain editable in admin.</span>
+                  </span>
+                </Checkbox>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="team-photo" className="text-sm font-medium text-slate-700">
+                  Photo {editingMember && <span className="font-normal text-slate-400">(leave empty to keep the current image)</span>}
+                </label>
+                <p className="mt-1 text-xs text-slate-400">
+                  JPG, PNG, WebP, or GIF. Maximum 4 MB. Choose any crop size or proportion after selecting.
+                </p>
+                <AdminUploadInput
+                  key={`${editingMember?.id || "new"}-${showForm ? "open" : "closed"}`}
+                  id="team-photo"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.gif"
+                  onChange={handlePhoto}
+                  onClick={() => setPhotoError("")}
+                  className="mt-2 w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
+                  aria-invalid={Boolean(photoError)}
+                />
+                <p className="mt-1 min-h-4 text-xs text-red-600">{photoError}</p>
+                {(photoPreview || (editingMember && memberPhotoUrl(editingMember.photo))) && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photoPreview || memberPhotoUrl(editingMember?.photo || null)}
+                    alt="Team member preview"
+                    className="mt-3 max-h-48 max-w-full border border-slate-200 object-contain"
+                  />
+                )}
+              </div>
             </div>
 
-            <form onSubmit={submitMember} className="space-y-6 p-5 sm:p-6" noValidate>
-              <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="team-name" className="text-sm font-medium text-slate-700">Name</label>
-                  <input
-                    id="team-name"
-                    value={form.name}
-                    onChange={(event) => updateName(event.target.value)}
-                    onBlur={() => markTouched("name")}
-                    maxLength={150}
-                    className={inputClass("name")}
-                    aria-invalid={Boolean(fieldError("name"))}
-                  />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("name")}</p>
-                </div>
-
-                <div>
-                  <label htmlFor="team-role" className="text-sm font-medium text-slate-700">Role or title</label>
-                  <input
-                    id="team-role"
-                    value={form.role}
-                    onChange={(event) => updateField("role", event.target.value)}
-                    onBlur={() => markTouched("role")}
-                    maxLength={180}
-                    className={inputClass("role")}
-                    aria-invalid={Boolean(fieldError("role"))}
-                  />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("role")}</p>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Agent profile URL</label>
-                  <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#2f87a8] focus-within:ring-2 focus-within:ring-[#2f87a8]/30">
-                    <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400">/</span>
-                    <input
-                      id="team-slug"
-                      value={form.slug}
-                      onChange={(event) => {
-                        setSlugEdited(true);
-                        updateField("slug", slugify(event.target.value));
-                      }}
-                      onBlur={() => markTouched("slug")}
-                      maxLength={63}
-                      className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
-                      aria-invalid={Boolean(fieldError("slug"))}
-                    />
-                  </div>
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("slug")}</p>
-                  <p className="text-xs text-slate-400">
-                    Local preview: http://localhost:3000/{form.slug || "agent-slug"}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Property site: http://{form.slug || "agent-slug"}.localhost:3000
-                  </p>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label htmlFor="team-bio" className="text-sm font-medium text-slate-700">Biography</label>
-                  <textarea
-                    id="team-bio"
-                    value={form.bio}
-                    onChange={(event) => updateField("bio", event.target.value)}
-                    onBlur={() => markTouched("bio")}
-                    maxLength={20000}
-                    rows={7}
-                    className={inputClass("bio")}
-                    aria-invalid={Boolean(fieldError("bio"))}
-                    placeholder="Write the profile description shown on the individual member page."
-                  />
-                  <div className="mt-1 flex justify-between gap-4 text-xs">
-                    <span className="text-red-600">{fieldError("bio")}</span>
-                    <span className="text-slate-400">{form.bio.length.toLocaleString()} / 20,000</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="team-email" className="text-sm font-medium text-slate-700">Email <span className="font-normal text-slate-400">(optional)</span></label>
-                  <input
-                    id="team-email"
-                    type="email"
-                    value={form.email}
-                    onChange={(event) => updateField("email", event.target.value)}
-                    onBlur={() => markTouched("email")}
-                    maxLength={254}
-                    className={inputClass("email")}
-                    aria-invalid={Boolean(fieldError("email"))}
-                  />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("email")}</p>
-                </div>
-
-                <div>
-                  <label htmlFor="team-phone" className="text-sm font-medium text-slate-700">Phone <span className="font-normal text-slate-400">(optional)</span></label>
-                  <PhoneInput
-                    id="team-phone"
-                    value={form.phone}
-                    onValueChange={(value) => updateField("phone", value)}
-                    onBlur={() => markTouched("phone")}
-                    className={inputClass("phone")}
-                    aria-invalid={Boolean(fieldError("phone"))}
-                  />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("phone")}</p>
-                </div>
-
-                <div>
-                  <label htmlFor="team-order" className="text-sm font-medium text-slate-700">Display order</label>
-                  <input
-                    id="team-order"
-                    type="number"
-                    min="0"
-                    max="9999"
-                    step="1"
-                    value={form.sort_order}
-                    onChange={(event) => updateField("sort_order", event.target.value)}
-                    onBlur={() => markTouched("sort_order")}
-                    className={inputClass("sort_order")}
-                    aria-invalid={Boolean(fieldError("sort_order"))}
-                  />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("sort_order")}</p>
-                  <p className="text-xs text-slate-400">Lower numbers appear first.</p>
-                </div>
-
-                <div className="flex items-start pt-6">
-                  <label className="flex cursor-pointer items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={form.is_active}
-                      onChange={(event) => updateField("is_active", event.target.checked)}
-                      className="mt-0.5 h-4 w-4 accent-[#003251]"
-                    />
-                    <span>
-                      <span className="block text-sm font-medium text-slate-700">Publish this member</span>
-                      <span className="mt-0.5 block text-xs text-slate-400">Hidden profiles remain editable in admin.</span>
-                    </span>
-                  </label>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label htmlFor="team-photo" className="text-sm font-medium text-slate-700">
-                    Photo {editingMember && <span className="font-normal text-slate-400">(leave empty to keep the current image)</span>}
-                  </label>
-                  <p className="mt-1 text-xs text-slate-400">
-                    JPG, PNG, WebP, or GIF. Maximum 4 MB. Choose any crop size or proportion after selecting.
-                  </p>
-                  <input
-                    key={`${editingMember?.id || "new"}-${showForm ? "open" : "closed"}`}
-                    id="team-photo"
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp,.gif"
-                    onChange={handlePhoto}
-                    onClick={() => setPhotoError("")}
-                    className="mt-2 w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
-                    aria-invalid={Boolean(photoError)}
-                  />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{photoError}</p>
-                  {(photoPreview || (editingMember && memberPhotoUrl(editingMember.photo))) && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photoPreview || memberPhotoUrl(editingMember?.photo || null)}
-                      alt="Team member preview"
-                      className="mt-3 max-h-48 max-w-full border border-slate-200 object-contain"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  disabled={saving}
-                  className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
-                >
-                  {saving ? "Saving…" : editingMember ? "Update member" : "Add member"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+              <AdminButton
+                type="button"
+                onClick={closeForm}
+                disabled={saving}
+                className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel
+              </AdminButton>
+              <AdminButton
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
+              >
+                {saving ? "Saving…" : editingMember ? "Update member" : "Add member"}
+              </AdminButton>
+            </div>
+          </AdminForm>
+        </AdminDialog>
       )}
     </>
   );

@@ -1,8 +1,15 @@
 "use client";
 
+import { Tag, Typography } from "antd";
+import {
+  AdminTable,
+  AdminCard,
+  AdminNotice as ToastNotice,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ToastNotice } from "@/components/ui/FeedbackProvider";
+
 
 interface DocumentRequest {
   id: number;
@@ -141,7 +148,7 @@ export default function DocumentRequestsClient() {
 
       <ToastNotice message={error} kind="error" />
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-1 text-lg font-semibold text-gray-900">
             Verified visitor activity
@@ -150,81 +157,36 @@ export default function DocumentRequestsClient() {
             A visitor verifies once and can continue viewing properties for 30 days in the same browser.
           </p>
 
-          {loading ? (
-            <div className="py-12 text-center text-gray-400">Loading…</div>
-          ) : visitors.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">
-              No verified property visitors yet.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {visitors.map((visitor) => (
-                <article key={visitor.id} className="rounded-xl border border-slate-200 p-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <p className="font-semibold text-gray-900">{visitor.name}</p>
-                      <a className="mt-1 block text-sm text-[#2f7895] hover:underline" href={`mailto:${visitor.email}`}>
-                        {visitor.email}
-                      </a>
-                      <a className="mt-1 block text-sm text-slate-500 hover:underline" href={`tel:${visitor.phone}`}>
-                        {visitor.phone}
-                      </a>
-                    </div>
-                    <div className="text-sm">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">First property viewed</p>
-                      <p className="mt-1 font-medium text-slate-700">
-                        {visitor.entry_property_title ||
-                          (visitor.entry_property_id
-                            ? `Property #${visitor.entry_property_id}`
-                            : "Not recorded")}
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-[#2f7895]">
-                        Agent: {visitor.entry_agent_name || "Not assigned"}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {sourceLabel(visitor.entry_source)} · {displayDate(visitor.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 border-t border-slate-100 pt-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                      Documents downloaded ({downloadsByVisitor.get(visitor.id)?.length || 0})
-                    </p>
-                    {(downloadsByVisitor.get(visitor.id)?.length || 0) === 0 ? (
-                      <p className="mt-2 text-sm text-slate-400">
-                        No document downloads yet.
-                      </p>
-                    ) : (
-                      <div className="mt-2 space-y-2">
-                        {downloadsByVisitor.get(visitor.id)?.map((download) => (
-                          <div
-                            key={download.id}
-                            className="rounded-lg bg-slate-50 px-3 py-2 text-sm"
-                          >
-                            <p className="font-medium text-slate-700">
-                              {download.document_name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                              {download.property_title || `Property #${download.property_id}`}
-                              {" · "}
-                              Agent: {download.property_agent_name || "Not assigned"}
-                            </p>
-                            <p className="mt-0.5 text-xs text-slate-400">
-                              {sourceLabel(download.source)} · {displayDate(download.downloaded_at)}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+          <AdminTable<PropertyVisitor>
+            dataSource={visitors}
+            loading={loading}
+            locale={{ emptyText: "No verified visitors yet." }}
+            columns={[
+              { title: "Visitor", key: "visitor", width: 270, render: (_, visitor) => <div><Typography.Text strong>{visitor.name}</Typography.Text><p><a href={`mailto:${visitor.email}`}>{visitor.email}</a></p><a href={`tel:${visitor.phone}`}>{visitor.phone || "—"}</a></div> },
+              { title: "First property", key: "property", width: 260, render: (_, visitor) => <div>{visitor.entry_property_title || (visitor.entry_property_id ? `Property #${visitor.entry_property_id}` : "Not available")}<p className="text-xs text-slate-500">Agent: {visitor.entry_agent_name || "Not assigned"}</p></div> },
+              { title: "Source", dataIndex: "entry_source", key: "source", width: 140, render: sourceLabel },
+              { title: "Verified", dataIndex: "created_at", key: "created", width: 200, render: displayDate },
+              { title: "Downloads", key: "downloads", width: 120, render: (_, visitor) => <Tag color="blue">{downloadsByVisitor.get(visitor.id)?.length || 0}</Tag> },
+            ]}
+            expandable={{
+              expandedRowRender: (visitor) => <AdminTable<DocumentDownload>
+                dataSource={downloadsByVisitor.get(visitor.id) || []}
+                pagination={false}
+                locale={{ emptyText: "No document downloads yet." }}
+                columns={[
+                  { title: "Document", dataIndex: "document_name", key: "document", width: 240 },
+                  { title: "Property", key: "property", width: 240, render: (_, download) => download.property_title || `Property #${download.property_id}` },
+                  { title: "Agent", key: "agent", width: 180, render: (_, download) => download.property_agent_name || "Not assigned" },
+                  { title: "Source", dataIndex: "source", key: "source", render: sourceLabel },
+                  { title: "Downloaded", dataIndex: "downloaded_at", key: "downloaded", width: 200, render: displayDate },
+                ]}
+              />
+            }}
+          />
         </div>
-      </section>
+      </AdminCard>
 
-      <section className="mt-6 overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="mt-6 overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-1 text-lg font-semibold text-gray-900">
             Verification requests
@@ -233,62 +195,21 @@ export default function DocumentRequestsClient() {
             Email-code requests used to unlock property details and documents.
           </p>
 
-          {loading ? (
-            <div className="py-12 text-center text-gray-400">Loading…</div>
-          ) : requests.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">
-              No verification requests yet.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 text-left">
-                    <th className="pb-3 font-medium text-gray-600">Visitor</th>
-                    <th className="pb-3 font-medium text-gray-600">Phone</th>
-                    <th className="pb-3 font-medium text-gray-600">Entry property</th>
-                    <th className="pb-3 font-medium text-gray-600">Source</th>
-                    <th className="pb-3 font-medium text-gray-600">Date</th>
-                    <th className="pb-3 font-medium text-gray-600">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {requests.map((request) => (
-                    <tr key={request.id} className="hover:bg-gray-50">
-                      <td className="py-3">
-                        <p className="font-medium text-gray-900">{request.name}</p>
-                        <a className="text-xs text-[#2f7895] hover:underline" href={`mailto:${request.email}`}>
-                          {request.email}
-                        </a>
-                      </td>
-                      <td className="py-3 text-gray-600">{request.phone || "—"}</td>
-                      <td className="max-w-44 truncate py-3 text-gray-600">
-                        <p>{request.property_title || `Property #${request.property_id}`}</p>
-                        <p className="text-xs text-[#2f7895]">
-                          Agent: {request.property_agent_name || "Not assigned"}
-                        </p>
-                      </td>
-                      <td className="py-3 text-gray-500">{sourceLabel(request.source)}</td>
-                      <td className="py-3 text-gray-400">{displayDate(request.requested_at)}</td>
-                      <td className="py-3">
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${
-                            request.status === "verified"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-sky-100 text-sky-700"
-                          }`}
-                        >
-                          {request.status === "verified" ? "Verified" : "Pending"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <AdminTable<DocumentRequest>
+            dataSource={requests}
+            loading={loading}
+            locale={{ emptyText: "No verification requests yet." }}
+            columns={[
+              { title: "Visitor", key: "visitor", width: 250, render: (_, request) => <div><Typography.Text strong>{request.name}</Typography.Text><p><a href={`mailto:${request.email}`}>{request.email}</a></p></div> },
+              { title: "Phone", dataIndex: "phone", key: "phone", width: 160, render: (phone: string | null) => phone || "—" },
+              { title: "Entry property", key: "property", width: 260, render: (_, request) => <div>{request.property_title || `Property #${request.property_id}`}<p className="text-xs text-slate-500">Agent: {request.property_agent_name || "Not assigned"}</p></div> },
+              { title: "Source", dataIndex: "source", key: "source", width: 130, render: sourceLabel },
+              { title: "Date", dataIndex: "requested_at", key: "requested", width: 200, render: displayDate },
+              { title: "Status", key: "status", width: 130, render: (_, request) => <Tag color={request.status === "verified" ? "success" : "processing"}>{request.status === "verified" ? "Verified" : "Pending"}</Tag> },
+            ]}
+          />
         </div>
-      </section>
+      </AdminCard>
     </>
   );
 }

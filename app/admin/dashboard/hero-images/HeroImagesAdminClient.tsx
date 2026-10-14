@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  AdminButton,
+  AdminCard,
+  AdminInput,
+  AdminLoading,
+  AdminNotice as ToastNotice,
+  AdminTag,
+  AdminUploadInput,
+  useAdminFeedback as useFeedback,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import FieldError from "@/components/ui/FieldError";
 import { heroContentValidation, validateImageUpload } from "@/lib/admin-validation";
 import { useFormValidation } from "@/lib/use-form-validation";
@@ -11,13 +22,12 @@ import { useRouter } from "next/navigation";
 import {
   ExternalLink,
   ImagePlus,
-  ImageUp,
   LoaderCircle,
   RotateCcw,
   Save,
   Trash2,
 } from "lucide-react";
-import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+
 
 import {
   cloneHeroContent,
@@ -49,8 +59,6 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
     return { status: "error", message: "The server returned an invalid response." };
   }
 }
-
-
 
 export default function HeroImagesAdminClient() {
   const router = useRouter();
@@ -277,7 +285,7 @@ export default function HeroImagesAdminClient() {
 
   return (
     <section>
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <AdminCard className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#003251]">
@@ -309,7 +317,7 @@ export default function HeroImagesAdminClient() {
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               Preview homepage
             </Link>
-            <button
+            <AdminButton
               type="button"
               onClick={restoreDefaults}
               disabled={loading || saving}
@@ -317,8 +325,8 @@ export default function HeroImagesAdminClient() {
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Load originals
-            </button>
-            <button
+            </AdminButton>
+            <AdminButton
               type="button"
               onClick={saveContent}
               disabled={loading || saving || !dirty}
@@ -330,30 +338,28 @@ export default function HeroImagesAdminClient() {
                 <Save className="h-4 w-4" aria-hidden="true" />
               )}
               {saving ? "Publishing…" : "Publish changes"}
-            </button>
+            </AdminButton>
           </div>
         </div>
-      </div>
+      </AdminCard>
 
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
       {loading ? (
-        <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">
-          <LoaderCircle className="h-7 w-7 animate-spin text-[#003251]" aria-label="Loading hero images" />
-        </div>
+        <AdminLoading className="mt-5">Loading hero images…</AdminLoading>
       ) : (
         <div className="mt-5 space-y-5">
           {content.slides.map((slide, index) => (
-            <article
+            <AdminCard
               key={index}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
             >
               <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-200 pb-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#003251] text-sm font-bold text-white">
+                  <AdminTag className="flex h-9 w-9 items-center justify-center rounded-full bg-[#003251] text-sm font-bold text-white">
                     {index + 1}
-                  </span>
+                  </AdminTag>
                   <div>
                     <h2 className="font-semibold text-[#003251]">
                       {slide.location || `Hero image ${index + 1}`}
@@ -361,7 +367,7 @@ export default function HeroImagesAdminClient() {
                     <p className="text-xs text-slate-500">Carousel position {index + 1}</p>
                   </div>
                 </div>
-                <button
+                <AdminButton
                   type="button"
                   onClick={() => removeSlide(index)}
                   disabled={content.slides.length === 1 || saving}
@@ -369,7 +375,7 @@ export default function HeroImagesAdminClient() {
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                   Remove
-                </button>
+                </AdminButton>
               </div>
 
               <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.1fr)]">
@@ -388,24 +394,16 @@ export default function HeroImagesAdminClient() {
                       </div>
                     )}
                   </div>
-                  <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143c60]">
-                    {uploadingIndex === index ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <ImageUp className="h-4 w-4" aria-hidden="true" />
-                    )}
-                    {uploadingIndex === index ? "Uploading…" : "Upload replacement"}
-                    <input
-                      aria-invalid={Boolean(uploadErrors[index])}
-                      aria-describedby={`hero-${index}-upload-error`}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      disabled={uploadingIndex !== null || saving}
-                      onChange={(event) => uploadImage(index, event)}
-                      className="sr-only"
-                    />
-                  </label>
-                    <FieldError id={`hero-${index}-upload-error`} error={uploadErrors[index]} />
+                  <AdminUploadInput
+                    aria-invalid={Boolean(uploadErrors[index])}
+                    aria-describedby={`hero-${index}-upload-error`}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    disabled={uploadingIndex !== null || saving}
+                    onChange={(event) => uploadImage(index, event)}
+                    className="mt-3"
+                    buttonLabel={uploadingIndex === index ? "Uploading…" : "Upload replacement"} loading={uploadingIndex === index} />
+                  <FieldError id={`hero-${index}-upload-error`} error={uploadErrors[index]} />
                   <p className="mt-2 text-xs text-slate-500">
                     Use a wide landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB.
                   </p>
@@ -414,7 +412,7 @@ export default function HeroImagesAdminClient() {
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-slate-700">
                     Image URL or saved path
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`slide.${index}.image`, `hero-${index}-image-error`)}
                       value={slide.image}
                       onChange={(event) => updateSlide(index, "image", event.target.value)}
@@ -425,7 +423,7 @@ export default function HeroImagesAdminClient() {
                   </label>
                   <label className="block text-sm font-medium text-slate-700">
                     Image description
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`slide.${index}.alt`, `hero-${index}-alt-error`)}
                       value={slide.alt}
                       onChange={(event) => updateSlide(index, "alt", event.target.value)}
@@ -440,7 +438,7 @@ export default function HeroImagesAdminClient() {
                   </label>
                   <label className="block text-sm font-medium text-slate-700">
                     Location label
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`slide.${index}.location`, `hero-${index}-location-error`)}
                       value={slide.location}
                       onChange={(event) => updateSlide(index, "location", event.target.value)}
@@ -452,11 +450,11 @@ export default function HeroImagesAdminClient() {
                   </label>
                 </div>
               </div>
-            </article>
+            </AdminCard>
           ))}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <button
+            <AdminButton
               type="button"
               onClick={addSlide}
               disabled={content.slides.length >= MAX_SLIDES || saving}
@@ -464,8 +462,8 @@ export default function HeroImagesAdminClient() {
             >
               <ImagePlus className="h-4 w-4" aria-hidden="true" />
               Add carousel image
-            </button>
-            <button
+            </AdminButton>
+            <AdminButton
               type="button"
               onClick={saveContent}
               disabled={saving || !dirty}
@@ -473,7 +471,7 @@ export default function HeroImagesAdminClient() {
             >
               {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? "Publishing…" : "Publish changes"}
-            </button>
+            </AdminButton>
           </div>
         </div>
       )}

@@ -1,5 +1,20 @@
 "use client";
 
+import { Tabs, Typography } from "antd";
+
+import {
+  AdminButton,
+  AdminCard,
+  AdminInput,
+  AdminLoading,
+  AdminNotice as ToastNotice,
+  AdminSelect,
+  AdminTag,
+  AdminTextArea,
+  AdminUploadInput,
+  useAdminFeedback as useFeedback,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import FieldError from "@/components/ui/FieldError";
 import { serviceContentValidation, validateImageUpload } from "@/lib/admin-validation";
 import { useFormValidation } from "@/lib/use-form-validation";
@@ -10,12 +25,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink,
-  ImageUp,
   LoaderCircle,
   RotateCcw,
   Save,
 } from "lucide-react";
-import { ToastNotice, useFeedback } from "@/components/ui/FeedbackProvider";
+
 
 import {
   clonePageContent,
@@ -50,8 +64,6 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
     return { status: "error", message: "The server returned an invalid response." };
   }
 }
-
-
 
 export default function PageContentAdminClient() {
   const router = useRouter();
@@ -301,7 +313,7 @@ export default function PageContentAdminClient() {
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               Preview page
             </Link>
-            <button
+            <AdminButton
               type="button"
               onClick={restoreDefaults}
               disabled={loading || saving}
@@ -309,8 +321,8 @@ export default function PageContentAdminClient() {
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Load originals
-            </button>
-            <button
+            </AdminButton>
+            <AdminButton
               type="button"
               onClick={saveContent}
               disabled={loading || saving || !dirty}
@@ -322,50 +334,27 @@ export default function PageContentAdminClient() {
                 <Save className="h-4 w-4" aria-hidden="true" />
               )}
               {saving ? "Publishing…" : "Publish changes"}
-            </button>
+            </AdminButton>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-5" role="tablist">
-          {PAGE_KEYS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={pageKey === key}
-              onClick={() => selectPage(key)}
-              className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                pageKey === key
-                  ? "bg-[#003251] text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {PAGE_LABELS[key]}
-            </button>
-          ))}
-          <div className="ml-auto self-center text-xs text-slate-500">
-            {dirty
-              ? "Unpublished changes"
-              : updatedAt
-                ? `Last published ${new Date(updatedAt.replace(" ", "T")).toLocaleString()}`
-                : "Using original content"}
-          </div>
-        </div>
+        <Tabs activeKey={pageKey} onChange={(key) => { void selectPage(key as PageContentKey); }} items={PAGE_KEYS.map((key) => ({ key, label: PAGE_LABELS[key] }))} />
+        <Typography.Text type="secondary" className="block">
+          {dirty ? "Unpublished changes" : updatedAt ? `Last published ${new Date(updatedAt.replace(" ", "T")).toLocaleString()}` : "Using original content"}
+        </Typography.Text>
       </div>
 
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
       {loading ? (
-        <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">
-          <LoaderCircle className="h-7 w-7 animate-spin text-[#1c878f]" aria-label="Loading page content" />
-        </div>
+        <AdminLoading className="mt-5">Loading page content…</AdminLoading>
       ) : (
         <div className="mt-5 space-y-5">
           <div className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2 xl:grid-cols-3 sm:p-6">
             <label className="text-sm font-medium text-slate-700">
               Sidebar heading
-              <input
+              <AdminInput
                 {...fieldAttributes("eyebrow", "service-eyebrow-error")}
                 value={content.eyebrow}
                 onChange={(event) => updateTopField("eyebrow", event.target.value)}
@@ -376,7 +365,7 @@ export default function PageContentAdminClient() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Contact card title
-              <input
+              <AdminInput
                 {...fieldAttributes("contactTitle", "service-contactTitle-error")}
                 value={content.contactTitle}
                 onChange={(event) => updateTopField("contactTitle", event.target.value)}
@@ -387,7 +376,7 @@ export default function PageContentAdminClient() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Contact card text
-              <input
+              <AdminInput
                 {...fieldAttributes("contactText", "service-contactText-error")}
                 value={content.contactText}
                 onChange={(event) => updateTopField("contactText", event.target.value)}
@@ -398,7 +387,7 @@ export default function PageContentAdminClient() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Contact button label
-              <input
+              <AdminInput
                 {...fieldAttributes("contactButtonLabel", "service-contactButtonLabel-error")}
                 value={content.contactButtonLabel}
                 onChange={(event) => updateTopField("contactButtonLabel", event.target.value)}
@@ -409,7 +398,7 @@ export default function PageContentAdminClient() {
             </label>
             <label className="text-sm font-medium text-slate-700 md:col-span-2">
               Contact button link
-              <input
+              <AdminInput
                 {...fieldAttributes("contactButtonHref", "service-contactButtonHref-error")}
                 value={content.contactButtonHref}
                 onChange={(event) => updateTopField("contactButtonHref", event.target.value)}
@@ -422,11 +411,11 @@ export default function PageContentAdminClient() {
           </div>
 
           {content.steps.map((step, stepIndex) => (
-            <article key={step.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <AdminCard key={step.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-5 flex items-center gap-3 border-b border-slate-200 pb-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#003251] text-sm font-bold text-white">
+                <AdminTag className="flex h-9 w-9 items-center justify-center rounded-full bg-[#003251] text-sm font-bold text-white">
                   {step.id}
-                </span>
+                </AdminTag>
                 <div>
                   <h2 className="font-semibold text-[#003251]">{step.title || `Step ${step.id}`}</h2>
                   <p className="text-xs text-slate-500">Public guide step {step.id} of 6</p>
@@ -437,7 +426,7 @@ export default function PageContentAdminClient() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-sm font-medium text-slate-700">
                     Navigation label
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`step.${step.id}.navLabel`, `service-step-${step.id}-navLabel-error`)}
                       value={step.navLabel}
                       onChange={(event) => updateStep(stepIndex, "navLabel", event.target.value)}
@@ -448,7 +437,7 @@ export default function PageContentAdminClient() {
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Progress label
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`step.${step.id}.stepLabel`, `service-step-${step.id}-stepLabel-error`)}
                       value={step.stepLabel}
                       onChange={(event) => updateStep(stepIndex, "stepLabel", event.target.value)}
@@ -459,7 +448,7 @@ export default function PageContentAdminClient() {
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Step title
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`step.${step.id}.title`, `service-step-${step.id}-title-error`)}
                       value={step.title}
                       onChange={(event) => updateStep(stepIndex, "title", event.target.value)}
@@ -470,7 +459,7 @@ export default function PageContentAdminClient() {
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Sidebar icon
-                    <select
+                    <AdminSelect
                       {...fieldAttributes(`step.${step.id}.icon`, `service-step-${step.id}-icon-error`)}
                       value={step.icon}
                       onChange={(event) => updateStep(stepIndex, "icon", event.target.value)}
@@ -481,12 +470,12 @@ export default function PageContentAdminClient() {
                           {option.label}
                         </option>
                       ))}
-                    </select>
+                    </AdminSelect>
                     <FieldError id={`service-step-${step.id}-icon-error`} error={errors[`step.${step.id}.icon`]} />
                   </label>
                   <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                     Body content
-                    <textarea
+                    <AdminTextArea
                       {...fieldAttributes(`step.${step.id}.body`, `service-step-${step.id}-body-error`)}
                       value={step.body}
                       onChange={(event) => updateStep(stepIndex, "body", event.target.value)}
@@ -509,7 +498,7 @@ export default function PageContentAdminClient() {
                   </div>
                   <label className="mt-3 block text-sm font-medium text-slate-700">
                     Image URL or saved path
-                    <input
+                    <AdminInput
                       {...fieldAttributes(`step.${step.id}.image`, `service-step-${step.id}-image-error`)}
                       value={step.image}
                       onChange={(event) => updateStep(stepIndex, "image", event.target.value)}
@@ -518,32 +507,24 @@ export default function PageContentAdminClient() {
                     />
                     <FieldError id={`service-step-${step.id}-image-error`} error={errors[`step.${step.id}.image`]} />
                   </label>
-                  <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#1c878f] hover:text-[#003251]">
-                    {uploadingStep === stepIndex ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <ImageUp className="h-4 w-4" aria-hidden="true" />
-                    )}
-                    {uploadingStep === stepIndex ? "Uploading…" : "Upload image"}
-                    <input
-                      aria-invalid={Boolean(uploadErrors[stepIndex])}
-                      aria-describedby={`service-step-${step.id}-upload-error`}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      disabled={uploadingStep !== null || saving}
-                      onChange={(event) => uploadImage(stepIndex, event)}
-                      className="sr-only"
-                    />
-                  </label>
-                    <FieldError id={`service-step-${step.id}-upload-error`} error={uploadErrors[stepIndex]} />
+                  <AdminUploadInput
+                    aria-invalid={Boolean(uploadErrors[stepIndex])}
+                    aria-describedby={`service-step-${step.id}-upload-error`}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    disabled={uploadingStep !== null || saving}
+                    onChange={(event) => uploadImage(stepIndex, event)}
+                    className="mt-3"
+                    buttonLabel={uploadingStep === stepIndex ? "Uploading…" : "Upload image"} loading={uploadingStep === stepIndex} />
+                  <FieldError id={`service-step-${step.id}-upload-error`} error={uploadErrors[stepIndex]} />
                   <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
                 </div>
               </div>
-            </article>
+            </AdminCard>
           ))}
 
           <div className="sticky bottom-4 flex justify-end">
-            <button
+            <AdminButton
               type="button"
               onClick={saveContent}
               disabled={saving || !dirty}
@@ -551,7 +532,7 @@ export default function PageContentAdminClient() {
             >
               {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? "Publishing…" : "Publish changes"}
-            </button>
+            </AdminButton>
           </div>
         </div>
       )}

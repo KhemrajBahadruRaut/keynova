@@ -1,16 +1,25 @@
 "use client";
 
+import { Segmented, Space, Badge, Rate } from "antd";
+
+import {
+  AdminButton,
+  AdminCard,
+  AdminEmpty,
+  AdminLoading,
+  AdminNotice as ToastNotice,
+  AdminTag,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   Clock3,
   LoaderCircle,
-  Quote,
-  Star,
   XCircle,
 } from "lucide-react";
-import { ToastNotice } from "@/components/ui/FeedbackProvider";
+
 
 import type {
   AdminTestimonial,
@@ -142,10 +151,10 @@ export default function TestimonialsAdminClient() {
         current.map((testimonial) =>
           testimonial.id === id
             ? {
-                ...testimonial,
-                status,
-                reviewed_at: new Date().toISOString(),
-              }
+              ...testimonial,
+              status,
+              reviewed_at: new Date().toISOString(),
+            }
             : testimonial,
         ),
       );
@@ -185,51 +194,20 @@ export default function TestimonialsAdminClient() {
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
-      <section className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
-          <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filter testimonials">
-            {FILTERS.map(({ label, value }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setFilter(value)}
-                aria-pressed={filter === value}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  filter === value
-                    ? "bg-[#003251] text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {label}
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                    filter === value ? "bg-white/15 text-white" : "bg-white text-slate-500"
-                  }`}
-                >
-                  {counts[value]}
-                </span>
-              </button>
-            ))}
-          </div>
+          <div className="overflow-x-auto"><Segmented value={filter} onChange={(value) => setFilter(value as typeof filter)} options={FILTERS.map(({ label, value }) => ({ value, label: <Space>{label}<Badge count={counts[value]} showZero color="#2f87a8" /></Space> }))} /></div>
         </div>
 
         <div className="p-4 sm:p-6">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-400">
-              <LoaderCircle aria-hidden="true" className="h-5 w-5 animate-spin" />
-              Loading testimonials…
-            </div>
+            <AdminLoading>Loading testimonials…</AdminLoading>
           ) : filteredTestimonials.length === 0 ? (
-            <div className="py-16 text-center">
-              <Quote aria-hidden="true" className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-4 text-sm font-medium text-slate-500">
-                No {filter === "all" ? "" : `${filter} `}testimonials found.
-              </p>
-            </div>
+            <AdminEmpty>No {filter === "all" ? "" : `${filter} `}testimonials found.</AdminEmpty>
           ) : (
             <div className="space-y-4">
               {filteredTestimonials.map((testimonial) => (
-                <article
+                <AdminCard
                   key={testimonial.id}
                   className="rounded-xl border border-slate-200 p-4 transition hover:border-slate-300 sm:p-5"
                 >
@@ -237,15 +215,15 @@ export default function TestimonialsAdminClient() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="font-semibold text-[#003251]">{testimonial.name}</h2>
-                        <span
+                        <AdminTag
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ring-1 ring-inset ${STATUS_STYLES[testimonial.status]}`}
                         >
                           <StatusIcon status={testimonial.status} />
                           {testimonial.status}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                        </AdminTag>
+                        <AdminTag className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
                           {testimonial.client_type}
-                        </span>
+                        </AdminTag>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                         <a
@@ -263,7 +241,7 @@ export default function TestimonialsAdminClient() {
 
                     <div className="flex shrink-0 flex-wrap gap-2">
                       {testimonial.status !== "approved" && (
-                        <button
+                        <AdminButton
                           type="button"
                           onClick={() => updateStatus(testimonial.id, "approved")}
                           disabled={updatingId !== null}
@@ -275,10 +253,10 @@ export default function TestimonialsAdminClient() {
                             <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
                           )}
                           Approve
-                        </button>
+                        </AdminButton>
                       )}
                       {testimonial.status !== "declined" && (
-                        <button
+                        <AdminButton
                           type="button"
                           onClick={() => updateStatus(testimonial.id, "declined")}
                           disabled={updatingId !== null}
@@ -290,31 +268,21 @@ export default function TestimonialsAdminClient() {
                             <XCircle aria-hidden="true" className="h-4 w-4" />
                           )}
                           Decline
-                        </button>
+                        </AdminButton>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-4 flex gap-1 text-[#2f87a8]" aria-label={`${testimonial.rating} out of 5 stars`}>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star
-                        key={index}
-                        aria-hidden="true"
-                        className="h-4 w-4"
-                        fill={index < testimonial.rating ? "currentColor" : "none"}
-                        strokeWidth={index < testimonial.rating ? 0 : 1.75}
-                      />
-                    ))}
-                  </div>
+                  <Rate className="mt-4" disabled value={testimonial.rating} aria-label={`${testimonial.rating} out of 5 stars`} />
                   <blockquote className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
                     “{testimonial.quote}”
                   </blockquote>
-                </article>
+                </AdminCard>
               ))}
             </div>
           )}
         </div>
-      </section>
+      </AdminCard>
     </>
   );
 }

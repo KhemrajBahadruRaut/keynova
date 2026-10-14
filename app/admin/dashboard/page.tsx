@@ -1,5 +1,14 @@
 "use client";
 
+import { Statistic } from "antd";
+
+import {
+  AdminButton,
+  AdminCard,
+  AdminNotice as ToastNotice,
+  AdminTag,
+} from "@/app/admin/dashboard/_components/AdminUI";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,7 +26,7 @@ import {
   RefreshCw,
   UsersRound,
 } from "lucide-react";
-import { ToastNotice } from "@/components/ui/FeedbackProvider";
+
 
 type ApiPayload = {
   status?: string;
@@ -202,7 +211,7 @@ export default function AdminDashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            <AdminButton
               type="button"
               onClick={() => loadDashboard(true)}
               disabled={refreshing}
@@ -210,7 +219,7 @@ export default function AdminDashboardPage() {
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
               Refresh
-            </button>
+            </AdminButton>
             <Link
               href="/"
               target="_blank"
@@ -239,26 +248,25 @@ export default function AdminDashboardPage() {
             <Link
               key={label}
               href={href}
-              className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/3 transition hover:-translate-y-0.5 hover:border-[#2f87a8]/35 hover:shadow-lg hover:shadow-[#003251]/6"
+              className="group block"
             >
-              <div className="flex items-start justify-between gap-4">
-                <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${style}`}>
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#2f7895]" aria-hidden="true" />
-              </div>
-              <p className="mt-5 text-3xl font-semibold tracking-tight text-[#003251]">
-                {loading ? <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-100" /> : value}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-700">{label}</p>
-              <p className="mt-1 text-xs text-slate-400">{detail}</p>
+              <AdminCard hoverable styles={{ body: { padding: 20 } }}>
+                <div className="flex items-start justify-between gap-4">
+                  <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${style}`}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#2f7895]" aria-hidden="true" />
+                </div>
+                <Statistic className="mt-5" title={label} value={value} loading={loading} styles={{ content: { color: "#003251", fontSize: 30, fontWeight: 700 } }} />
+                <p className="mt-1 text-xs text-slate-400">{detail}</p>
+              </AdminCard>
             </Link>
           ))}
         </div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        <AdminCard className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
             <div>
               <h2 className="font-semibold text-[#003251]">Work queue</h2>
@@ -282,16 +290,16 @@ export default function AdminDashboardPage() {
                     {count === 0 ? "Nothing waiting" : `${count} ${count === 1 ? "item" : "items"} waiting`}
                   </span>
                 </span>
-                <span className={`min-w-8 rounded-full px-2.5 py-1 text-center text-xs font-bold ${count > 0 ? "bg-[#003251] text-white" : "bg-slate-100 text-slate-400"}`}>
+                <AdminTag className={`min-w-8 rounded-full px-2.5 py-1 text-center text-xs font-bold ${count > 0 ? "bg-[#003251] text-white" : "bg-slate-100 text-slate-400"}`}>
                   {loading ? "–" : count}
-                </span>
+                </AdminTag>
                 <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:text-[#2f7895]" aria-hidden="true" />
               </Link>
             ))}
           </div>
-        </section>
+        </AdminCard>
 
-        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+        <AdminCard className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
           <div>
             <h2 className="font-semibold text-[#003251]">Quick actions</h2>
             <p className="mt-1 text-xs text-slate-400">Common website management tasks</p>
@@ -314,7 +322,7 @@ export default function AdminDashboardPage() {
               </Link>
             ))}
           </div>
-        </section>
+        </AdminCard>
       </div>
     </div>
   );
