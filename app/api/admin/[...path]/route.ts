@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 
 import { getBackendUrl } from "@/lib/auth/backend";
 import { getMailSettingsAccessToken } from "@/lib/auth/mail-settings-access";
 import { deleteAdminSession, getAdminSession } from "@/lib/auth/session";
 
 export const maxDuration = 60;
+export const runtime = "nodejs";
 
 const MAX_PROXY_BODY_BYTES = Math.floor(4.25 * 1024 * 1024);
+const MAX_ADMIN_IMAGE_PIXELS = 25_000_000;
+const ADMIN_IMAGE_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
+const ADMIN_IMAGE_UPLOADS: Record<
+  string,
+  { fields: string[]; maxDimension: number }
+> = {
+  "team/create_member.php": { fields: ["photo"], maxDimension: 1200 },
+  "team/update_member.php": { fields: ["photo"], maxDimension: 1200 },
+  "property/create_property.php": { fields: ["images[]"], maxDimension: 2400 },
+  "property/update_property.php": { fields: ["images[]"], maxDimension: 2400 },
+  "content/upload_image.php": { fields: ["image"], maxDimension: 2400 },
+};
 
 const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "property/get_properties.php",
@@ -48,6 +62,75 @@ function unauthorizedResponse() {
     { status: "error", message: "Your session has expired." },
     { status: 401, headers: { "Cache-Control": "no-store" } },
   );
+}
+
+async function convertAdminImageField(
+  formData: FormData,
+  fieldName: string,
+  maxDimension: number,
+): Promise<NextResponse | null> {
+  const entries = formData.getAll(fieldName);
+  if (!entries.some((entry) => entry instanceof File && entry.size > 0)) {
+    return null;
+  }
+
+  formData.delete(fieldName);
+  for (const entry of entries) {
+    if (!(entry instanceof File) || entry.size <= 0) {
+      formData.append(fieldName, entry);
+      continue;
+    }
+
+    let optimizedImage: Buffer;
+    try {
+      const source = sharp(Buffer.from(await entry.arrayBuffer()), {
+        limitInputPixels: MAX_ADMIN_IMAGE_PIXELS,
+      });
+      const metadata = await source.metadata();
+      if (!metadata.format || !ADMIN_IMAGE_FORMATS.has(metadata.format)) {
+        const label = fieldName === "photo" ? "photo" : "image";
+        return NextResponse.json(
+          {
+            status: "error",
+            message: `The ${label} must be a JPG, PNG, WebP, or GIF image.`,
+          },
+          { status: 422, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+
+      optimizedImage = await source
+        .rotate()
+        .resize({
+          width: maxDimension,
+          height: maxDimension,
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 85, effort: 4 })
+        .toBuffer();
+    } catch (error) {
+      console.error(`Admin image conversion failed for ${fieldName}:`, error);
+      const label = fieldName === "photo" ? "photo" : "image";
+      return NextResponse.json(
+        {
+          status: "error",
+          message: `The ${label} could not be processed. Choose a valid image and try again.`,
+        },
+        { status: 422, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    const baseName =
+      entry.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) ||
+      "image";
+    formData.append(
+      fieldName,
+      new Blob([Uint8Array.from(optimizedImage)], { type: "image/webp" }),
+      `${baseName}.webp`,
+    );
+  }
+
+  return null;
 }
 
 async function proxyAdminRequest(
@@ -92,8 +175,10 @@ async function proxyAdminRequest(
     Accept: "application/json",
     Authorization: `Bearer ${session.backendToken}`,
   });
+  const imageUpload =
+    request.method === "POST" ? ADMIN_IMAGE_UPLOADS[endpoint] : undefined;
   const contentType = request.headers.get("content-type");
-  if (contentType) headers.set("Content-Type", contentType);
+  if (contentType && !imageUpload) headers.set("Content-Type", contentType);
   if (MAIL_SETTINGS_ENDPOINTS.has(endpoint)) {
     const mailSettingsAccess = await getMailSettingsAccessToken();
     if (mailSettingsAccess) {
@@ -102,12 +187,31 @@ async function proxyAdminRequest(
   }
 
   try {
+    let body: BodyInit | undefined;
+    if (request.method !== "GET") {
+      if (imageUpload) {
+        const formData = await request.formData();
+        for (const fieldName of imageUpload.fields) {
+          const conversionError = await convertAdminImageField(
+            formData,
+            fieldName,
+            imageUpload.maxDimension,
+          );
+          if (conversionError) return conversionError;
+        }
+
+        body = formData;
+      } else {
+        body = await request.arrayBuffer();
+      }
+    }
+
     const backendResponse = await fetch(
       getBackendUrl(endpoint, request.nextUrl.search),
       {
         method: request.method,
         headers,
-        body: request.method === "GET" ? undefined : await request.arrayBuffer(),
+        body,
         cache: "no-store",
         signal: AbortSignal.timeout(55_000),
       },

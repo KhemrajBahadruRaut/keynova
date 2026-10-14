@@ -614,7 +614,7 @@ export default function TeamAdminClient() {
                   Photo {editingMember && <span className="font-normal text-slate-400">(leave empty to keep the current image)</span>}
                 </label>
                 <p className="mt-1 text-xs text-slate-400">
-                  JPG, PNG, WebP, or GIF. Maximum 4 MB. Choose any crop size or proportion after selecting.
+                  JPG, PNG, WebP, or GIF, up to 4 MB. Photos are optimized and saved as WebP. Choose any crop size or proportion after selecting.
                 </p>
                 <AdminUploadInput
                   key={`${editingMember?.id || "new"}-${showForm ? "open" : "closed"}`}

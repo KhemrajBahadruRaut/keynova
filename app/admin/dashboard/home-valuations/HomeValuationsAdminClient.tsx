@@ -502,7 +502,7 @@ export default function HomeValuationsAdminClient() {
                 className="mt-3"
                 buttonLabel={uploading ? "Uploading…" : "Upload image"} loading={uploading} />
               <FieldError id="valuation-image-upload-error" error={uploadError} />
-              <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
+              <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB. Uploads are saved as WebP.</p>
             </div>
           </div>
         </div>

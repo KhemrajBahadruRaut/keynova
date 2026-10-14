@@ -1204,7 +1204,7 @@ export default function PropertiesAdminClient() {
                     Property Images
                   </label>
                   <p id="property-images-help" className="mb-2 text-xs text-gray-500">
-                    JPG, PNG, WebP, or GIF. Maximum 20 images and 4 MB per image.
+                    JPG, PNG, WebP, or GIF. Maximum 20 images and 4 MB per image. Uploads are saved as WebP.
                   </p>
                   {editProperty && existingImages.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">

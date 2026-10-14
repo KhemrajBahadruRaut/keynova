@@ -405,7 +405,7 @@ export default function HeroImagesAdminClient() {
                     buttonLabel={uploadingIndex === index ? "Uploading…" : "Upload replacement"} loading={uploadingIndex === index} />
                   <FieldError id={`hero-${index}-upload-error`} error={uploadErrors[index]} />
                   <p className="mt-2 text-xs text-slate-500">
-                    Use a wide landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB.
+                    Use a wide landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB. Uploads are saved as WebP.
                   </p>
                 </div>
 

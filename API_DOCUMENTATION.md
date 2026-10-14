@@ -290,7 +290,7 @@ Both use multipart form data and require the admin cookie. Direct PHP paths acce
 | `lng` | No | Numeric longitude from -180 to 180 |
 | `show_on_listing` | At least one publication flag | String `1` enables; anything else disables |
 | `show_off_market` | At least one publication flag | String `1` enables; anything else disables |
-| `images[]` | No | JPG, JPEG, PNG, WebP, or GIF files |
+| `images[]` | No | JPG, JPEG, PNG, WebP, or GIF files; admin uploads are converted to WebP at up to 2400 × 2400 |
 | `documents[]` | No | PDF, DOC, or DOCX files; larger files should use chunk upload |
 
 At least one publication flag must be enabled. Agent display/contact fields are populated from the selected team member; do not submit copied agent fields as the authoritative values.
@@ -625,7 +625,7 @@ Lists sort by `sort_order`, then `id`, ascending. A member has:
   "slug": "example-agent",
   "name": "Alex Example",
   "role": "Real Estate Agent",
-  "photo": "team_0123456789abcdef0123456789abcdef.jpg",
+  "photo": "team_0123456789abcdef0123456789abcdef.webp",
   "bio": "Agent biography",
   "email": "alex@example.com",
   "phone": "6175550123",
@@ -654,7 +654,7 @@ Photo, email, and phone can be null. Detail lookup expects a canonical slug; a n
 | `phone` | No | Exactly ten unformatted digits; blank becomes null |
 | `sort_order` | No | Integer text 0–9999; default `0` |
 | `is_active` | No | `1`, `true`, `on`, or `yes` enables; default `1`; other values disable |
-| `photo` | Create: yes; update: no | JPG, PNG, WebP, or GIF, up to 4 MiB |
+| `photo` | Create: yes; update: no | JPG, PNG, WebP, or GIF, up to 4 MiB; the admin API rotates, resizes to at most 1200×1200, and saves it as WebP |
 
 Update submits the full member form and preserves the existing photo if a replacement is omitted. Reserved slug names are listed in `team/team_helpers.php`. Duplicate slugs return `409`; invalid fields return `422`; updating an unknown member returns `404`.
 
@@ -706,7 +706,7 @@ Allowed `page_key` values: `buywithus`, `listwithus`, `homevaluation`, `homehero
 | GET | `BACKEND/content/get_content.php` | Query `page_key` | `200`, record or null in `data` |
 | GET | `SITE/api/admin/content/get_admin_content.php` | Query `page_key` | `200`, record or null in `data` |
 | POST | `SITE/api/admin/content/update_content.php` | JSON `page_key`, complete `content` object | `200`, saved record in `data` |
-| POST | `SITE/api/admin/content/upload_image.php` | Multipart `page_key`, `image` | `201`, `{ "image": "<filename>" }` in `data` |
+| POST | `SITE/api/admin/content/upload_image.php` | Multipart `page_key`, `image` | `201`, `{ "image": "<filename.webp>" }` in `data`; images are converted to WebP at up to 2400 × 2400 |
 
 All `SITE/api/admin` paths require the admin cookie. A saved record has:
 
@@ -882,7 +882,7 @@ MiB/KiB below mean powers of 1,024. PHP server configuration can impose addition
 | Email settings update | 16 KiB |
 | Contact, property inquiry, valuation, agent actions JSON | 32 KiB |
 | Website content JSON update | 250,000 bytes |
-| Team photo / page content image | 4 MiB per image |
+| Admin team / property / page-content image | 4 MiB per image; converted to WebP (maximum edge 1200 px for team, 2400 px for property and page content) |
 | Team thumbnail source | 4 MiB |
 | Property image in current admin UI | 4 MiB per file; multipart request must also fit the proxy limit |
 | Visitor profile image | 5 MiB; sent directly to PHP |

@@ -517,7 +517,7 @@ export default function PageContentAdminClient() {
                     className="mt-3"
                     buttonLabel={uploadingStep === stepIndex ? "Uploading…" : "Upload image"} loading={uploadingStep === stepIndex} />
                   <FieldError id={`service-step-${step.id}-upload-error`} error={uploadErrors[stepIndex]} />
-                  <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB.</p>
+                  <p className="mt-2 text-xs text-slate-500">JPG, PNG, WebP, or GIF. Maximum 4 MB. Uploads are saved as WebP.</p>
                 </div>
               </div>
             </AdminCard>
