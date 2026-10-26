@@ -23,6 +23,7 @@ import { Pencil, Plus, Trash2, UsersRound } from "lucide-react";
 import ImageCropModal from "@/components/ui/ImageCropModal";
 
 import { phoneDigits } from "@/lib/phone";
+import { orderTeamMembers } from "@/lib/team-order";
 
 import {
   hasValidationErrors,
@@ -143,6 +144,15 @@ export default function TeamAdminClient() {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const pinnedMemberIds = new Set(
+    members
+      .filter((member) => member.is_active)
+      .slice(0, 4)
+      .map((member) => member.id),
+  );
+  const showDisplayOrder = editingMember
+    ? pinnedMemberIds.has(editingMember.id)
+    : members.filter((member) => member.is_active).length < 4;
 
   const handleUnauthorized = useCallback(() => {
     router.replace("/admin");
@@ -162,7 +172,16 @@ export default function TeamAdminClient() {
         throw new Error(payload.message || "Unable to load team members.");
       }
 
-      setMembers(payload.data || []);
+      const fetchedMembers = payload.data || [];
+      const publishedMembers = orderTeamMembers(
+        fetchedMembers.filter((member) => member.is_active),
+        (member) => member.sort_order,
+      );
+      const hiddenMembers = orderTeamMembers(
+        fetchedMembers.filter((member) => !member.is_active),
+        (member) => member.sort_order,
+      );
+      setMembers([...publishedMembers, ...hiddenMembers]);
       setError("");
     } catch (loadError) {
       setError(
@@ -434,6 +453,8 @@ export default function TeamAdminClient() {
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             Manage the people shown on the website and their individual profiles.
+            The first four published profiles keep their display order; the rest
+            are sorted alphabetically by name.
           </p>
         </div>
         <AdminButton
@@ -462,7 +483,7 @@ export default function TeamAdminClient() {
               </Space>
             },
             { title: "Status", key: "status", width: 130, render: (_, member) => <Tag color={member.is_active ? "success" : "default"}>{member.is_active ? "Published" : "Hidden"}</Tag> },
-            { title: "Profile", key: "profile", width: 220, render: (_, member) => <div><Typography.Link href={`/${member.slug}`} target="_blank" rel="noreferrer">/{member.slug}</Typography.Link><p className="mt-1 text-xs text-slate-500">Display order {member.sort_order}</p></div> },
+            { title: "Profile", key: "profile", width: 220, render: (_, member) => <div><Typography.Link href={`/${member.slug}`} target="_blank" rel="noreferrer">/{member.slug}</Typography.Link>{pinnedMemberIds.has(member.id) && <p className="mt-1 text-xs text-slate-500">Display order {member.sort_order}</p>}</div> },
             {
               title: "Actions", key: "actions", width: 210, render: (_, member) => <Space>
                 <Button onClick={() => openEdit(member)} icon={<Pencil size={16} />} aria-label={`Edit ${member.name}`}>Edit</Button>
@@ -578,23 +599,28 @@ export default function TeamAdminClient() {
                 <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("phone")}</p>
               </div>
 
-              <div>
-                <label htmlFor="team-order" className="text-sm font-medium text-slate-700">Display order</label>
-                <AdminInput
-                  id="team-order"
-                  type="number"
-                  min="0"
-                  max="9999"
-                  step="1"
-                  value={form.sort_order}
-                  onChange={(event) => updateField("sort_order", event.target.value)}
-                  onBlur={() => markTouched("sort_order")}
-                  className={inputClass("sort_order")}
-                  aria-invalid={Boolean(fieldError("sort_order"))}
-                />
-                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("sort_order")}</p>
-                <p className="text-xs text-slate-400">Lower numbers appear first.</p>
-              </div>
+              {showDisplayOrder && (
+                <div>
+                  <label htmlFor="team-order" className="text-sm font-medium text-slate-700">Display order</label>
+                  <AdminInput
+                    id="team-order"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    step="1"
+                    value={form.sort_order}
+                    onChange={(event) => updateField("sort_order", event.target.value)}
+                    onBlur={() => markTouched("sort_order")}
+                    className={inputClass("sort_order")}
+                    aria-invalid={Boolean(fieldError("sort_order"))}
+                  />
+                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("sort_order")}</p>
+                  <p className="text-xs text-slate-400">
+                    This order sets the first four positions. Profiles after those
+                    four are sorted alphabetically.
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-start pt-6">
                 <Checkbox

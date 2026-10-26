@@ -118,7 +118,6 @@ export function heroContentValidation(content: HeroContent) {
   content.slides.forEach((slide, index) => {
     image(`slide.${index}.image`, slide.image, "Image");
     add(`slide.${index}.alt`, slide.alt, "Image description", 250);
-    add(`slide.${index}.location`, slide.location, "Location label", 120);
   });
   return validation;
 }

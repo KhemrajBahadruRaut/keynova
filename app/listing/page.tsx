@@ -20,6 +20,7 @@ interface Property {
   agent_name: string;
   agent_photo: string;
   cover_image: string | null;
+  mls_number?: string;
   // Optional fields used by the new list/map layout — supply these from
   // the API if available; the UI degrades gracefully if they're missing.
   property_type?: string; // e.g. "Retail", "Multifamily", "Mixed-Use"
@@ -113,12 +114,34 @@ export default function ListingsPage() {
     let list = [...properties];
 
     if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.title?.toLowerCase().includes(q) ||
-          p.address?.toLowerCase().includes(q),
-      );
+      const queryTerms = search
+        .toLocaleLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      list = list.filter((property) => {
+        const searchableText = [
+          property.title,
+          property.address,
+          property.property_type,
+          property.status,
+          property.agent_name,
+          property.price,
+          property.building_size,
+          property.units,
+          property.year_built,
+          property.mls_number,
+          String(property.id),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase()
+          .replace(/[^a-z0-9]+/g, " ");
+
+        return queryTerms.every((term) => searchableText.includes(term));
+      });
     }
 
     if (type !== "All Property Types") {

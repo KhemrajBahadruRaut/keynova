@@ -67,6 +67,10 @@
   white-space: nowrap;
 }
 
+.menuCount {
+  flex-shrink: 0;
+}
+
 .mainContent {
   min-width: 0;
   transition: padding-left 0.2s ease;

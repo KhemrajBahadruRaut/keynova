@@ -289,7 +289,7 @@ export default function AdminShell({
                 <span className={styles.menuLabel}>{label}</span>
                 {!compact && <span className={styles.menuDescription}>{description}</span>}
               </span>
-              {!compact && <Badge count={counts[key]} overflowCount={99} size="small" color="#2f87a8" />}
+              {!compact && <Badge className={styles.menuCount} offset={[-12, 0]} count={counts[key]} overflowCount={99} size="small" color="#2f87a8" />}
             </Link>
           ),
         }),

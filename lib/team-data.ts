@@ -1,3 +1,5 @@
+import { orderTeamMembers } from "@/lib/team-order";
+
 export interface TeamMember {
   id: string;
   slug: string;
@@ -136,10 +138,11 @@ async function requestTeamMembers(signal?: AbortSignal): Promise<TeamMember[]> {
   }
 
   const payload = await readJson(response);
-  return unwrapList(payload)
+  const members = unwrapList(payload)
     .map(normalizeTeamMember)
-    .filter((member) => member.id && member.slug && member.name && member.isActive)
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+    .filter((member) => member.id && member.slug && member.name && member.isActive);
+
+  return orderTeamMembers(members, (member) => member.sortOrder);
 }
 
 async function requestTeamMember(

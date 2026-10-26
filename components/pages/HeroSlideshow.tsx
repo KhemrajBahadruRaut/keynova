@@ -72,6 +72,7 @@ export default function HeroSlideshow({ slides }: Readonly<{ slides: HeroSlide[]
           alt={index === activeSlide ? slide.alt : ""}
           aria-hidden={index !== activeSlide}
           fill
+          quality={90}
           sizes="100vw"
           loading="eager"
           fetchPriority={index === 0 ? "high" : "low"}
@@ -81,16 +82,13 @@ export default function HeroSlideshow({ slides }: Readonly<{ slides: HeroSlide[]
           }`}
         />
       ))}
-      <p className="absolute bottom-8 left-8 z-20 hidden text-xs font-semibold uppercase tracking-[0.2em] text-white/85 sm:block">
-        {slides[activeSlide].location}
-      </p>
       <div className="absolute bottom-8 right-8 z-20 flex gap-2" aria-label="Hero images">
         {slides.map((slide, index) => (
           <button
             key={`${slide.image}-${index}`}
             type="button"
             onClick={() => showSlide(index)}
-            aria-label={`Show image ${index + 1}: ${slide.location}`}
+            aria-label={`Show hero image ${index + 1}`}
             aria-current={index === activeSlide ? "true" : undefined}
             className={`h-2.5 rounded-full transition-all ${
               index === activeSlide ? "w-8 bg-white" : "w-2.5 bg-white/45 hover:bg-white/75"

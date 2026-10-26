@@ -62,7 +62,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
 
 export default function HeroImagesAdminClient() {
   const router = useRouter();
-  const { confirm } = useFeedback();
+  const { confirm, notify } = useFeedback();
   const [content, setContent] = useState<HeroContent>(() => cloneHeroContent());
   const [baseline, setBaseline] = useState("");
   const [updatedAt, setUpdatedAt] = useState("");
@@ -196,7 +196,7 @@ export default function HeroImagesAdminClient() {
   const addSlide = () => {
     if (content.slides.length >= MAX_SLIDES) return;
     setContent((current) => ({
-      slides: [...current.slides, { image: "", alt: "", location: "" }],
+      slides: [...current.slides, { image: "", alt: "", location: "Property" }],
     }));
     setError("");
     setNotice("New carousel item added. Complete it, then publish your changes.");
@@ -256,7 +256,10 @@ export default function HeroImagesAdminClient() {
       resetValidation();
       setBaseline(JSON.stringify(payload.data.content));
       setUpdatedAt(payload.data.updated_at);
-      setNotice(payload.message || "Homepage hero published.");
+      notify({
+        message: payload.message || "Homepage hero published.",
+        kind: "success",
+      });
       router.refresh();
     } catch (saveError) {
       setError(
@@ -362,7 +365,7 @@ export default function HeroImagesAdminClient() {
                   </AdminTag>
                   <div>
                     <h2 className="font-semibold text-[#003251]">
-                      {slide.location || `Hero image ${index + 1}`}
+                      Hero image {index + 1}
                     </h2>
                     <p className="text-xs text-slate-500">Carousel position {index + 1}</p>
                   </div>
@@ -405,7 +408,7 @@ export default function HeroImagesAdminClient() {
                     buttonLabel={uploadingIndex === index ? "Uploading…" : "Upload replacement"} loading={uploadingIndex === index} />
                   <FieldError id={`hero-${index}-upload-error`} error={uploadErrors[index]} />
                   <p className="mt-2 text-xs text-slate-500">
-                    Use a wide landscape image. JPG, PNG, WebP, or GIF; maximum 4 MB. Uploads are saved as WebP.
+                    Use a wide landscape image at least 1920 px wide for best clarity. JPG, PNG, WebP, or GIF; maximum 4 MB.
                   </p>
                 </div>
 
@@ -435,18 +438,6 @@ export default function HeroImagesAdminClient() {
                     <span className="mt-1.5 block text-xs font-normal text-slate-500">
                       Used by screen readers and shown if the image cannot load.
                     </span>
-                  </label>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Location label
-                    <AdminInput
-                      {...fieldAttributes(`slide.${index}.location`, `hero-${index}-location-error`)}
-                      value={slide.location}
-                      onChange={(event) => updateSlide(index, "location", event.target.value)}
-                      maxLength={120}
-                      placeholder="Beacon Hill, Boston"
-                      className={inputClass}
-                    />
-                    <FieldError id={`hero-${index}-location-error`} error={errors[`slide.${index}.location`]} />
                   </label>
                 </div>
               </div>
