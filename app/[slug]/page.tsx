@@ -87,7 +87,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
               </p>
             )}
 
-            <div className="mt-9 h-px w-20 bg-[#1c878f]" />
+            <div className="mt-9 h-px w-20 bg-[#003251]" />
 
             <div className="mt-8 whitespace-pre-line text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
               {overview ||
@@ -96,7 +96,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
 
             {experience && (
               <section className="mt-10 border-t border-slate-200 pt-8">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#1c878f]">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#003251]">
                   Experience
                 </p>
                 <div className="mt-5 whitespace-pre-line text-base leading-8 text-slate-600">

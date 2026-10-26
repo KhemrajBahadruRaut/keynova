@@ -262,7 +262,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                 value={draftSearch}
                 onChange={(event) => setDraftSearch(event.target.value)}
                 placeholder="Search by address, town, ZIP, or property type..."
-                className="w-full rounded border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-[#003251] focus:border-[#1c878f] focus:outline-none"
+                className="w-full rounded border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-[#003251] focus:border-[#003251] focus:outline-none"
               />
             </div>
             <button type="submit" className="rounded bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#164765]">
@@ -415,7 +415,7 @@ export default function AgentSearchLanding({ member }: Readonly<{ member: Public
                           aria-label={saved ? "Remove saved home" : "Save this home"}
                           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#003251] shadow disabled:opacity-60"
                         >
-                          {savingId === id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${saved ? "fill-[#1c878f] text-[#1c878f]" : ""}`} />}
+                          {savingId === id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${saved ? "fill-[#003251] text-[#003251]" : ""}`} />}
                         </button>
                       </div>
                       <div className="p-4">

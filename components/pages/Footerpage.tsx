@@ -82,6 +82,9 @@ const FooterPage: React.FC = () => {
             <Link href="/contact" className="hover:text-white">
               Contact Us
             </Link>
+            <Link href="/privacy-policy" className="hover:text-white">
+              Privacy Policy
+            </Link>
           </div>
 
           <div className="mt-5 flex gap-3">

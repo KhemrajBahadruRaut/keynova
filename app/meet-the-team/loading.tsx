@@ -7,7 +7,7 @@ export default function MeetTheTeamLoading() {
         <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
             <div key={index}>
-              <div className="aspect-[4/5] bg-slate-200" />
+              <div className="aspect-4/5 bg-slate-200" />
               <div className="mt-4 h-5 w-3/5 bg-slate-200" />
               <div className="mt-2 h-4 w-4/5 bg-slate-100" />
             </div>

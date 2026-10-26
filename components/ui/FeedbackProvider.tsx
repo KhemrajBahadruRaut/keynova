@@ -127,7 +127,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
       {children}
 
       <div
-        className="pointer-events-none fixed inset-x-4 bottom-4 z-[120] flex flex-col items-end gap-2 sm:left-auto sm:right-5 sm:w-full sm:max-w-sm"
+        className="pointer-events-none fixed inset-x-4 bottom-4 z-120 flex flex-col items-end gap-2 sm:left-auto sm:right-5 sm:w-full sm:max-w-sm"
         aria-live="polite"
         aria-atomic="false"
       >
@@ -173,7 +173,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
 
       {confirmation && (
         <div
-          className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/35 px-4 py-8 backdrop-blur-[2px]"
+          className="fixed inset-0 z-130 flex items-center justify-center bg-slate-950/35 px-4 py-8 backdrop-blur-[2px]"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) settleConfirmation(false);
           }}

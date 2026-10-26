@@ -48,6 +48,8 @@ function initialForm(content: HomeValuationContent): ValuationForm {
 export default function HomeValuation({
   content,
 }: Readonly<{ content: HomeValuationContent }>) {
+  const privacyPolicyHref =
+    content.privacyPolicyHref === "#" ? "/privacy-policy" : content.privacyPolicyHref;
   const [form, setForm] = useState<ValuationForm>(() => initialForm(content));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -306,9 +308,9 @@ export default function HomeValuation({
             <p className="text-xs leading-relaxed text-[#003251]">
               {content.footerDisclosure}{" "}
               <a
-                href={content.privacyPolicyHref}
+                href={privacyPolicyHref}
                 className="underline hover:text-[#003251]/80"
-                {...(/^https?:\/\//i.test(content.privacyPolicyHref)
+                {...(/^https?:\/\//i.test(privacyPolicyHref)
                   ? { target: "_blank", rel: "noreferrer" }
                   : {})}
               >

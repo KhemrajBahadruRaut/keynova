@@ -15,7 +15,7 @@ type PhoneInputProps = Omit<
 export default function PhoneInput({
   value,
   onValueChange,
-  placeholder = "(774) 287-6819",
+  placeholder = "Phone Number",
   autoComplete = "tel",
   inputMode = "numeric",
   ...props

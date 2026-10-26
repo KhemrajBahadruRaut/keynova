@@ -25,6 +25,8 @@ interface Property {
   // the API if available; the UI degrades gracefully if they're missing.
   property_type?: string; // e.g. "Retail", "Multifamily", "Mixed-Use"
   status?: string; // e.g. "Subject To Offer"
+  show_on_listing?: boolean;
+  show_off_market?: boolean;
   lat?: number;
   lng?: number;
 }
@@ -36,7 +38,7 @@ export default function ListingsPage() {
   const pathname = usePathname();
   const router = useRouter();
   const isOffMarket = pathname === "/off-market";
-  const destination = isOffMarket ? "off_market" : "listing";
+  const destination = isOffMarket ? "off_market" : "all_public";
   const pageTitle = isOffMarket ? "Off Market" : "Property Listings";
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -184,6 +186,8 @@ export default function ListingsPage() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const detailsSource = (property: Property) =>
+    !property.show_on_listing && property.show_off_market ? "exclusive" : "listing";
 
   const resetFilters = () => {
     setSearch("");
@@ -444,7 +448,7 @@ export default function ListingsPage() {
                 <div
                   key={p.id}
                   onClick={() =>
-                    router.push(`/details?id=${p.id}&source=listing`)
+                    router.push(`/details?id=${p.id}&source=${detailsSource(p)}`)
                   }
                   onMouseEnter={() => setHoveredId(p.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -536,9 +540,11 @@ export default function ListingsPage() {
           <ListingsMap
             properties={pageItems}
             hoveredId={hoveredId}
-            onMarkerClick={(id) =>
-              router.push(`/details?id=${id}&source=listing`)
-            }
+            onMarkerClick={(id) => {
+              const property = pageItems.find((item) => item.id === id);
+              const source = property ? detailsSource(property) : "listing";
+              router.push(`/details?id=${id}&source=${source}`);
+            }}
           />
         </div>
       </div>

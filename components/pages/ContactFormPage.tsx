@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import contactBackground from "@/public/contacts/contact-bg.png";
@@ -382,9 +383,9 @@ export default function LetsTalkPage({
               time or reply &apos;help&apos; for assistance. You can also click the
               unsubscribe link in the emails. Message and data rates may apply.
               Message frequency may vary.{" "}
-              <a href="#" className="text-[#003251] hover:underline">
+              <Link href="/privacy-policy" className="text-[#003251] hover:underline">
                 Privacy Policy
-              </a>
+              </Link>
             </p>
 
             {formStatus && (

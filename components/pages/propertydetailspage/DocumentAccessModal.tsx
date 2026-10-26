@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Download, X } from "lucide-react";
 import PhoneInput from "@/components/ui/PhoneInput";
 import {
@@ -493,6 +494,12 @@ export default function DocumentAccessModal({
               {required
                 ? " view this property and its documents."
                 : " unlock the documents for this property."}
+            </p>
+            <p className="-mt-3 text-xs leading-5 text-gray-500">
+              We use these details to verify access and support your visitor account. Read our{" "}
+              <Link href="/privacy-policy" className="font-medium text-[#003251] underline underline-offset-2">
+                Privacy Policy
+              </Link>.
             </p>
             {error && (
               <p

@@ -31,7 +31,7 @@ export interface PropertyRecord {
   lng: number | null;
 }
 
-export type PropertyDestination = "listing" | "off_market";
+export type PropertyDestination = "listing" | "off_market" | "all_public";
 
 type ApiEnvelope = {
   status?: string;

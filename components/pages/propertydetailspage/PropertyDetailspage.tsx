@@ -733,7 +733,7 @@ export default function PropertyDetailsPage({
                 I agree to be contacted by KeyNova Group via call, email, and text for real
                 estate services. To opt out, you can reply &quot;Stop&quot; at any time or reply
                 &quot;Help&quot; for assistance. Message and data rates may apply. Message frequency
-                may vary. <a href="#" className="text-[#003251] hover:underline">Privacy Policy</a>
+                may vary. <Link href="/privacy-policy" className="text-[#003251] hover:underline">Privacy Policy</Link>
               </p>
 
               {formStatus && (
