@@ -4,6 +4,7 @@ import {
   Children,
   isValidElement,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   type ButtonHTMLAttributes,
@@ -16,7 +17,6 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import {
-  Alert,
   App,
   Button,
   Card,
@@ -222,7 +222,21 @@ export function AdminTag({ className = "", children, ...props }: HTMLAttributes<
 }
 
 export function AdminNotice({ message, kind = "info" }: { message?: string | null; kind?: "success" | "error" | "info" }) {
-  return message ? <Alert key={message} title={message} type={kind} showIcon closable style={{ marginBottom: 16 }} /> : null;
+  const { notify } = useAdminFeedback();
+  const lastMessage = useRef("");
+
+  useEffect(() => {
+    if (!message) {
+      lastMessage.current = "";
+      return;
+    }
+    if (lastMessage.current === message) return;
+
+    lastMessage.current = message;
+    notify({ message, kind, duration: kind === "error" ? 6500 : 4500 });
+  }, [kind, message, notify]);
+
+  return null;
 }
 
 export function AdminLoading({ children = "Loading…", className, ...props }: HTMLAttributes<HTMLDivElement>) {

@@ -5,6 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import { resolveHeroImage, type HeroSlide } from "@/lib/hero-content";
 
+function isUploadedHeroImage(source: string) {
+  return /(?:^|\/)page_content_homehero_[a-f0-9]{32}\.(?:jpe?g|png|webp|gif)(?:$|[?#])/i.test(
+    source,
+  );
+}
+
 export default function HeroSlideshow({ slides }: Readonly<{ slides: HeroSlide[] }>) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [requestedSlides, setRequestedSlides] = useState([0]);
@@ -73,6 +79,7 @@ export default function HeroSlideshow({ slides }: Readonly<{ slides: HeroSlide[]
           aria-hidden={index !== activeSlide}
           fill
           quality={90}
+          unoptimized={isUploadedHeroImage(resolveHeroImage(slide.image))}
           sizes="100vw"
           loading="eager"
           fetchPriority={index === 0 ? "high" : "low"}

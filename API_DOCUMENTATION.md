@@ -706,7 +706,8 @@ Allowed `page_key` values: `buywithus`, `listwithus`, `homevaluation`, `homehero
 | GET | `BACKEND/content/get_content.php` | Query `page_key` | `200`, record or null in `data` |
 | GET | `SITE/api/admin/content/get_admin_content.php` | Query `page_key` | `200`, record or null in `data` |
 | POST | `SITE/api/admin/content/update_content.php` | JSON `page_key`, complete `content` object | `200`, saved record in `data` |
-| POST | `SITE/api/admin/content/upload_image.php` | Multipart `page_key`, `image` | `201`, `{ "image": "<filename.webp>" }` in `data`; images are converted to WebP at up to 2400 × 2400 |
+| POST | `SITE/api/admin/content/upload_image.php` | Multipart `page_key`, `image` | `201`, `{ "image": "<filename>" }` in `data`; single-request uploads are limited to 4 MiB. `homehero` uploads keep the original image data, while other content uploads are converted to WebP at up to 2400 × 2400 |
+| POST | `SITE/api/admin/content/upload_image_chunk.php` | Multipart `page_key=homehero`, `upload_id`, `original_name`, `total_size`, `chunk_index`, `chunk_count`, `chunk` | `200` for a stored chunk; final chunk returns `201` with `{ "complete": true, "image": "<filename>" }` in `data` |
 
 All `SITE/api/admin` paths require the admin cookie. A saved record has:
 
@@ -722,7 +723,7 @@ All `SITE/api/admin` paths require the admin cookie. A saved record has:
 
 `data: null` means there is no saved override; the frontend uses defaults. Invalid page keys/content return `422`. Content update has a maximum JSON size of 250,000 bytes and replaces the complete content object. Removed uploaded image references may be deleted from disk.
 
-Images accept HTTP(S) URLs, site-relative image paths beginning with a single `/`, or generated `page_content_...` filenames, optionally prefixed with `uploads/`. Image uploads accept JPG, PNG, WebP, and GIF up to 4 MiB. Uploading an image does not publish it; submit its returned filename in a content update.
+Images accept HTTP(S) URLs, site-relative image paths beginning with a single `/`, or generated `page_content_...` filenames, optionally prefixed with `uploads/`. Image uploads accept JPG, PNG, WebP, and GIF. Homepage hero images can be uploaded in chunks up to 30 MB (30,000,000 bytes) total and 25 megapixels; their original format, dimensions, and image data are preserved, and they are served without Next.js image re-encoding. Other content uploads use a 4 MiB limit and are converted to WebP at up to 2400 × 2400. Uploading an image does not publish it; submit its returned filename in a content update.
 
 ### `homehero` schema
 
@@ -882,7 +883,8 @@ MiB/KiB below mean powers of 1,024. PHP server configuration can impose addition
 | Email settings update | 16 KiB |
 | Contact, property inquiry, valuation, agent actions JSON | 32 KiB |
 | Website content JSON update | 250,000 bytes |
-| Admin team / property / page-content image | 4 MiB per image; converted to WebP (maximum edge 1200 px for team, 2400 px for property and page content) |
+| Admin team / property / non-hero page-content image | 4 MiB per image; converted to WebP (maximum edge 1200 px for team, 2400 px for property and page content) |
+| Homepage hero image | 30,000,000 bytes total; 1.5 MiB chunks; original data preserved, maximum 25 megapixels |
 | Team thumbnail source | 4 MiB |
 | Property image in current admin UI | 4 MiB per file; multipart request must also fit the proxy limit |
 | Visitor profile image | 5 MiB; sent directly to PHP |

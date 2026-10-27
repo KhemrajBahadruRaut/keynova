@@ -49,6 +49,8 @@ type ContentRecord = {
 };
 
 const MAX_SLIDES = 8;
+const MAX_HERO_IMAGE_BYTES = 30_000_000;
+const HERO_IMAGE_CHUNK_BYTES = Math.floor(1.5 * 1024 * 1024);
 const inputClass =
   "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-slate-500 aria-invalid:focus:border-slate-500";
 
@@ -69,6 +71,7 @@ export default function HeroImagesAdminClient() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [uploadErrors, setUploadErrors] = useState<Record<number, string>>({});
@@ -154,33 +157,63 @@ export default function HeroImagesAdminClient() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    const fileError = validateImageUpload(file);
+    const fileError = validateImageUpload(file, MAX_HERO_IMAGE_BYTES);
     setUploadErrors((current) => ({ ...current, [index]: fileError }));
     if (fileError) return;
 
     setUploadingIndex(index);
+    setUploadProgress(0);
     setError("");
     setNotice("");
-    const formData = new FormData();
-    formData.append("page_key", "homehero");
-    formData.append("image", file);
 
     try {
-      const response = await fetch("/api/admin/content/upload_image.php", {
-        method: "POST",
-        body: formData,
-      });
-      if (response.status === 401) {
-        handleUnauthorized();
-        return;
+      const uploadId = crypto.randomUUID();
+      const chunkCount = Math.ceil(file.size / HERO_IMAGE_CHUNK_BYTES);
+      let uploadedImage: string | undefined;
+
+      for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
+        const start = chunkIndex * HERO_IMAGE_CHUNK_BYTES;
+        const chunk = file.slice(
+          start,
+          Math.min(start + HERO_IMAGE_CHUNK_BYTES, file.size),
+        );
+        const formData = new FormData();
+        formData.append("page_key", "homehero");
+        formData.append("upload_id", uploadId);
+        formData.append("original_name", file.name);
+        formData.append("total_size", String(file.size));
+        formData.append("chunk_index", String(chunkIndex));
+        formData.append("chunk_count", String(chunkCount));
+        formData.append("chunk", chunk, `${file.name}.part${chunkIndex}`);
+
+        const response = await fetch("/api/admin/content/upload_image_chunk.php", {
+          method: "POST",
+          body: formData,
+        });
+        if (response.status === 401) {
+          handleUnauthorized();
+          return;
+        }
+
+        const payload = await readPayload<{
+          complete?: boolean;
+          image?: string;
+        }>(response);
+        if (!response.ok || payload.status !== "success") {
+          throw new Error(payload.message || "Unable to upload the image.");
+        }
+
+        setUploadProgress(Math.round(((chunkIndex + 1) / chunkCount) * 100));
+        if (chunkIndex === chunkCount - 1) {
+          if (!payload.data?.complete || !payload.data.image) {
+            throw new Error("The image upload did not finish. Please try again.");
+          }
+          uploadedImage = payload.data.image;
+        }
       }
 
-      const payload = await readPayload<{ image?: string }>(response);
-      if (!response.ok || payload.status !== "success" || !payload.data?.image) {
-        throw new Error(payload.message || "Unable to upload the image.");
-      }
-
-      updateSlide(index, "image", payload.data.image);
+      if (!uploadedImage) throw new Error("The uploaded image was not returned.");
+      updateSlide(index, "image", uploadedImage);
       setNotice("Image uploaded. Publish changes to show it on the homepage.");
     } catch (uploadError) {
       setError(
@@ -190,6 +223,7 @@ export default function HeroImagesAdminClient() {
       );
     } finally {
       setUploadingIndex(null);
+      setUploadProgress(0);
     }
   };
 
@@ -406,10 +440,10 @@ export default function HeroImagesAdminClient() {
                     disabled={uploadingIndex !== null || saving}
                     onChange={(event) => uploadImage(index, event)}
                     className="mt-3"
-                    buttonLabel={uploadingIndex === index ? "Uploading…" : "Upload replacement"} loading={uploadingIndex === index} />
+                    buttonLabel={uploadingIndex === index ? `Uploading ${uploadProgress}%…` : "Upload replacement"} loading={uploadingIndex === index} />
                   <FieldError id={`hero-${index}-upload-error`} error={uploadErrors[index]} />
                   <p className="mt-2 text-xs text-slate-500">
-                    Use a wide landscape image at least 1920 px wide for best clarity. JPG, PNG, WebP, or GIF; maximum 4 MB.
+                    Use a wide landscape image at least 1920 px wide for best clarity. JPG, PNG, WebP, or GIF; maximum 30 MB.
                   </p>
                 </div>
 

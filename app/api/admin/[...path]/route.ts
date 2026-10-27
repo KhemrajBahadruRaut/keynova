@@ -40,6 +40,7 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "content/get_admin_content.php",
   "content/update_content.php",
   "content/upload_image.php",
+  "content/upload_image_chunk.php",
   "valuation/get_requests.php",
   "valuation/update_request_status.php",
   "testimonials/get_admin_testimonials.php",
@@ -133,6 +134,62 @@ async function convertAdminImageField(
   return null;
 }
 
+async function validatePreservedAdminImageField(
+  formData: FormData,
+  fieldName: string,
+): Promise<NextResponse | null> {
+  const entries = formData.getAll(fieldName);
+  if (!entries.some((entry) => entry instanceof File && entry.size > 0)) {
+    return null;
+  }
+
+  const label = fieldName === "photo" ? "photo" : "image";
+  for (const entry of entries) {
+    if (!(entry instanceof File) || entry.size <= 0) continue;
+
+    try {
+      const metadata = await sharp(Buffer.from(await entry.arrayBuffer()), {
+        limitInputPixels: MAX_ADMIN_IMAGE_PIXELS,
+      }).metadata();
+
+      if (!metadata.format || !ADMIN_IMAGE_FORMATS.has(metadata.format)) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: `The ${label} must be a JPG, PNG, WebP, or GIF image.`,
+          },
+          { status: 422, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+
+      if (
+        !metadata.width ||
+        !metadata.height ||
+        metadata.width * metadata.height > MAX_ADMIN_IMAGE_PIXELS
+      ) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: `The ${label} must be 25 megapixels or smaller.`,
+          },
+          { status: 422, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+    } catch (error) {
+      console.error(`Admin image validation failed for ${fieldName}:`, error);
+      return NextResponse.json(
+        {
+          status: "error",
+          message: `The ${label} must be a valid image.`,
+        },
+        { status: 422, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+  }
+
+  return null;
+}
+
 async function proxyAdminRequest(
   request: NextRequest,
   context: AdminProxyContext,
@@ -164,8 +221,7 @@ async function proxyAdminRequest(
     return NextResponse.json(
       {
         status: "error",
-        message:
-          "The upload is too large for Vercel. Use files no larger than 4 MB.",
+        message: "A single upload request is too large for Vercel.",
       },
       { status: 413, headers: { "Cache-Control": "no-store" } },
     );
@@ -191,12 +247,18 @@ async function proxyAdminRequest(
     if (request.method !== "GET") {
       if (imageUpload) {
         const formData = await request.formData();
+        const preserveHomeHeroOriginal =
+          endpoint === "content/upload_image.php" &&
+          formData.get("page_key") === "homehero";
+
         for (const fieldName of imageUpload.fields) {
-          const conversionError = await convertAdminImageField(
-            formData,
-            fieldName,
-            imageUpload.maxDimension,
-          );
+          const conversionError = preserveHomeHeroOriginal
+            ? await validatePreservedAdminImageField(formData, fieldName)
+            : await convertAdminImageField(
+                formData,
+                fieldName,
+                imageUpload.maxDimension,
+              );
           if (conversionError) return conversionError;
         }
 

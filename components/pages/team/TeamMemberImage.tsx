@@ -41,12 +41,12 @@ export default function TeamMemberImage({
   const uploadFilename = photo.startsWith(uploadPrefix)
     ? photo.slice(uploadPrefix.length)
     : "";
-  const isCardUpload = variant === "card" &&
+  const isTeamUpload =
     /^team_[a-f0-9]{32}\.(?:jpg|png|webp)$/.test(uploadFilename);
-  // Use one 1200px optimized source at every zoom level. A responsive srcset
-  // swaps sources during browser zoom and can leave portraits looking uneven.
-  const displayPhoto = isCardUpload
-    ? `/api/team-thumbnail/${uploadFilename}`
+  // Serve uploaded team portraits through a consistently resized source.
+  // Cards use 750px; profile views retain up to the full 1200px upload size.
+  const displayPhoto = isTeamUpload
+    ? `/api/team-thumbnail/${uploadFilename}${variant === "profile" ? "?size=profile" : ""}`
     : optimizable
       ? getImageProps({ src: photo, alt: member.name, width: 600, height: 750, quality: 90 }).props.src
       : photo;

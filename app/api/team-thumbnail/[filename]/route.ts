@@ -7,10 +7,13 @@ const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ filename: string }> },
 ) {
   const { filename } = await params;
+  const outputWidth = new URL(request.url).searchParams.get("size") === "profile"
+    ? 1200
+    : 750;
   if (!TEAM_UPLOAD_NAME.test(filename)) return new Response(null, { status: 404 });
   if (!API_BASE) return new Response(null, { status: 503 });
 
@@ -35,13 +38,12 @@ export async function GET(
     const thumbnail = await sharp(Buffer.from(input), { limitInputPixels: 25_000_000 })
       .rotate()
       .resize({
-        width: 750,
+        width: outputWidth,
         withoutEnlargement: true,
         kernel: "lanczos3",
         fastShrinkOnLoad: false,
       })
-      .sharpen({ sigma: 0.7 })
-      .webp({ quality: 90, effort: 4 })
+      .webp({ quality: 95, effort: 4 })
       .toBuffer();
 
     return new Response(new Uint8Array(thumbnail), {

@@ -55,13 +55,19 @@ export function validateOptionList(value: string, label: string, maxItems: numbe
   return "";
 }
 
-export function validateImageUpload(file: Pick<File, "size" | "type" | "name">) {
+export function validateImageUpload(
+  file: Pick<File, "size" | "type" | "name">,
+  maxBytes = 4 * 1024 * 1024,
+) {
   if (
     !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type) ||
     !/\.(?:jpe?g|png|webp|gif)$/i.test(file.name)
   ) return "Choose a JPG, PNG, WebP, or GIF image.";
   if (file.size === 0) return "Choose an image that is not empty.";
-  return file.size > 4 * 1024 * 1024 ? "Images must be 4 MB or smaller." : "";
+  const maxMegabytes = Math.round(maxBytes / 1_000_000);
+  return file.size > maxBytes
+    ? `Images must be ${maxMegabytes} MB or smaller.`
+    : "";
 }
 
 export function validateRecipientEmail(value: string, recipients: string[], index: number) {
