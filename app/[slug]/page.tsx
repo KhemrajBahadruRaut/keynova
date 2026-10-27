@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import TeamMemberImage from "@/components/pages/team/TeamMemberImage";
 import { agentPropertySiteUrl } from "@/lib/agent-domain";
 import { getTeamMember } from "@/lib/team-data";
+import { formatPhoneNumber } from "@/lib/phone";
 
 type TeamMemberPageProps = {
   params: Promise<{ slug: string }>;
@@ -47,6 +48,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
     requestHeaders.get("host") ||
     undefined;
   const telephone = member.phone.replace(/[^\d+]/g, "");
+  const displayPhone = formatPhoneNumber(member.phone) || member.phone;
   const [overview, experience] = member.bio.split(/\n\s*\nExperience\s*\n\s*\n/i, 2);
 
   return (
@@ -122,7 +124,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
                     className="inline-flex items-center gap-2 transition hover:underline hover:underline-offset-4"
                   >
                     <Phone aria-hidden="true" className="h-4 w-4" />
-                    {member.phone}
+                    {displayPhone}
                   </a>
                 )}
               </div>
