@@ -79,7 +79,7 @@ export default function ContactInquiriesClient() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#003251]">
           Administration
         </p>
         <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -92,7 +92,7 @@ export default function ContactInquiriesClient() {
 
       <ToastNotice message={error} kind="error" />
 
-      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#d1d5db] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-5 text-lg font-semibold text-gray-900">
             Contact Inquiries
@@ -104,7 +104,7 @@ export default function ContactInquiriesClient() {
             locale={{ emptyText: "No inquiries yet." }}
             columns={[
               { title: "Visitor", key: "visitor", width: 270, render: (_, inquiry) => <div><Typography.Text strong>{inquiry.name}</Typography.Text><p><a href={`mailto:${inquiry.email}`}>{inquiry.email}</a></p>{inquiry.phone && <a href={`tel:${inquiry.phone}`}>{inquiry.phone}</a>}</div> },
-              { title: "Source", key: "source", width: 220, render: (_, inquiry) => <Space orientation="vertical" size={4}><Tag color="blue">{inquiry.source === "property" ? "Property inquiry" : inquiry.source === "agent" ? "Agent inquiry" : "Website contact"}</Tag>{inquiry.agent_name && <Typography.Text type="secondary">{inquiry.agent_name}</Typography.Text>}{inquiry.help_with && <Tag>{inquiry.help_with}</Tag>}</Space> },
+              { title: "Source", key: "source", width: 220, render: (_, inquiry) => <Space orientation="vertical" size={4}><Tag color="#003251">{inquiry.source === "property" ? "Property inquiry" : inquiry.source === "agent" ? "Agent inquiry" : "Website contact"}</Tag>{inquiry.agent_name && <Typography.Text type="secondary">{inquiry.agent_name}</Typography.Text>}{inquiry.help_with && <Tag>{inquiry.help_with}</Tag>}</Space> },
               { title: "Subject", key: "subject", width: 300, render: (_, inquiry) => inquiry.source === "property" ? `Re: ${inquiry.property_title || "Property no longer available"}` : inquiry.subject || "General inquiry" },
               { title: "Submitted", dataIndex: "created_at", key: "created_at", width: 170, render: (value: string) => new Date(value.replace(" ", "T")).toLocaleDateString() },
             ]}

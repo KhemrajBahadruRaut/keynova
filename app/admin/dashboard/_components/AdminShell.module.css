@@ -1,6 +1,6 @@
 .desktopSider.desktopSider {
   display: none;
-  box-shadow: 8px 0 32px rgb(7 26 42 / 12%);
+  box-shadow: 8px 0 32px rgb(0 50 81 / 12%);
 }
 
 .sidebarBody {
@@ -69,6 +69,11 @@
 
 .menuCount {
   flex-shrink: 0;
+}
+
+.menuCount :global(.ant-badge-count) {
+  color: #003251;
+  box-shadow: 0 0 0 1px #003251;
 }
 
 .mainContent {

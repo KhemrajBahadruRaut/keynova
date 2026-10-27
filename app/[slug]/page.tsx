@@ -77,7 +77,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
           </a>
 
           <div className="flex flex-col justify-center px-7 py-12 sm:px-12 lg:px-16 lg:py-16">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#054044]">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#003251]">
               KeyNova Group
             </p>
             <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">

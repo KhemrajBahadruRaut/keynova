@@ -74,7 +74,7 @@ const STATUS_OPTIONS: Array<{ value: RequestStatus; label: string }> = [
   { value: "archived", label: "Archived" },
 ];
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#1c878f] focus:ring-2 focus:ring-[#1c878f]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-slate-500 aria-invalid:focus:border-slate-500";
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -348,7 +348,7 @@ export default function HomeValuationsAdminClient() {
       <AdminCard className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1c878f]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#003251]">
               Lead management
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-[#003251] sm:text-3xl">
@@ -362,7 +362,7 @@ export default function HomeValuationsAdminClient() {
             href="/homevaluation"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 self-start rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#1c878f]"
+            className="inline-flex items-center gap-2 self-start rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#003251]"
           >
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
             View public page
@@ -384,7 +384,7 @@ export default function HomeValuationsAdminClient() {
             columns={[
               { title: "Contact", key: "contact", width: 260, render: (_, request) => <div><Typography.Text strong>{request.name}</Typography.Text><p><a href={`mailto:${request.email}`}>{request.email}</a></p><a href={`tel:${request.phone}`}>{request.phone}</a></div> },
               { title: "Property", key: "property", width: 280, render: (_, request) => <div>{request.address}, {request.zip}<p className="mt-1 text-xs text-slate-500">{request.property_type} · {request.bedrooms} bedrooms · {request.bathrooms} bathrooms</p></div> },
-              { title: "Consent", key: "consent", width: 130, render: (_, request) => <Tag color={request.consent_given ? "success" : "default"}>{request.consent_given ? "Given" : "Not given"}</Tag> },
+              { title: "Consent", key: "consent", width: 130, render: (_, request) => <Tag color={request.consent_given ? "#003251" : "default"}>{request.consent_given ? "Given" : "Not given"}</Tag> },
               { title: "Submitted", dataIndex: "created_at", key: "created", width: 200, render: (value: string) => new Date(value.replace(" ", "T")).toLocaleString() },
               { title: "Status", key: "status", width: 180, render: (_, request) => <AdminSelect value={request.status} disabled={updatingId === request.id} aria-label={`Status for ${request.name}`} onChange={(event) => updateStatus(request.id, event.target.value as RequestStatus)}>{STATUS_OPTIONS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}</AdminSelect> },
             ]}

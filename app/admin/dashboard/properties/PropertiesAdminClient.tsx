@@ -389,8 +389,8 @@ export default function PropertiesAdminClient() {
   const fieldClass = (field: PropertyFormField, resize = false) =>
     `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${resize ? "resize-none " : ""
     }${fieldError(field)
-      ? "border-red-500 focus:ring-red-200"
-      : "border-slate-200 bg-slate-50 focus:border-[#6E9CAE] focus:bg-white focus:ring-[#6E9CAE]/25"
+      ? "border-slate-500 focus:ring-slate-200"
+      : "border-slate-200 bg-slate-50 focus:border-[#003251] focus:bg-white focus:ring-[#003251]/25"
     }`;
 
   const openCreateForm = () => {
@@ -766,13 +766,13 @@ export default function PropertiesAdminClient() {
       );
     if (geocodeStatus === "ok")
       return (
-        <p className="text-xs text-green-600 mt-1">
+        <p className="text-xs text-slate-600 mt-1">
           ✓ Location found — pin will appear on map
         </p>
       );
     if (geocodeStatus === "fail")
       return (
-        <p className="mt-1 text-xs text-red-500">
+        <p className="mt-1 text-xs text-slate-500">
           ⚠ Address not found on map — property will still be saved
         </p>
       );
@@ -788,7 +788,7 @@ export default function PropertiesAdminClient() {
 
 
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#003251]">
           Administration
         </p>
         <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -799,7 +799,7 @@ export default function PropertiesAdminClient() {
         </p>
       </div>
 
-      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#d1d5db] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <div>
             <div className="flex justify-between items-center mb-5">
@@ -808,7 +808,7 @@ export default function PropertiesAdminClient() {
               </h2>
               <AdminButton
                 onClick={openCreateForm}
-                className="flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c]"
+                className="flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003251]"
               >
                 <Plus className="h-4 w-4" /> Add Property
               </AdminButton>
@@ -822,7 +822,7 @@ export default function PropertiesAdminClient() {
                 { title: "Property", key: "property", width: 300, render: (_, property) => <div><Typography.Text strong>{property.title}</Typography.Text><p className="mt-1 text-sm text-slate-500">{property.address}</p></div> },
                 { title: "Price", dataIndex: "price", key: "price", width: 150 },
                 { title: "Details", key: "details", width: 200, render: (_, property) => <div>{property.building_size || "—"}<p className="text-xs text-slate-500">{property.units || "—"} units</p></div> },
-                { title: "Published to", key: "destination", width: 200, render: (_, property) => <Space wrap>{property.show_on_listing && <Tag color="blue">Listings</Tag>}{property.show_off_market && <Tag color="purple">Exclusive</Tag>}{!property.show_on_listing && !property.show_off_market && <Tag>Hidden</Tag>}</Space> },
+                { title: "Published to", key: "destination", width: 200, render: (_, property) => <Space wrap>{property.show_on_listing && <Tag color="#003251">Listings</Tag>}{property.show_off_market && <Tag color="#003251">Exclusive</Tag>}{!property.show_on_listing && !property.show_off_market && <Tag>Hidden</Tag>}</Space> },
                 {
                   title: "Actions", key: "actions", width: 220, render: (_, property) => <Space wrap>
                     <Button href={`/details?id=${property.id}&source=${property.show_off_market && !property.show_on_listing ? "exclusive" : "listing"}`} target="_blank" rel="noreferrer">View</Button>
@@ -860,7 +860,7 @@ export default function PropertiesAdminClient() {
                     setFormMsg({ type: "", text: "" });
                   }}
                   className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${showOnListing
-                    ? "border-[#6E9CAE] bg-[#edf4f6]"
+                    ? "border-[#003251] bg-[#f3f4f6]"
                     : "border-gray-200 hover:border-gray-300"
                     }`}
                 >
@@ -881,7 +881,7 @@ export default function PropertiesAdminClient() {
                     setFormMsg({ type: "", text: "" });
                   }}
                   className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${showOffMarket
-                    ? "border-[#6E9CAE] bg-[#edf4f6]"
+                    ? "border-[#003251] bg-[#f3f4f6]"
                     : "border-gray-200 hover:border-gray-300"
                     }`}
                 >
@@ -896,7 +896,7 @@ export default function PropertiesAdminClient() {
                 </Checkbox>
               </div>
               {!showOnListing && !showOffMarket && (
-                <p className="mt-2 text-xs text-red-600" role="alert">
+                <p className="mt-2 text-xs text-slate-600" role="alert">
                   Select at least one page.
                 </p>
               )}
@@ -928,7 +928,7 @@ export default function PropertiesAdminClient() {
                   />
                   <p
                     id="property-title-error"
-                    className="mt-1 min-h-4 text-xs text-red-600"
+                    className="mt-1 min-h-4 text-xs text-slate-600"
                     aria-live="polite"
                   >
                     {fieldError("title")}
@@ -959,7 +959,7 @@ export default function PropertiesAdminClient() {
 
                   <p
                     id="property-address-error"
-                    className="mt-1 min-h-4 text-xs text-red-600"
+                    className="mt-1 min-h-4 text-xs text-slate-600"
                     aria-live="polite"
                   >
                     {fieldError("address")}
@@ -1008,7 +1008,7 @@ export default function PropertiesAdminClient() {
                   />
                   <p
                     id="property-price-error"
-                    className="mt-1 min-h-4 text-xs text-red-600"
+                    className="mt-1 min-h-4 text-xs text-slate-600"
                     aria-live="polite"
                   >
                     {fieldError("price")}
@@ -1035,7 +1035,7 @@ export default function PropertiesAdminClient() {
                   />
                   <p
                     id="property-building-size-error"
-                    className="mt-1 min-h-4 text-xs text-red-600"
+                    className="mt-1 min-h-4 text-xs text-slate-600"
                     aria-live="polite"
                   >
                     {fieldError("building_size")}
@@ -1061,7 +1061,7 @@ export default function PropertiesAdminClient() {
                   />
                   <p
                     id="property-units-error"
-                    className="mt-1 min-h-4 text-xs text-red-600"
+                    className="mt-1 min-h-4 text-xs text-slate-600"
                     aria-live="polite"
                   >
                     {fieldError("units")}
@@ -1089,7 +1089,7 @@ export default function PropertiesAdminClient() {
                   />
                   <p
                     id="property-year-built-error"
-                    className="mt-1 min-h-4 text-xs text-red-600"
+                    className="mt-1 min-h-4 text-xs text-slate-600"
                     aria-live="polite"
                   >
                     {fieldError("year_built")}
@@ -1120,7 +1120,7 @@ export default function PropertiesAdminClient() {
               />
               <p
                 id="property-description-error"
-                className="mt-1 min-h-4 text-xs text-red-600"
+                className="mt-1 min-h-4 text-xs text-slate-600"
                 aria-live="polite"
               >
                 {fieldError("description")}
@@ -1149,7 +1149,7 @@ export default function PropertiesAdminClient() {
               />
               <p
                 id="property-highlights-error"
-                className="mt-1 min-h-4 text-xs text-red-600"
+                className="mt-1 min-h-4 text-xs text-slate-600"
                 aria-live="polite"
               >
                 {fieldError("highlights")}
@@ -1184,10 +1184,10 @@ export default function PropertiesAdminClient() {
               {form.agent_id && (() => {
                 const selectedAgent = agents.find((agent) => String(agent.id) === form.agent_id);
                 return selectedAgent ? (
-                  <div className="mt-3 rounded-xl border border-[#dbe5ea] bg-[#f7fafb] px-4 py-3">
+                  <div className="mt-3 rounded-xl border border-[#d1d5db] bg-[#f3f4f6] px-4 py-3">
                     <p className="text-sm font-semibold text-[#003251]">{selectedAgent.name}</p>
                     <p className="mt-0.5 text-xs text-slate-500">{selectedAgent.role}</p>
-                    <p className="mt-2 text-xs text-[#2f7895]">/{selectedAgent.slug}</p>
+                    <p className="mt-2 text-xs text-[#003251]">/{selectedAgent.slug}</p>
                   </div>
                 ) : null;
               })()}
@@ -1235,7 +1235,7 @@ export default function PropertiesAdminClient() {
                     type="file"
                     accept=".jpg,.jpeg,.png,.webp,.gif"
                     multiple
-                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
+                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#003251] hover:file:bg-slate-100"
                     onChange={handleAddImages}
                     onClick={() =>
                       setFileErrors((current) => ({
@@ -1246,7 +1246,7 @@ export default function PropertiesAdminClient() {
                     aria-invalid={Boolean(fileErrors.images)}
                     aria-describedby="property-images-help property-images-error"
                   />
-                  <p id="property-images-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p id="property-images-error" className="mt-1 min-h-4 text-xs text-slate-600" aria-live="polite">
                     {fileErrors.images}
                   </p>
                   {images.length > 0 && (
@@ -1301,10 +1301,11 @@ export default function PropertiesAdminClient() {
                           </span>
                           <AdminButton
                             type="button"
+                            danger
                             onClick={() =>
                               handleDeleteExistingDocument(doc.file)
                             }
-                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                            className="text-slate-500 hover:text-slate-700 text-xs font-medium"
                           >
                             Remove
                           </AdminButton>
@@ -1318,7 +1319,7 @@ export default function PropertiesAdminClient() {
                     type="file"
                     accept=".pdf,.doc,.docx"
                     multiple
-                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
+                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#003251] hover:file:bg-slate-100"
                     onChange={handleDocuments}
                     onClick={() =>
                       setFileErrors((current) => ({
@@ -1329,7 +1330,7 @@ export default function PropertiesAdminClient() {
                     aria-invalid={Boolean(fileErrors.documents)}
                     aria-describedby="property-documents-help property-documents-error"
                   />
-                  <p id="property-documents-error" className="mt-1 min-h-4 text-xs text-red-600" aria-live="polite">
+                  <p id="property-documents-error" className="mt-1 min-h-4 text-xs text-slate-600" aria-live="polite">
                     {fileErrors.documents}
                   </p>
                   {documents.length > 0 && (
@@ -1362,7 +1363,7 @@ export default function PropertiesAdminClient() {
               <AdminButton
                 type="submit"
                 disabled={formLoading || formHasErrors}
-                className="flex-1 rounded-lg bg-[#003251] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-lg bg-[#003251] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {formLoading
                   ? "Saving…"

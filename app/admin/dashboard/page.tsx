@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
       detail: `${metrics.listedProperties} visible on listings`,
       href: "/admin/dashboard/properties",
       Icon: Building2,
-      style: "bg-[#e9f4f7] text-[#17647b]",
+      style: "bg-[#f3f4f6] text-[#003251]",
     },
     {
       label: "Team members",
@@ -150,7 +150,7 @@ export default function AdminDashboardPage() {
       detail: `${metrics.activeTeam} active profiles`,
       href: "/admin/dashboard/team",
       Icon: UsersRound,
-      style: "bg-[#eef2ff] text-indigo-700",
+      style: "bg-[#f3f4f6] text-slate-700",
     },
     {
       label: "Contact inquiries",
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
       detail: "Messages received",
       href: "/admin/dashboard/contact-inquiries",
       Icon: MessageSquareText,
-      style: "bg-[#fff5e8] text-amber-700",
+      style: "bg-[#f3f4f6] text-slate-700",
     },
     {
       label: "Needs attention",
@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
       detail: "Pending reviews and requests",
       href: "/admin/dashboard/testimonials",
       Icon: FileCheck2,
-      style: "bg-[#fff0f1] text-rose-700",
+      style: "bg-[#f3f4f6] text-slate-700",
     },
   ];
 
@@ -176,21 +176,21 @@ export default function AdminDashboardPage() {
       count: metrics.valuations,
       href: "/admin/dashboard/home-valuations",
       Icon: HousePlus,
-      color: "text-amber-700 bg-amber-50",
+      color: "text-slate-700 bg-slate-50",
     },
     {
       label: "Unverified property visitors",
       count: metrics.documentRequests,
       href: "/admin/dashboard/document-requests",
       Icon: FileCheck2,
-      color: "text-sky-700 bg-sky-50",
+      color: "text-slate-700 bg-slate-50",
     },
     {
       label: "Testimonials awaiting review",
       count: metrics.testimonials,
       href: "/admin/dashboard/testimonials",
       Icon: Quote,
-      color: "text-violet-700 bg-violet-50",
+      color: "text-slate-700 bg-slate-50",
     },
   ];
 
@@ -200,7 +200,7 @@ export default function AdminDashboardPage() {
         <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full border border-white/10" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#80c5de]">
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/75">
               Admin overview
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
                   <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${style}`}>
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#2f7895]" aria-hidden="true" />
+                  <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#003251]" aria-hidden="true" />
                 </div>
                 <Statistic className="mt-5" title={label} value={value} loading={loading} styles={{ content: { color: "#003251", fontSize: 30, fontWeight: 700 } }} />
                 <p className="mt-1 text-xs text-slate-400">{detail}</p>
@@ -272,7 +272,7 @@ export default function AdminDashboardPage() {
               <h2 className="font-semibold text-[#003251]">Work queue</h2>
               <p className="mt-1 text-xs text-slate-400">Items that may need a response</p>
             </div>
-            {loading && <LoaderCircle className="h-4 w-4 animate-spin text-[#2f87a8]" aria-label="Loading" />}
+            {loading && <LoaderCircle className="h-4 w-4 animate-spin text-[#003251]" aria-label="Loading" />}
           </div>
           <div className="divide-y divide-slate-100">
             {workQueue.map(({ label, count, href, Icon, color }) => (
@@ -293,7 +293,7 @@ export default function AdminDashboardPage() {
                 <AdminTag className={`min-w-8 rounded-full px-2.5 py-1 text-center text-xs font-bold ${count > 0 ? "bg-[#003251] text-white" : "bg-slate-100 text-slate-400"}`}>
                   {loading ? "–" : count}
                 </AdminTag>
-                <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:text-[#2f7895]" aria-hidden="true" />
+                <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:text-[#003251]" aria-hidden="true" />
               </Link>
             ))}
           </div>
@@ -314,9 +314,9 @@ export default function AdminDashboardPage() {
               <Link
                 key={label}
                 href={href}
-                className="group rounded-xl border border-slate-200 p-4 transition hover:border-[#2f87a8]/45 hover:bg-[#f7fbfc]"
+                className="group rounded-xl border border-slate-200 p-4 transition hover:border-[#003251]/45 hover:bg-[#f3f4f6]"
               >
-                <Icon className="h-5 w-5 text-[#2f7895]" aria-hidden="true" />
+                <Icon className="h-5 w-5 text-[#003251]" aria-hidden="true" />
                 <p className="mt-3 text-sm font-semibold text-[#003251]">{label}</p>
                 <p className="mt-1 text-xs text-slate-400">{detail}</p>
               </Link>

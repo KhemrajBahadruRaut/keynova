@@ -77,15 +77,15 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#071d31] px-4 py-10">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full border border-[#5aa9c8]/20" />
-      <div className="pointer-events-none absolute -bottom-40 -right-28 h-112 w-md rounded-full bg-[#6E9CAE]/10 blur-3xl" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#003251] px-4 py-10">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full border border-white/10" />
+      <div className="pointer-events-none absolute -bottom-40 -right-28 h-112 w-md rounded-full bg-white/5 blur-3xl" />
       <form
         onSubmit={handleSubmit}
         className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl shadow-black/30"
         noValidate
       >
-        <div className="border-b-4 border-[#2f87a8] bg-[#003251] px-8 py-7 text-center">
+        <div className="border-b-4 border-white/30 bg-[#003251] px-8 py-7 text-center">
           <Image
             src="/logo/logofooter.png"
             width={282}
@@ -95,7 +95,7 @@ export default function AdminLogin() {
             className="mx-auto h-24 w-24 object-contain"
           />
           <div className="mt-3 flex items-center justify-center gap-2 text-white/75">
-            <LockKeyhole className="h-4 w-4 text-[#d89a42]" />
+            <LockKeyhole className="h-4 w-4 text-white" />
             <span className="text-xs font-semibold uppercase tracking-[0.2em]">
               Administration Portal
             </span>
@@ -127,8 +127,8 @@ export default function AdminLogin() {
               placeholder="admin@keynovagrp.com"
               className={`w-full rounded-lg border bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:bg-white focus:ring-2 ${
                 touched.email && validationErrors.email
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-slate-200 focus:border-[#6E9CAE] focus:ring-[#6E9CAE]/25"
+                  ? "border-slate-500 focus:ring-slate-200"
+                  : "border-slate-200 focus:border-[#003251] focus:ring-[#003251]/25"
               }`}
               value={email}
               onChange={(event) => updateField("email", event.target.value)}
@@ -142,7 +142,7 @@ export default function AdminLogin() {
             />
             <p
               id="admin-email-error"
-              className="mt-1 min-h-4 text-xs text-red-600"
+              className="mt-1 min-h-4 text-xs text-slate-600"
               aria-live="polite"
             >
               {touched.email ? validationErrors.email : ""}
@@ -164,8 +164,8 @@ export default function AdminLogin() {
               placeholder="Enter your password"
               className={`w-full rounded-lg border bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:bg-white focus:ring-2 ${
                 touched.password && validationErrors.password
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-slate-200 focus:border-[#6E9CAE] focus:ring-[#6E9CAE]/25"
+                  ? "border-slate-500 focus:ring-slate-200"
+                  : "border-slate-200 focus:border-[#003251] focus:ring-[#003251]/25"
               }`}
               value={password}
               onChange={(event) => updateField("password", event.target.value)}
@@ -181,7 +181,7 @@ export default function AdminLogin() {
             />
             <p
               id="admin-password-error"
-              className="mt-1 min-h-4 text-xs text-red-600"
+              className="mt-1 min-h-4 text-xs text-slate-600"
               aria-live="polite"
             >
               {touched.password ? validationErrors.password : ""}
@@ -191,7 +191,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading || hasValidationErrors(validationErrors)}
-            className="w-full rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0b2e4c] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>

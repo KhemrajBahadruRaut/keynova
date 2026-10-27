@@ -339,18 +339,19 @@ export default function EmailSettingsClient() {
                     onChange={(event) => updateRecipient(group, index, event.target.value)}
                     onBlur={() => markRecipientTouched(group, index)}
                     aria-describedby={`${group}-recipient-${index}-error`}
-                    className={`min-w-0 flex-1 rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/25 ${inputError
-                      ? "border-red-300 focus:border-red-400"
-                      : "border-slate-200 focus:border-[#2f87a8]"
+                    className={`min-w-0 flex-1 rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#003251]/25 ${inputError
+                      ? "border-slate-300 focus:border-slate-400"
+                      : "border-slate-200 focus:border-[#003251]"
                       }`}
                     placeholder={`recipient${index + 1}@example.com`}
                     aria-invalid={Boolean(inputError)}
                   />
                   <AdminButton
                     type="button"
+                    danger
                     onClick={() => removeRecipient(group, index)}
                     disabled={recipients.length <= 1}
-                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-red-100 text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-100 text-slate-500 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300"
                     aria-label={`Remove recipient ${index + 1} from ${title}`}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -366,7 +367,7 @@ export default function EmailSettingsClient() {
           <AdminButton
             type="button"
             onClick={() => addRecipient(group)}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#2f87a8]/25 bg-white px-3 py-2 text-sm font-semibold text-[#2f7895] transition hover:border-[#2f87a8] hover:bg-sky-50"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#003251]/25 bg-white px-3 py-2 text-sm font-semibold text-[#003251] transition hover:border-[#003251] hover:bg-slate-50"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add recipient
@@ -383,7 +384,7 @@ export default function EmailSettingsClient() {
 
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#003251]">
             Administration
           </p>
           <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -406,16 +407,16 @@ export default function EmailSettingsClient() {
       </div>
 
       {accessState === "checking" && (
-        <section className="flex min-h-72 items-center justify-center rounded-xl border border-[#dbe5ea] bg-white">
+        <section className="flex min-h-72 items-center justify-center rounded-xl border border-[#d1d5db] bg-white">
           <div className="text-center text-sm text-slate-500">
-            <Loader2 className="mx-auto mb-3 h-7 w-7 animate-spin text-[#2f87a8]" aria-hidden="true" />
+            <Loader2 className="mx-auto mb-3 h-7 w-7 animate-spin text-[#003251]" aria-hidden="true" />
             Checking secure access…
           </div>
         </section>
       )}
 
       {accessState === "error" && (
-        <AdminCard className="rounded-xl border border-red-100 bg-white p-6 text-center shadow-sm">
+        <AdminCard className="rounded-xl border border-slate-100 bg-white p-6 text-center shadow-sm">
           <p className="text-sm font-semibold text-slate-700">Unable to load secure settings.</p>
           <AdminButton
             type="button"
@@ -431,8 +432,8 @@ export default function EmailSettingsClient() {
       )}
 
       {accessState === "locked" && (
-        <AdminCard className="mx-auto max-w-lg rounded-xl border border-[#dbe5ea] bg-white p-6 shadow-sm sm:p-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-[#2f7895]">
+        <AdminCard className="mx-auto max-w-lg rounded-xl border border-[#d1d5db] bg-white p-6 shadow-sm sm:p-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 text-[#003251]">
             <LockKeyhole className="h-7 w-7" aria-hidden="true" />
           </div>
           <div className="mt-5 text-center">
@@ -459,14 +460,14 @@ export default function EmailSettingsClient() {
                 validateUnlockField("password");
                 setError("");
               }}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#2f87a8] focus:ring-2 focus:ring-[#2f87a8]/25 aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/25 aria-invalid:border-slate-500 aria-invalid:focus:border-slate-500"
               autoFocus
             />
             <FieldError id="email-settings-password-error" error={unlockErrors.password} />
             <AdminButton
               type="submit"
               disabled={unlocking}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251] disabled:cursor-wait disabled:opacity-60"
             >
               {unlocking ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -480,8 +481,8 @@ export default function EmailSettingsClient() {
       )}
 
       {accessState === "unlocked" && (
-        <AdminForm onSubmit={saveSettings} className="rounded-xl border border-[#dbe5ea] bg-white p-4 shadow-sm shadow-[#003251]/5 sm:p-6" noValidate>
-          <div className="mb-6 flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <AdminForm onSubmit={saveSettings} className="rounded-xl border border-[#d1d5db] bg-white p-4 shadow-sm shadow-[#003251]/5 sm:p-6" noValidate>
+          <div className="mb-6 flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-800">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
             <p>
               Secure access is active. Recipient addresses are protected and can only be
@@ -503,7 +504,7 @@ export default function EmailSettingsClient() {
           </div>
 
           <div className="mt-5 flex items-start gap-3 rounded-lg bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-            <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#2f7895]" aria-hidden="true" />
+            <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#003251]" aria-hidden="true" />
             <p>
               This page controls recipients only. The outgoing sender and SMTP credentials
               remain securely configured on the server.
@@ -514,7 +515,7 @@ export default function EmailSettingsClient() {
             <AdminButton
               type="submit"
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251] disabled:cursor-wait disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {saving ? "Saving…" : "Save email recipients"}

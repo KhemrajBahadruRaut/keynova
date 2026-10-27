@@ -426,9 +426,9 @@ export default function TeamAdminClient() {
   };
 
   const inputClass = (field: keyof MemberForm) =>
-    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#2f87a8]/30 ${fieldError(field)
-      ? "border-red-300 focus:border-red-400"
-      : "border-slate-200 focus:border-[#2f87a8]"
+    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#003251]/30 ${fieldError(field)
+      ? "border-slate-300 focus:border-slate-400"
+      : "border-slate-200 focus:border-[#003251]"
     }`;
 
   return (
@@ -445,7 +445,7 @@ export default function TeamAdminClient() {
       )}
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#003251]">
             Administration
           </p>
           <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -460,7 +460,7 @@ export default function TeamAdminClient() {
         <AdminButton
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c]"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251]"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Add team member
@@ -470,7 +470,7 @@ export default function TeamAdminClient() {
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
-      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#d1d5db] bg-white shadow-sm shadow-[#003251]/5">
         <AdminTable<TeamMember>
           dataSource={members}
           loading={loading}
@@ -482,7 +482,7 @@ export default function TeamAdminClient() {
                 <div><Typography.Text strong>{member.name}</Typography.Text><p className="mt-1 text-sm text-slate-600">{member.role}</p><p className="mt-1 max-w-72 line-clamp-2 text-xs text-slate-500">{member.bio || "No biography has been added yet."}</p></div>
               </Space>
             },
-            { title: "Status", key: "status", width: 130, render: (_, member) => <Tag color={member.is_active ? "success" : "default"}>{member.is_active ? "Published" : "Hidden"}</Tag> },
+            { title: "Status", key: "status", width: 130, render: (_, member) => <Tag color={member.is_active ? "#003251" : "default"}>{member.is_active ? "Published" : "Hidden"}</Tag> },
             { title: "Profile", key: "profile", width: 220, render: (_, member) => <div><Typography.Link href={`/${member.slug}`} target="_blank" rel="noreferrer">/{member.slug}</Typography.Link>{pinnedMemberIds.has(member.id) && <p className="mt-1 text-xs text-slate-500">Display order {member.sort_order}</p>}</div> },
             {
               title: "Actions", key: "actions", width: 210, render: (_, member) => <Space>
@@ -509,7 +509,7 @@ export default function TeamAdminClient() {
                   className={inputClass("name")}
                   aria-invalid={Boolean(fieldError("name"))}
                 />
-                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("name")}</p>
+                <p className="mt-1 min-h-4 text-xs text-slate-600">{fieldError("name")}</p>
               </div>
 
               <div>
@@ -523,12 +523,12 @@ export default function TeamAdminClient() {
                   className={inputClass("role")}
                   aria-invalid={Boolean(fieldError("role"))}
                 />
-                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("role")}</p>
+                <p className="mt-1 min-h-4 text-xs text-slate-600">{fieldError("role")}</p>
               </div>
 
               <div className="sm:col-span-2">
                 <label htmlFor="team-slug" className="text-sm font-medium text-slate-700">Agent profile URL</label>
-                <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#2f87a8] focus-within:ring-2 focus-within:ring-[#2f87a8]/30">
+                <div className="mt-1 flex rounded-lg border border-slate-200 focus-within:border-[#003251] focus-within:ring-2 focus-within:ring-[#003251]/30">
                   <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-400">/</span>
                   <AdminInput
                     id="team-slug"
@@ -543,7 +543,7 @@ export default function TeamAdminClient() {
                     aria-invalid={Boolean(fieldError("slug"))}
                   />
                 </div>
-                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("slug")}</p>
+                <p className="mt-1 min-h-4 text-xs text-slate-600">{fieldError("slug")}</p>
                 <p className="text-xs text-slate-400">
                   Local preview: http://localhost:3000/{form.slug || "agent-slug"}
                 </p>
@@ -566,7 +566,7 @@ export default function TeamAdminClient() {
                   placeholder="Write the profile description shown on the individual member page."
                 />
                 <div className="mt-1 flex justify-between gap-4 text-xs">
-                  <span className="text-red-600">{fieldError("bio")}</span>
+                  <span className="text-slate-600">{fieldError("bio")}</span>
                   <span className="text-slate-400">{form.bio.length.toLocaleString()} / 20,000</span>
                 </div>
               </div>
@@ -583,7 +583,7 @@ export default function TeamAdminClient() {
                   className={inputClass("email")}
                   aria-invalid={Boolean(fieldError("email"))}
                 />
-                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("email")}</p>
+                <p className="mt-1 min-h-4 text-xs text-slate-600">{fieldError("email")}</p>
               </div>
 
               <div>
@@ -596,7 +596,7 @@ export default function TeamAdminClient() {
                   className={inputClass("phone")}
                   aria-invalid={Boolean(fieldError("phone"))}
                 />
-                <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("phone")}</p>
+                <p className="mt-1 min-h-4 text-xs text-slate-600">{fieldError("phone")}</p>
               </div>
 
               {showDisplayOrder && (
@@ -614,7 +614,7 @@ export default function TeamAdminClient() {
                     className={inputClass("sort_order")}
                     aria-invalid={Boolean(fieldError("sort_order"))}
                   />
-                  <p className="mt-1 min-h-4 text-xs text-red-600">{fieldError("sort_order")}</p>
+                  <p className="mt-1 min-h-4 text-xs text-slate-600">{fieldError("sort_order")}</p>
                   <p className="text-xs text-slate-400">
                     This order sets the first four positions. Profiles after those
                     four are sorted alphabetically.
@@ -649,10 +649,10 @@ export default function TeamAdminClient() {
                   accept=".jpg,.jpeg,.png,.webp,.gif"
                   onChange={handlePhoto}
                   onClick={() => setPhotoError("")}
-                  className="mt-2 w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2f7895] hover:file:bg-sky-100"
+                  className="mt-2 w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#003251] hover:file:bg-slate-100"
                   aria-invalid={Boolean(photoError)}
                 />
-                <p className="mt-1 min-h-4 text-xs text-red-600">{photoError}</p>
+                <p className="mt-1 min-h-4 text-xs text-slate-600">{photoError}</p>
                 {(photoPreview || (editingMember && memberPhotoUrl(editingMember.photo))) && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -676,7 +676,7 @@ export default function TeamAdminClient() {
               <AdminButton
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0b2e4c] disabled:cursor-wait disabled:opacity-60"
+                className="rounded-lg bg-[#003251] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251] disabled:cursor-wait disabled:opacity-60"
               >
                 {saving ? "Saving…" : editingMember ? "Update member" : "Add member"}
               </AdminButton>

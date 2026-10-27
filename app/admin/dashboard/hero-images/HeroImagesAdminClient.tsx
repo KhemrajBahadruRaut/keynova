@@ -50,7 +50,7 @@ type ContentRecord = {
 
 const MAX_SLIDES = 8;
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-slate-500 aria-invalid:focus:border-slate-500";
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -333,7 +333,7 @@ export default function HeroImagesAdminClient() {
               type="button"
               onClick={saveContent}
               disabled={loading || saving || !dirty}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143c60] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -372,9 +372,10 @@ export default function HeroImagesAdminClient() {
                 </div>
                 <AdminButton
                   type="button"
+                  danger
                   onClick={() => removeSlide(index)}
                   disabled={content.slides.length === 1 || saving}
-                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                   Remove
@@ -458,7 +459,7 @@ export default function HeroImagesAdminClient() {
               type="button"
               onClick={saveContent}
               disabled={saving || !dirty}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#003251] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#143c60] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#003251] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? "Publishing…" : "Publish changes"}

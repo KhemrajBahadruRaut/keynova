@@ -293,7 +293,7 @@ export default function HomepageActionCardsEditor() {
               type="button"
               onClick={saveContent}
               disabled={loading || saving || !dirty}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143c60] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -337,7 +337,7 @@ export default function HomepageActionCardsEditor() {
                     value={card.image}
                     onChange={(event) => updateImage(index, event.target.value)}
                     maxLength={2048}
-                    className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
+                    className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-slate-500 aria-invalid:focus:border-slate-500"
                   />
                   <FieldError id={`homepage-card-${card.id}-image-error`} error={errors[`card.${card.id}.image`]} />
                 </label>

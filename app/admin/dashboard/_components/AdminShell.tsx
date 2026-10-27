@@ -129,8 +129,15 @@ const EMPTY_COUNTS: AdminCounts = {
 
 const ADMIN_THEME: ThemeConfig = {
   token: {
-    colorPrimary: "#2f87a8",
+    colorPrimary: "#003251",
+    colorError: "#003251",
+    colorInfo: "#003251",
+    colorSuccess: "#003251",
+    colorWarning: "#003251",
+    colorLink: "#003251",
     colorTextHeading: "#003251",
+    colorBorder: "#d1d5db",
+    colorBgLayout: "#f3f4f6",
     controlHeight: 40,
     borderRadius: 10,
     fontFamily: "Arial, Helvetica, sans-serif",
@@ -144,7 +151,7 @@ const ADMIN_THEME: ThemeConfig = {
       darkItemColor: "rgba(255, 255, 255, 0.78)",
       darkItemHoverColor: "#ffffff",
       darkItemHoverBg: "rgba(255, 255, 255, 0.08)",
-      darkItemSelectedBg: "#175778",
+      darkItemSelectedBg: "rgba(255, 255, 255, 0.12)",
       darkItemSelectedColor: "#ffffff",
       darkGroupTitleColor: "rgba(255, 255, 255, 0.45)",
       itemHeight: 56,
@@ -279,7 +286,7 @@ export default function AdminShell({
           key: href,
           title: label,
           icon: (
-            <Badge dot={compact && counts[key] > 0} color="#7bc3df">
+            <Badge dot={compact && counts[key] > 0} color="#ffffff">
               <Icon size={18} aria-hidden="true" />
             </Badge>
           ),
@@ -289,7 +296,7 @@ export default function AdminShell({
                 <span className={styles.menuLabel}>{label}</span>
                 {!compact && <span className={styles.menuDescription}>{description}</span>}
               </span>
-              {!compact && <Badge className={styles.menuCount} offset={[-12, 0]} count={counts[key]} overflowCount={99} size="small" color="#2f87a8" />}
+              {!compact && <Badge className={styles.menuCount} offset={[-2, 0]} count={counts[key]} overflowCount={99} size="small"/>}
             </Link>
           ),
         }),
@@ -323,7 +330,7 @@ export default function AdminShell({
   };
 
   const renderActions = (compact = false) => (
-    <ConfigProvider theme={{ token: { colorText: "rgba(255,255,255,0.78)", colorBgTextHover: "rgba(255,255,255,0.08)", colorError: "#fda4af" } }}>
+    <ConfigProvider theme={{ token: { colorText: "rgba(255,255,255,0.78)", colorBgTextHover: "rgba(255,255,255,0.08)", colorError: "#ffffff" } }}>
       <div className="space-y-2">
         <Tooltip title={compact ? "View public website" : undefined} placement="right">
           <Button type="text" block href="/" target="_blank" rel="noreferrer" icon={<ExternalLink size={18} aria-hidden="true" />} aria-label="View public website" style={{ height: 44, justifyContent: compact ? "center" : "flex-start" }}>
@@ -342,12 +349,12 @@ export default function AdminShell({
   return (
     <ConfigProvider theme={ADMIN_THEME}>
       <App component={false}>
-        <Layout style={{ minHeight: "100dvh", flexDirection: "column", background: "#eef3f6", "--admin-sidebar-width": collapsed ? "88px" : "288px" } as CSSProperties}>
+        <Layout style={{ minHeight: "100dvh", flexDirection: "column", background: "#f3f4f6", "--admin-sidebar-width": collapsed ? "88px" : "288px" } as CSSProperties}>
           <Layout.Sider width={278} collapsedWidth={88} collapsed={collapsed} collapsible trigger={null} className={styles.desktopSider} style={{ position: "fixed", inset: "0 auto 0 0", height: "100dvh", zIndex: 40 }}>
             <div className={styles.sidebarBody}>
               <Link
                 href="/admin/dashboard"
-                className={`flex min-h-28 items-center border-b border-white/10 py-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7bc3df] ${collapsed ? "justify-center px-3" : "gap-4 px-6"}`}
+                className={`flex min-h-28 items-center border-b border-white/10 py-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${collapsed ? "justify-center px-3" : "gap-4 px-6"}`}
                 aria-label="Go to admin overview"
               >
                 <Image
@@ -360,7 +367,7 @@ export default function AdminShell({
                 />
                 {!collapsed && <div className="min-w-0 border-l border-white/20 pl-4">
                   <p className="text-base font-semibold text-white">KeyNova Admin</p>
-                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7bc3df]">
+                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-200">
                     Website Management
                   </p>
                 </div>}
@@ -374,7 +381,7 @@ export default function AdminShell({
             </div>
           </Layout.Sider>
 
-          <header className="sticky  top-0 z-40 border-b border-white/10 bg-[#003251] shadow-lg shadow-[#071a2a]/10 xl:hidden">
+          <header className="sticky  top-0 z-40 border-b border-white/10 bg-[#003251] shadow-lg shadow-[#003251]/10 xl:hidden">
             <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
               <Link
                 href="/admin/dashboard"
@@ -390,7 +397,7 @@ export default function AdminShell({
                 />
                 <div className="min-w-0 border-l border-white/20 pl-3">
                   <p className="truncate text-sm font-semibold text-white">KeyNova Admin</p>
-                  <p className="truncate text-[10px] uppercase tracking-[0.18em] text-[#7bc3df]">
+                  <p className="truncate text-[10px] uppercase tracking-[0.18em] text-slate-200">
                     {currentLabel}
                   </p>
                 </div>
@@ -450,7 +457,7 @@ export default function AdminShell({
                   <Button type="text" onClick={() => setCollapsed((current) => !current)} icon={collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} aria-controls="admin-desktop-navigation" style={{ width: 44, height: 44, color: "#003251" }} />
                 </Tooltip>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2f7895]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#003251]">
                     KeyNova workspace
                   </p>
                   <p className="mt-1 text-lg font-semibold text-[#003251]">{currentLabel}</p>

@@ -37,9 +37,9 @@ const FILTERS: Array<{ label: string; value: "all" | TestimonialStatus }> = [
 ];
 
 const STATUS_STYLES: Record<TestimonialStatus, string> = {
-  pending: "bg-sky-50 text-sky-700 ring-sky-200",
-  approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  declined: "bg-red-50 text-red-700 ring-red-200",
+  pending: "bg-slate-50 text-slate-700 ring-slate-200",
+  approved: "bg-slate-50 text-slate-700 ring-slate-200",
+  declined: "bg-slate-50 text-slate-700 ring-slate-200",
 };
 
 type ApiPayload = {
@@ -174,7 +174,7 @@ export default function TestimonialsAdminClient() {
     <>
       <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#003251]">
             Administration
           </p>
           <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -184,7 +184,7 @@ export default function TestimonialsAdminClient() {
             Review client submissions before they appear on the public website.
           </p>
         </div>
-        <div className="flex w-fit items-center gap-2 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+        <div className="flex w-fit items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-800">
           <Clock3 aria-hidden="true" className="h-4 w-4" />
           <span className="font-semibold">{counts.pending}</span>
           pending review
@@ -194,9 +194,9 @@ export default function TestimonialsAdminClient() {
       <ToastNotice message={error} kind="error" />
       <ToastNotice message={notice} kind="success" />
 
-      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#d1d5db] bg-white shadow-sm shadow-[#003251]/5">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
-          <div className="overflow-x-auto"><Segmented value={filter} onChange={(value) => setFilter(value as typeof filter)} options={FILTERS.map(({ label, value }) => ({ value, label: <Space>{label}<Badge count={counts[value]} showZero color="#2f87a8" /></Space> }))} /></div>
+          <div className="overflow-x-auto"><Segmented value={filter} onChange={(value) => setFilter(value as typeof filter)} options={FILTERS.map(({ label, value }) => ({ value, label: <Space>{label}<Badge count={counts[value]} showZero color="#003251" /></Space> }))} /></div>
         </div>
 
         <div className="p-4 sm:p-6">
@@ -228,7 +228,7 @@ export default function TestimonialsAdminClient() {
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                         <a
                           href={`mailto:${testimonial.email}`}
-                          className="text-[#2f7895] hover:underline"
+                          className="text-[#003251] hover:underline"
                         >
                           {testimonial.email}
                         </a>
@@ -245,7 +245,7 @@ export default function TestimonialsAdminClient() {
                           type="button"
                           onClick={() => updateStatus(testimonial.id, "approved")}
                           disabled={updatingId !== null}
-                          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {updatingId === testimonial.id ? (
                             <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
@@ -258,9 +258,10 @@ export default function TestimonialsAdminClient() {
                       {testimonial.status !== "declined" && (
                         <AdminButton
                           type="button"
+                          danger
                           onClick={() => updateStatus(testimonial.id, "declined")}
                           disabled={updatingId !== null}
-                          className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3.5 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {updatingId === testimonial.id ? (
                             <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />

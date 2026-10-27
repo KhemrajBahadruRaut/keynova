@@ -135,7 +135,7 @@ export default function DocumentRequestsClient() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f7895]">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#003251]">
           Administration
         </p>
         <h1 className="mt-1 text-2xl font-bold text-[#003251] sm:text-3xl">
@@ -148,7 +148,7 @@ export default function DocumentRequestsClient() {
 
       <ToastNotice message={error} kind="error" />
 
-      <AdminCard className="overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="overflow-hidden rounded-xl border border-[#d1d5db] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-1 text-lg font-semibold text-gray-900">
             Verified visitor activity
@@ -166,7 +166,7 @@ export default function DocumentRequestsClient() {
               { title: "First property", key: "property", width: 260, render: (_, visitor) => <div>{visitor.entry_property_title || (visitor.entry_property_id ? `Property #${visitor.entry_property_id}` : "Not available")}<p className="text-xs text-slate-500">Agent: {visitor.entry_agent_name || "Not assigned"}</p></div> },
               { title: "Source", dataIndex: "entry_source", key: "source", width: 140, render: sourceLabel },
               { title: "Verified", dataIndex: "created_at", key: "created", width: 200, render: displayDate },
-              { title: "Downloads", key: "downloads", width: 120, render: (_, visitor) => <Tag color="blue">{downloadsByVisitor.get(visitor.id)?.length || 0}</Tag> },
+              { title: "Downloads", key: "downloads", width: 120, render: (_, visitor) => <Tag color="#003251">{downloadsByVisitor.get(visitor.id)?.length || 0}</Tag> },
             ]}
             expandable={{
               expandedRowRender: (visitor) => <AdminTable<DocumentDownload>
@@ -186,7 +186,7 @@ export default function DocumentRequestsClient() {
         </div>
       </AdminCard>
 
-      <AdminCard className="mt-6 overflow-hidden rounded-xl border border-[#dbe5ea] bg-white shadow-sm shadow-[#003251]/5">
+      <AdminCard className="mt-6 overflow-hidden rounded-xl border border-[#d1d5db] bg-white shadow-sm shadow-[#003251]/5">
         <div className="p-4 sm:p-6">
           <h2 className="mb-1 text-lg font-semibold text-gray-900">
             Verification requests
@@ -205,7 +205,7 @@ export default function DocumentRequestsClient() {
               { title: "Entry property", key: "property", width: 260, render: (_, request) => <div>{request.property_title || `Property #${request.property_id}`}<p className="text-xs text-slate-500">Agent: {request.property_agent_name || "Not assigned"}</p></div> },
               { title: "Source", dataIndex: "source", key: "source", width: 130, render: sourceLabel },
               { title: "Date", dataIndex: "requested_at", key: "requested", width: 200, render: displayDate },
-              { title: "Status", key: "status", width: 130, render: (_, request) => <Tag color={request.status === "verified" ? "success" : "processing"}>{request.status === "verified" ? "Verified" : "Pending"}</Tag> },
+              { title: "Status", key: "status", width: 130, render: (_, request) => <Tag color={request.status === "verified" ? "#003251" : "default"}>{request.status === "verified" ? "Verified" : "Pending"}</Tag> },
             ]}
           />
         </div>

@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <Navbar />
-      <main className="bg-white px-6 py-16 text-[#003251] sm:py-20 lg:px-10">
+      <main className="bg-white px-6 py-16 pt-10 text-[#003251] sm:py-20 lg:px-10">
         <article className="mx-auto max-w-4xl">
           <header className="mb-12 border-b border-slate-200 pb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">

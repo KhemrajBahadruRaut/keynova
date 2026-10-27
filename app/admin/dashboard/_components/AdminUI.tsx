@@ -57,13 +57,13 @@ type AdminButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color"> &
 export function AdminButton({
   type = "button", className = "", variant, danger, children, ...props
 }: AdminButtonProps) {
-  const primary = /bg-\[#(?:003251|1c878f|2f87a8)\]|bg-(?:emerald|green)-600/.test(className);
+  const primary = /bg-\[#003251\]/.test(className);
   return (
     <Button
       {...props}
       htmlType={type}
       type={variant ?? (primary ? "primary" : "default")}
-      danger={danger ?? /(?:text|bg|border)-(?:red|rose)-/.test(className)}
+      danger={danger}
       className={controlLayout(className)}
     >
       {children}
@@ -217,10 +217,7 @@ export function AdminCard({ children, styles, className = "", ...props }: CardPr
 }
 
 export function AdminTag({ className = "", children, ...props }: HTMLAttributes<HTMLSpanElement>) {
-  const color = /emerald|green/.test(className) ? "success"
-    : /red|rose/.test(className) ? "error"
-      : /amber|yellow/.test(className) ? "warning"
-        : /sky|blue/.test(className) ? "processing" : "default";
+  const color = /bg-\[#003251\]/.test(className) ? "#003251" : "default";
   return <Tag {...props} color={color} className={controlLayout(className)}>{children}</Tag>;
 }
 

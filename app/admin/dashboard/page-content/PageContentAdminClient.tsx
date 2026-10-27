@@ -55,7 +55,7 @@ type ContentRecord = {
 
 const PAGE_KEYS: PageContentKey[] = ["buywithus", "listwithus"];
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#1c878f] focus:ring-2 focus:ring-[#1c878f]/15 aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#003251] focus:ring-2 focus:ring-[#003251]/15 aria-invalid:border-slate-500 aria-invalid:focus:border-slate-500";
 
 async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
   try {
@@ -291,7 +291,7 @@ export default function PageContentAdminClient() {
       <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1c878f]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#003251]">
               Website content
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-[#003251] sm:text-3xl">
@@ -308,7 +308,7 @@ export default function PageContentAdminClient() {
               href={`/${pageKey}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#1c878f] hover:text-[#003251]"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#003251] hover:text-[#003251]"
             >
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               Preview page
@@ -317,7 +317,7 @@ export default function PageContentAdminClient() {
               type="button"
               onClick={restoreDefaults}
               disabled={loading || saving}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#2f87a8] hover:text-[#246f8c] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#003251] hover:text-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Load originals
@@ -326,7 +326,7 @@ export default function PageContentAdminClient() {
               type="button"
               onClick={saveContent}
               disabled={loading || saving || !dirty}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#06466c] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#003251] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -528,7 +528,7 @@ export default function PageContentAdminClient() {
               type="button"
               onClick={saveContent}
               disabled={saving || !dirty}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#003251] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#06466c] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#003251] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? "Publishing…" : "Publish changes"}
