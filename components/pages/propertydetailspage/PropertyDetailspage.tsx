@@ -601,7 +601,7 @@ export default function PropertyDetailsPage({
                 <img
                   src={propertyUploadUrl(property.agent_photo)}
                   alt={property.agent_name || "Property agent"}
-                  className="h-14 w-14 rounded-md object-cover"
+                  className="h-14 w-14 rounded-md object-contain"
                 />
               ) : (
                 <div className="flex h-14 w-14 items-center justify-center rounded-md bg-gray-100 text-lg font-semibold text-[#003251]">

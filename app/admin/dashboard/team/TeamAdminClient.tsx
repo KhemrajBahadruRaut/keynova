@@ -70,7 +70,7 @@ const LIST_ENDPOINT = "/api/admin/team/get_admin_members.php";
 const CREATE_ENDPOINT = "/api/admin/team/create_member.php";
 const UPDATE_ENDPOINT = "/api/admin/team/update_member.php";
 const DELETE_ENDPOINT = "/api/admin/team/delete_member.php";
-const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+const MAX_OPTIMIZED_PHOTO_BYTES = 4 * 1024 * 1024;
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
 const RESERVED_ROUTES = new Set([
   "about",
@@ -304,8 +304,8 @@ export default function TeamAdminClient() {
       setPhotoError("Choose a JPG, PNG, WebP, or GIF image.");
       return;
     }
-    if (selected.size > MAX_PHOTO_BYTES) {
-      setPhotoError("The photo must be 4 MB or smaller.");
+    if (selected.size === 0) {
+      setPhotoError("Choose an image that is not empty.");
       return;
     }
     setCropFile(selected);
@@ -436,9 +436,13 @@ export default function TeamAdminClient() {
       {cropFile && (
         <ImageCropModal zIndex={1200}
           file={cropFile}
-          outputWidth={800}
+          aspect={4 / 5}
+          outputWidth={1920}
+          outputFormat="image/webp"
+          outputQuality={0.96}
+          maxOutputBytes={MAX_OPTIMIZED_PHOTO_BYTES}
+          showZoomControls
           title="Crop the team member photo"
-          freeCrop
           onCancel={() => setCropFile(null)}
           onComplete={handleCroppedPhoto}
         />
@@ -640,7 +644,7 @@ export default function TeamAdminClient() {
                   Photo {editingMember && <span className="font-normal text-slate-400">(leave empty to keep the current image)</span>}
                 </label>
                 <p className="mt-1 text-xs text-slate-400">
-                  JPG, PNG, WebP, or GIF, up to 4 MB. Photos are optimized and saved as WebP. Choose any crop size or proportion after selecting.
+                  No source file size limit. Photos use a consistent 4:5 portrait crop and are optimized as high-quality WebP, up to 2,400 px and under 10 MB.
                 </p>
                 <AdminUploadInput
                   key={`${editingMember?.id || "new"}-${showForm ? "open" : "closed"}`}

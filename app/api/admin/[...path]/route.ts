@@ -10,13 +10,24 @@ export const runtime = "nodejs";
 
 const MAX_PROXY_BODY_BYTES = Math.floor(4.25 * 1024 * 1024);
 const MAX_ADMIN_IMAGE_PIXELS = 25_000_000;
+const MAX_TEAM_WEBP_BYTES = 4 * 1024 * 1024;
 const ADMIN_IMAGE_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
 const ADMIN_IMAGE_UPLOADS: Record<
   string,
-  { fields: string[]; maxDimension: number }
+  { fields: string[]; maxDimension: number; quality?: number; preserveWebp?: boolean }
 > = {
-  "team/create_member.php": { fields: ["photo"], maxDimension: 1200 },
-  "team/update_member.php": { fields: ["photo"], maxDimension: 1200 },
+  "team/create_member.php": {
+    fields: ["photo"],
+    maxDimension: 2400,
+    quality: 95,
+    preserveWebp: true,
+  },
+  "team/update_member.php": {
+    fields: ["photo"],
+    maxDimension: 2400,
+    quality: 95,
+    preserveWebp: true,
+  },
   "property/create_property.php": { fields: ["images[]"], maxDimension: 2400 },
   "property/update_property.php": { fields: ["images[]"], maxDimension: 2400 },
   "content/upload_image.php": { fields: ["image"], maxDimension: 2400 },
@@ -69,6 +80,8 @@ async function convertAdminImageField(
   formData: FormData,
   fieldName: string,
   maxDimension: number,
+  quality: number,
+  preserveWebp: boolean,
 ): Promise<NextResponse | null> {
   const entries = formData.getAll(fieldName);
   if (!entries.some((entry) => entry instanceof File && entry.size > 0)) {
@@ -84,7 +97,8 @@ async function convertAdminImageField(
 
     let optimizedImage: Buffer;
     try {
-      const source = sharp(Buffer.from(await entry.arrayBuffer()), {
+      const imageBuffer = Buffer.from(await entry.arrayBuffer());
+      const source = sharp(imageBuffer, {
         limitInputPixels: MAX_ADMIN_IMAGE_PIXELS,
       });
       const metadata = await source.metadata();
@@ -99,6 +113,27 @@ async function convertAdminImageField(
         );
       }
 
+      const baseName =
+        entry.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) ||
+        "image";
+      if (
+        preserveWebp &&
+        metadata.format === "webp" &&
+        entry.size <= MAX_TEAM_WEBP_BYTES &&
+        metadata.width &&
+        metadata.height &&
+        metadata.width <= maxDimension &&
+        metadata.height <= maxDimension &&
+        (!metadata.orientation || metadata.orientation === 1)
+      ) {
+        formData.append(
+          fieldName,
+          new Blob([Uint8Array.from(imageBuffer)], { type: "image/webp" }),
+          `${baseName}.webp`,
+        );
+        continue;
+      }
+
       optimizedImage = await source
         .rotate()
         .resize({
@@ -107,7 +142,7 @@ async function convertAdminImageField(
           fit: "inside",
           withoutEnlargement: true,
         })
-        .webp({ quality: 85, effort: 4 })
+        .webp({ quality, effort: 4 })
         .toBuffer();
     } catch (error) {
       console.error(`Admin image conversion failed for ${fieldName}:`, error);
@@ -121,9 +156,6 @@ async function convertAdminImageField(
       );
     }
 
-    const baseName =
-      entry.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) ||
-      "image";
     formData.append(
       fieldName,
       new Blob([Uint8Array.from(optimizedImage)], { type: "image/webp" }),
@@ -258,6 +290,8 @@ async function proxyAdminRequest(
                 formData,
                 fieldName,
                 imageUpload.maxDimension,
+                imageUpload.quality ?? 85,
+                imageUpload.preserveWebp ?? false,
               );
           if (conversionError) return conversionError;
         }

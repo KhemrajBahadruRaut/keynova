@@ -160,14 +160,14 @@ export default function LetsTalkPage({
       <div className="relative mx-auto pt-30 grid  max-w-6xl grid-cols-1 items-center gap-10 px-6  md:grid-cols-[1fr_1.2fr] md:px-10">
         {/* Portrait */}
         <div className="flex justify-center md:justify-start">
-          <div className="relative h-105 w-full max-w-md overflow-hidden md:h-178">
+          <div className={`relative h-105 w-full max-w-md overflow-hidden md:h-178 ${agent ? "bg-white" : ""}`}>
             {portraitUrl ? (
               <OptimizedImage
                 src={portraitUrl}
                 alt={agent ? `${agent.name}, KeyNova Group` : "Contact KeyNova Group"}
                 fill
                 sizes="(min-width: 1152px) 469px, (min-width: 768px) calc((100vw - 120px) / 2.2), (min-width: 496px) 448px, calc(100vw - 48px)"
-                className="object-cover object-top"
+                className={agent ? "object-contain" : "object-cover object-top"}
               />
             ) : agent ? (
               <div

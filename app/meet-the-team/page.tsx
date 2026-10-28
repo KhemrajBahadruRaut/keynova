@@ -57,7 +57,7 @@ export default async function MeetTheTeamPage() {
                     className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#003251]"
                     aria-label={`Read more about ${member.name}`}
                   >
-                    <div className="relative aspect-4/5 overflow-hidden bg-slate-100">
+                    <div className="relative aspect-4/5 overflow-hidden">
                       <TeamMemberImage
                         member={member}
                         variant="card"

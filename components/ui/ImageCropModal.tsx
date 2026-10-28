@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Crop, Loader2, RotateCcw, X } from "lucide-react";
+import { Crop, Loader2, RotateCcw, X, ZoomIn, ZoomOut } from "lucide-react";
 
 type Point = { x: number; y: number };
 type Size = { width: number; height: number };
@@ -19,6 +19,10 @@ interface ImageCropModalProps {
   file: File;
   aspect?: number;
   outputWidth: number;
+  outputFormat?: "image/jpeg" | "image/webp";
+  outputQuality?: number;
+  maxOutputBytes?: number;
+  showZoomControls?: boolean;
   title: string;
   circularPreview?: boolean;
   zIndex?: number;
@@ -30,6 +34,20 @@ interface ImageCropModalProps {
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  outputFormat: "image/jpeg" | "image/webp",
+  quality: number,
+) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Unable to prepare the cropped image."))),
+      outputFormat,
+      quality,
+    );
+  });
 }
 
 const FREE_CROP_HANDLES: Array<{
@@ -51,6 +69,10 @@ export default function ImageCropModal({
   file,
   aspect = 1,
   outputWidth,
+  outputFormat = "image/jpeg",
+  outputQuality = 0.9,
+  maxOutputBytes,
+  showZoomControls = false,
   title,
   circularPreview = false,
   zIndex,
@@ -75,23 +97,11 @@ export default function ImageCropModal({
   const freeCropInteraction = useRef<FreeCropInteraction | null>(null);
 
   useEffect(() => {
-    const reader = new FileReader();
-    const handleLoad = () => {
-      if (typeof reader.result === "string") {
-        setImageUrl(reader.result);
-        setError("");
-      } else {
-        setError("The selected image could not be opened.");
-      }
-    };
-    const handleError = () => setError("The selected image could not be opened.");
-    reader.addEventListener("load", handleLoad);
-    reader.addEventListener("error", handleError);
-    reader.readAsDataURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+    setError("");
     return () => {
-      reader.removeEventListener("load", handleLoad);
-      reader.removeEventListener("error", handleError);
-      if (reader.readyState === FileReader.LOADING) reader.abort();
+      URL.revokeObjectURL(objectUrl);
     };
   }, [file]);
 
@@ -366,37 +376,60 @@ export default function ImageCropModal({
         ? Math.max(1, Math.round(sourceHeight * freeOutputScale))
         : Math.round(outputWidth / aspect);
       const canvas = document.createElement("canvas");
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Your browser could not prepare the cropped image.");
-      context.fillStyle = "#ffffff";
-      context.fillRect(0, 0, canvasWidth, canvasHeight);
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = "high";
-      context.drawImage(
-        image,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        0,
-        0,
-        canvasWidth,
-        canvasHeight,
-      );
+      const qualitySteps = maxOutputBytes
+        ? Array.from({ length: 7 }, (_, index) => outputQuality - index * 0.02)
+            .filter((quality) => quality >= 0.82)
+        : [outputQuality];
+      let renderScale = 1;
+      let blob: Blob | null = null;
 
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(
-          (result) => (result ? resolve(result) : reject(new Error("Unable to crop the image."))),
-          "image/jpeg",
-          0.9,
+      while (!blob) {
+        const scaledWidth = Math.max(1, Math.round(canvasWidth * renderScale));
+        const scaledHeight = Math.max(1, Math.round(canvasHeight * renderScale));
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Your browser could not prepare the cropped image.");
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, scaledWidth, scaledHeight);
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        context.drawImage(
+          image,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          scaledWidth,
+          scaledHeight,
         );
-      });
+
+        for (const quality of qualitySteps) {
+          const candidate = await canvasToBlob(canvas, outputFormat, quality);
+          if (candidate.type !== outputFormat) {
+            throw new Error(`Your browser could not prepare the image as ${outputFormat === "image/webp" ? "WebP" : "JPEG"}.`);
+          }
+          if (!maxOutputBytes || candidate.size <= maxOutputBytes) {
+            blob = candidate;
+            break;
+          }
+        }
+
+        if (!blob) {
+          if (Math.max(scaledWidth, scaledHeight) <= 320) {
+            throw new Error("This photo could not be optimized to the upload size. Choose a different crop.");
+          }
+          renderScale *= 0.9;
+        }
+      }
+
       const baseName = file.name.replace(/\.[^.]+$/, "").slice(0, 80) || "image";
+      const extension = outputFormat === "image/webp" ? "webp" : "jpg";
       await onComplete(
-        new File([blob], `${baseName}-cropped.jpg`, {
-          type: "image/jpeg",
+        new File([blob], `${baseName}-cropped.${extension}`, {
+          type: outputFormat,
           lastModified: Date.now(),
         }),
       );
@@ -426,7 +459,9 @@ export default function ImageCropModal({
             <p className="mt-1 text-sm text-slate-500">
               {freeCrop
                 ? "Drag the crop box to move it. Pull any handle to resize it freely."
-                : "Drag to reposition and use zoom to resize."}
+                : showZoomControls
+                  ? "Drag to reposition the image, then adjust the zoom to frame it."
+                  : "Drag to reposition and use zoom to resize."}
             </p>
           </div>
           <button
@@ -598,7 +633,46 @@ export default function ImageCropModal({
             </div>
           )}
         </div>
-         
+
+        {showZoomControls && !freeCrop && (
+          <div className="mt-4 flex items-center gap-3" aria-label="Image zoom controls">
+            <button
+              type="button"
+              onClick={() => changeZoom(clamp(zoom - 0.1, 1, 3))}
+              disabled={processing || zoom <= 1}
+              aria-label="Zoom out"
+              className="flex h-9 w-9 shrink-0 items-center justify-center border border-slate-300 text-slate-700 disabled:opacity-40"
+            >
+              <ZoomOut className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <label htmlFor="image-crop-zoom" className="text-sm font-medium text-slate-600">
+              Zoom
+            </label>
+            <input
+              id="image-crop-zoom"
+              type="range"
+              min="1"
+              max="3"
+              step="0.05"
+              value={zoom}
+              onChange={(event) => changeZoom(Number(event.target.value))}
+              disabled={processing}
+              className="min-w-0 flex-1 accent-[#003251]"
+            />
+            <span className="w-12 text-right text-xs tabular-nums text-slate-500">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={() => changeZoom(clamp(zoom + 0.1, 1, 3))}
+              disabled={processing || zoom >= 3}
+              aria-label="Zoom in"
+              className="flex h-9 w-9 shrink-0 items-center justify-center border border-slate-300 text-slate-700 disabled:opacity-40"
+            >
+              <ZoomIn className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {error && (
           <p role="alert" className="mt-4 bg-red-50 px-3 py-2 text-sm text-red-600">

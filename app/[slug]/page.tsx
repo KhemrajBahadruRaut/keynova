@@ -67,7 +67,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
             href={agentPropertySiteUrl(member.slug, requestHost)}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block aspect-4/5 w-full overflow-hidden bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#003251]"
+            className="group relative block aspect-4/5 w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#003251]"
             aria-label={`Open ${member.name}'s property website in a new tab`}
           >
             <TeamMemberImage

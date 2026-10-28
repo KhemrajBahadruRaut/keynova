@@ -50,14 +50,13 @@ export default function TeamMemberImage({
     : optimizable
       ? getImageProps({ src: photo, alt: member.name, width: 600, height: 750, quality: 90 }).props.src
       : photo;
-
   return (
     <Image
       src={displayPhoto}
       alt={member.name}
       fill
       unoptimized
-      className={`object-cover object-top ${className}`}
+      className={`object-cover ${className}`}
       loading={eager ? "eager" : "lazy"}
     />
   );
