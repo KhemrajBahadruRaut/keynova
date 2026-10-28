@@ -95,6 +95,9 @@ async function convertAdminImageField(
       continue;
     }
 
+    const baseName =
+      entry.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) ||
+      "image";
     let optimizedImage: Buffer;
     try {
       const imageBuffer = Buffer.from(await entry.arrayBuffer());
@@ -113,9 +116,6 @@ async function convertAdminImageField(
         );
       }
 
-      const baseName =
-        entry.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) ||
-        "image";
       if (
         preserveWebp &&
         metadata.format === "webp" &&
