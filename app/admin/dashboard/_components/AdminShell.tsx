@@ -446,7 +446,7 @@ export default function AdminShell({
             }}
             footer={renderActions()}
           >
-            <p className="border-b border-white/10 px-6 py-4 text-xs text-white/65 wrap-anywhere">{adminEmail}</p>
+            <p className="border-b border-white/10 px-6 py-4 text-xs text-white/65  wrap-anywhere">{adminEmail}</p>
             {renderNavigation(true)}
           </Drawer>
 
