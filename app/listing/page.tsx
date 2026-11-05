@@ -454,12 +454,14 @@ export default function ListingsPage() {
                   onMouseLeave={() => setHoveredId(null)}
                   className="bg-white cursor-pointer group relative"
                 >
-                  <div className="relative aspect-16/10 overflow-hidden bg-gray-100">
+                  <div className="relative flex aspect-16/10 w-full items-center justify-center overflow-hidden bg-gray-100">
                     {p.cover_image ? (
                       <img
                         src={`${API}/uploads/${p.cover_image}`}
                         alt={p.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                        className="block max-h-full max-w-full object-contain"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-4xl">

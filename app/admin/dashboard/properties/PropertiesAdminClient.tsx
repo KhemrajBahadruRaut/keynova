@@ -81,11 +81,6 @@ type PropertyMutationResponse = {
   id?: number | string;
 };
 
-type PropertyAttachment = {
-  field: "images[]";
-  file: File;
-};
-
 const INITIAL_PROPERTY_FORM: PropertyForm = {
   agent_id: "",
   title: "",
@@ -103,12 +98,10 @@ const PROPERTY_FORM_FIELDS = Object.keys(
 ) as PropertyFormField[];
 
 const EMPTY_FILE_ERRORS = { images: "", documents: "" };
-// Vercel Functions reject request bodies above 4.5 MB. Attachments are sent
-// one at a time, and this leaves room for multipart fields and boundaries.
-const MAX_PROXIED_FILE_SIZE = 4 * 1024 * 1024;
-const MAX_IMAGE_SIZE = MAX_PROXIED_FILE_SIZE;
+// Keep each request under Vercel's body limit while preserving the original file.
+const IMAGE_CHUNK_SIZE = Math.floor(1.5 * 1024 * 1024);
+const MAX_IMAGE_SIZE = 30 * 1024 * 1024;
 const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
-const DOCUMENT_CHUNK_SIZE = Math.floor(1.5 * 1024 * 1024);
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx"];
 
@@ -150,8 +143,11 @@ function validateImageFile(file: File) {
   if (!IMAGE_EXTENSIONS.includes(getFileExtension(file))) {
     return `"${file.name}" was rejected. Use a JPG, PNG, WebP, or GIF image.`;
   }
+  if (file.size === 0) {
+    return `"${file.name}" is empty. Choose an image that contains data.`;
+  }
   if (file.size > MAX_IMAGE_SIZE) {
-    return `"${file.name}" is ${formatFileSize(file.size)}. Images must be 4 MB or smaller.`;
+    return `"${file.name}" is ${formatFileSize(file.size)}. Images must be 30 MB or smaller.`;
   }
   return "";
 }
@@ -173,7 +169,6 @@ function createPropertyFormData({
   propertyId,
   lat,
   lng,
-  attachment,
 }: {
   form: PropertyForm;
   showOnListing: boolean;
@@ -181,7 +176,6 @@ function createPropertyFormData({
   propertyId?: number;
   lat: number | null;
   lng: number | null;
-  attachment?: PropertyAttachment;
 }) {
   const formData = new FormData();
   Object.entries(form).forEach(([key, value]) =>
@@ -192,7 +186,6 @@ function createPropertyFormData({
   if (propertyId !== undefined) formData.append("id", String(propertyId));
   if (lat !== null) formData.append("lat", String(lat));
   if (lng !== null) formData.append("lng", String(lng));
-  if (attachment) formData.append(attachment.field, attachment.file);
   return formData;
 }
 
@@ -491,12 +484,6 @@ export default function PropertiesAdminClient() {
     const initialUrl = editProperty
       ? `${ADMIN_API}/property/update_property.php`
       : `${ADMIN_API}/property/create_property.php`;
-    const attachments: PropertyAttachment[] = [
-      ...images.map((file) => ({
-        field: "images[]" as const,
-        file,
-      })),
-    ];
     let propertyId = editProperty?.id;
     let propertySaved = false;
 
@@ -522,44 +509,59 @@ export default function PropertiesAdminClient() {
         }
       }
 
-      for (const attachment of attachments) {
+      for (const image of images) {
+        const uploadId = crypto.randomUUID();
+        const chunkCount = Math.ceil(image.size / IMAGE_CHUNK_SIZE);
+
         try {
-          const attachmentResult = await submitPropertyForm(
-            `${ADMIN_API}/property/update_property.php`,
-            createPropertyFormData({
-              form,
-              showOnListing,
-              showOffMarket,
-              propertyId,
-              lat: geocodedLat,
-              lng: geocodedLng,
-              attachment,
-            }),
-          );
-          if (!attachmentResult) return;
+          for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
+            const start = chunkIndex * IMAGE_CHUNK_SIZE;
+            const chunk = image.slice(
+              start,
+              Math.min(start + IMAGE_CHUNK_SIZE, image.size),
+            );
+            const chunkFormData = new FormData();
+            chunkFormData.append("property_id", String(propertyId));
+            chunkFormData.append("upload_id", uploadId);
+            chunkFormData.append("original_name", image.name);
+            chunkFormData.append("total_size", String(image.size));
+            chunkFormData.append("chunk_index", String(chunkIndex));
+            chunkFormData.append("chunk_count", String(chunkCount));
+            chunkFormData.append(
+              "chunk",
+              chunk,
+              `${image.name}.part${chunkIndex}`,
+            );
+
+            const chunkResult = await submitPropertyForm(
+              `${ADMIN_API}/property/upload_property_image_chunk.php`,
+              chunkFormData,
+            );
+            if (!chunkResult) return;
+          }
         } catch (error) {
           const reason =
             error instanceof Error ? error.message : "Please try again.";
           throw new Error(
-            `"${attachment.file.name}" could not be uploaded. ${reason}`,
+            `"${image.name}" could not be uploaded. ${reason}`,
           );
         }
 
         setImages((current) =>
-          current.filter((file) => file !== attachment.file),
+          current.filter((file) => file !== image),
         );
       }
 
       for (const document of documents) {
         const uploadId = crypto.randomUUID();
-        const chunkCount = Math.ceil(document.size / DOCUMENT_CHUNK_SIZE);
+        const chunkCount = Math.ceil(document.size / IMAGE_CHUNK_SIZE);
 
         try {
           for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
-            const start = chunkIndex * DOCUMENT_CHUNK_SIZE;
+            const start = chunkIndex * IMAGE_CHUNK_SIZE;
             const chunk = document.slice(
               start,
-              Math.min(start + DOCUMENT_CHUNK_SIZE, document.size),
+              Math.min(start + IMAGE_CHUNK_SIZE, document.size),
             );
             const chunkFormData = new FormData();
             chunkFormData.append("property_id", String(propertyId));
@@ -1204,7 +1206,7 @@ export default function PropertiesAdminClient() {
                     Property Images
                   </label>
                   <p id="property-images-help" className="mb-2 text-xs text-gray-500">
-                    JPG, PNG, WebP, or GIF. Maximum 20 images and 4 MB per image. Uploads are saved as WebP.
+                    JPG, PNG, WebP, or GIF. Maximum 20 images and 30 MB per image. Original image data is preserved.
                   </p>
                   {editProperty && existingImages.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">

@@ -171,6 +171,7 @@ Only these PHP paths can be reached through `/api/admin/`:
 | GET | `contact/get_contacts.php` |
 | POST | `property/create_property.php` |
 | POST | `property/update_property.php` |
+| POST | `property/upload_property_image_chunk.php` |
 | POST | `property/upload_property_document_chunk.php` |
 | POST | `property/delete_property.php` |
 | POST | `property/delete_property_image.php` |
@@ -290,7 +291,7 @@ Both use multipart form data and require the admin cookie. Direct PHP paths acce
 | `lng` | No | Numeric longitude from -180 to 180 |
 | `show_on_listing` | At least one publication flag | String `1` enables; anything else disables |
 | `show_off_market` | At least one publication flag | String `1` enables; anything else disables |
-| `images[]` | No | JPG, JPEG, PNG, WebP, or GIF files; admin uploads are converted to WebP at up to 2400 × 2400 |
+| `images[]` | No | JPG, JPEG, PNG, WebP, or GIF files; stored as submitted. The admin UI uses chunked upload for property images. |
 | `documents[]` | No | PDF, DOC, or DOCX files; larger files should use chunk upload |
 
 At least one publication flag must be enabled. Agent display/contact fields are populated from the selected team member; do not submit copied agent fields as the authoritative values.
@@ -298,6 +299,43 @@ At least one publication flag must be enabled. Agent display/contact fields are 
 Update is a full form submission: include the required fields and publication flags again. Omitted optional values are cleared/defaulted rather than treated as a partial patch. New attachments are appended; existing ones use the deletion endpoints below. Unsupported or failed image/document attachments can be skipped while the property mutation still succeeds; verify attachments by fetching the property afterward.
 
 Validation errors return `422`, sometimes with an `errors` map. Updating a missing property returns `404`.
+
+### Upload a property image in chunks
+
+`POST /api/admin/property/upload_property_image_chunk.php`
+
+Send multipart data sequentially for each chunk:
+
+| Field | Contract |
+| --- | --- |
+| `property_id` | Existing property ID |
+| `upload_id` | Stable UUID v4 for all chunks of one file |
+| `original_name` | Original filename, up to 255 bytes; JPG, JPEG, PNG, WebP, or GIF extension |
+| `total_size` | Entire file size in bytes; 1 byte to 30 MiB |
+| `chunk_index` | Zero-based index |
+| `chunk_count` | Between 1 and 20, matching the total size and 1.5 MiB chunk size |
+| `chunk` | File/blob, 1 byte to 1.5 MiB per chunk |
+
+The frontend sends 1.5 MiB chunks. The server assembles and validates the original image, then stores its bytes without resizing or re-encoding it. Images up to 50 megapixels are accepted. The final chunk triggers assembly and adds the image to the property.
+
+Intermediate success (`200`):
+
+```json
+{ "status": "success", "message": "Image chunk uploaded.", "complete": false }
+```
+
+Final success (`201`):
+
+```json
+{
+  "status": "success",
+  "message": "Property image uploaded without changing its image data.",
+  "complete": true,
+  "image": { "name": "building.jpg", "file": "prop_12_img_example.jpg" }
+}
+```
+
+Invalid upload data or image files return `422`, a missing property returns `404`, and missing chunks at assembly return `409`. Stale temporary chunks older than one hour are cleaned during uploads.
 
 ### Upload a document in chunks
 
@@ -883,14 +921,14 @@ MiB/KiB below mean powers of 1,024. PHP server configuration can impose addition
 | Email settings update | 16 KiB |
 | Contact, property inquiry, valuation, agent actions JSON | 32 KiB |
 | Website content JSON update | 250,000 bytes |
-| Admin team / property / non-hero page-content image | 4 MiB per image; converted to WebP (maximum edge 1200 px for team, 2400 px for property and page content) |
+| Admin team / non-hero page-content image | 4 MiB per image; converted to WebP (maximum edge 1200 px for team and 2400 px for page content) |
+| Property image | 30 MiB per image; 1.5 MiB chunks; original data preserved; maximum 50 megapixels |
 | Homepage hero image | 30,000,000 bytes total; 1.5 MiB chunks; original data preserved, maximum 25 megapixels |
 | Team thumbnail source | 4 MiB |
-| Property image in current admin UI | 4 MiB per file; multipart request must also fit the proxy limit |
 | Visitor profile image | 5 MiB; sent directly to PHP |
 | Chunked property document | 10 MiB overall; 2 MiB per chunk; up to 10 chunks |
 
-The property image handlers accept supported extensions but do not themselves enforce the UI's 4 MiB file limit. The proxy's length checks rely on `Content-Length`; testimonials additionally measure the received body. Backend JSON parsers and upload handlers have their own checks. Successful property creation does not prove that every supplied attachment was stored.
+The proxy's length checks rely on `Content-Length`; testimonials additionally measure the received body. Backend JSON parsers and upload handlers have their own checks. Successful property creation does not prove that every legacy multipart attachment was stored; chunked property image uploads report success only after the file is assembled and linked to the property.
 
 Admin requests have a 55-second backend timeout. Login, mail unlock, and testimonials use ten seconds; team thumbnail fetching uses eight seconds.
 

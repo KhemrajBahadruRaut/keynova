@@ -28,8 +28,6 @@ const ADMIN_IMAGE_UPLOADS: Record<
     quality: 95,
     preserveWebp: true,
   },
-  "property/create_property.php": { fields: ["images[]"], maxDimension: 2400 },
-  "property/update_property.php": { fields: ["images[]"], maxDimension: 2400 },
   "content/upload_image.php": { fields: ["image"], maxDimension: 2400 },
 };
 
@@ -40,6 +38,7 @@ const ALLOWED_ADMIN_ENDPOINTS = new Set([
   "property/get_property.php",
   "property/create_property.php",
   "property/update_property.php",
+  "property/upload_property_image_chunk.php",
   "property/upload_property_document_chunk.php",
   "property/delete_property.php",
   "property/delete_property_image.php",

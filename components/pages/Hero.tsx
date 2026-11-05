@@ -13,7 +13,7 @@ export default function Hero({ content }: Readonly<{ content: HeroContent }>) {
       {/* HERO */}
       <section className="relative w-full h-screen min-h-160 overflow-hidden">
         <HeroSlideshow slides={slides} />
-        <div className="pointer-events-none absolute inset-0 bg-[#001d2f]/45" />
+        <div className="pointer-events-none absolute inset-0 bg-[#001d2f]/20" />
 
         <div className="relative z-10 h-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center px-6">
           <h1 className="text-white font-semibold leading-[1.05] text-4xl sm:text-5xl lg:text-6xl">

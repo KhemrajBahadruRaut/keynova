@@ -510,12 +510,12 @@ export default function PropertyDetailsPage({
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
           <div>
-            <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
+            <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-gray-100">
               {galleryImages.length ? (
                 <img
                   src={galleryImages[Math.min(activeImage, galleryImages.length - 1)]}
                   alt={property.title || property.address}
-                  className="h-full w-full object-cover"
+                  className="block max-h-full max-w-full object-contain"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-400">
@@ -525,20 +525,22 @@ export default function PropertyDetailsPage({
             </div>
 
             {galleryImages.length > 1 && (
-              <div className="mt-3 grid grid-cols-4 gap-3">
+              <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {galleryImages.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setActiveImage(index)}
-                    className={`aspect-4/3 overflow-hidden rounded-md ring-offset-2 focus:outline-none ${
+                    className={`relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-md bg-gray-100 ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003251] ${
                       activeImage === index ? "ring-2 ring-[#003251]" : ""
                     }`}
                   >
                     <img
                       src={image}
                       alt={`${property.title || "Property"} view ${index + 1}`}
-                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      className="block max-h-full max-w-full object-contain"
                     />
                   </button>
                 ))}
