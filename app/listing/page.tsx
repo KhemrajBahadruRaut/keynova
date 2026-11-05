@@ -32,7 +32,6 @@ interface Property {
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
-const PAGE_SIZE = 4;
 
 export default function ListingsPage() {
   const pathname = usePathname();
@@ -51,7 +50,6 @@ export default function ListingsPage() {
   const [minSize, setMinSize] = useState("");
   const [maxSize, setMaxSize] = useState("");
   const [sortBy, setSortBy] = useState("date_updated");
-  const [page, setPage] = useState(1);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [mapExpanded, setMapExpanded] = useState(false);
 
@@ -101,7 +99,6 @@ export default function ListingsPage() {
       .catch(() => undefined)
       .finally(() => {
         setSearch((requestedSearch || "").slice(0, 120));
-        setPage(1);
         setLoading(false);
       });
   }, [destination]);
@@ -184,8 +181,6 @@ export default function ListingsPage() {
     sizeError,
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const detailsSource = (property: Property) =>
     !property.show_on_listing && property.show_off_market ? "exclusive" : "listing";
 
@@ -196,7 +191,6 @@ export default function ListingsPage() {
     setMaxUnits("");
     setMinSize("");
     setMaxSize("");
-    setPage(1);
   };
 
   if (loading) {
@@ -242,7 +236,6 @@ export default function ListingsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPage(1);
               }}
               placeholder="Search by address, city, state, or zip"
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003251]/25 lg:w-72"
@@ -259,7 +252,6 @@ export default function ListingsPage() {
               value={type}
               onChange={(e) => {
                 setType(e.target.value);
-                setPage(1);
               }}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003251]/25 lg:w-auto"
             >
@@ -285,7 +277,6 @@ export default function ListingsPage() {
                 value={minUnits}
                 onChange={(e) => {
                   setMinUnits(e.target.value);
-                  setPage(1);
                 }}
                 placeholder="Min"
                 className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-20 lg:flex-none ${
@@ -308,7 +299,6 @@ export default function ListingsPage() {
                 value={maxUnits}
                 onChange={(e) => {
                   setMaxUnits(e.target.value);
-                  setPage(1);
                 }}
                 placeholder="Max"
                 className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-20 lg:flex-none ${
@@ -341,7 +331,6 @@ export default function ListingsPage() {
                 value={minSize}
                 onChange={(e) => {
                   setMinSize(e.target.value);
-                  setPage(1);
                 }}
                 placeholder="Min SF"
                 className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-24 lg:flex-none ${
@@ -364,7 +353,6 @@ export default function ListingsPage() {
                 value={maxSize}
                 onChange={(e) => {
                   setMaxSize(e.target.value);
-                  setPage(1);
                 }}
                 placeholder="Max SF"
                 className={`min-w-0 flex-1 border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 lg:w-24 lg:flex-none ${
@@ -402,10 +390,7 @@ export default function ListingsPage() {
           <p className="text-xs text-gray-500 tracking-wide">
             {filtered.length === 0
               ? "0 RESULTS"
-              : `${(page - 1) * PAGE_SIZE + 1} - ${Math.min(
-                  page * PAGE_SIZE,
-                  filtered.length,
-                )} RESULTS OUT OF ${filtered.length} LISTINGS`}
+              : `${filtered.length} RESULTS`}
           </p>
           <div className="flex items-center justify-between gap-2 text-xs text-gray-500 sm:justify-start">
             <label htmlFor="listing-sort">Sort:</label>
@@ -429,11 +414,11 @@ export default function ListingsPage() {
       <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:flex-row">
         {/* List */}
         <div
-          className={`w-full shrink-0 overflow-y-auto bg-white transition-[width] duration-300 lg:max-h-[calc(100vh-150px)] lg:border-r lg:border-gray-200 ${
+          className={`w-full shrink-0 bg-white transition-[width] duration-300 lg:border-r lg:border-gray-200 ${
             mapExpanded ? "lg:w-1/2" : "lg:w-2/3"
           }`}
         >
-          {pageItems.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="text-center py-20 px-4">
               <div className="text-5xl mb-4">🏢</div>
               <p className="text-gray-500 text-sm">
@@ -444,7 +429,7 @@ export default function ListingsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 p-3 sm:grid-cols-2 lg:grid-cols-3 ">
-              {pageItems.map((p) => (
+              {filtered.map((p) => (
                 <div
                   key={p.id}
                   onClick={() =>
@@ -494,24 +479,6 @@ export default function ListingsPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-wrap items-center justify-center gap-2 border-t border-gray-100 px-4 py-3 sm:justify-start">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`w-7 h-7 text-xs rounded-full flex items-center justify-center transition-colors ${
-                    page === n
-                      ? "bg-[#003251] text-white font-semibold"
-                      : "text-gray-500 hover:bg-gray-100"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Map */}
@@ -540,10 +507,10 @@ export default function ListingsPage() {
             {mapExpanded ? "Smaller map" : "Expand map"}
           </button>
           <ListingsMap
-            properties={pageItems}
+            properties={filtered}
             hoveredId={hoveredId}
             onMarkerClick={(id) => {
-              const property = pageItems.find((item) => item.id === id);
+              const property = filtered.find((item) => item.id === id);
               const source = property ? detailsSource(property) : "listing";
               router.push(`/details?id=${id}&source=${source}`);
             }}

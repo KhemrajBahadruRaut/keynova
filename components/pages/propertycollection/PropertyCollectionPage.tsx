@@ -22,6 +22,7 @@ import {
   propertyUploadUrl,
   type PropertyRecord,
 } from "@/lib/property-data";
+import OptimizedImage from "@/components/ui/OptimizedImage";
 
 const ListingsMap = dynamic(() => import("@/app/listing/ListingsMap"), {
   ssr: false,
@@ -505,13 +506,16 @@ export default function PropertyCollectionPage({
                     href={detailHref}
                     className="group w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#003251] focus-visible:ring-offset-2"
                   >
-                    <div className="aspect-4/3 overflow-hidden rounded-lg bg-gray-100">
+                    <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-gray-100">
                       {imageUrl ? (
-                        <img
+                        <OptimizedImage
                           src={imageUrl}
                           alt={property.title || property.address}
                           loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          fill
+                          sizes="(min-width: 768px) 640px, 100vw"
+                          quality={90}
+                          className="object-contain"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-sm text-gray-400">

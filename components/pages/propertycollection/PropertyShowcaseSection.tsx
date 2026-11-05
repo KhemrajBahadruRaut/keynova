@@ -87,8 +87,9 @@ function PropertyCard({
             }
             loading="lazy"
             fill
-            sizes="(min-width: 640px) 360px, 290px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="640px"
+            quality={90}
+            className="object-contain"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-[#eef3f5] px-6 text-center text-sm text-slate-400">

@@ -1233,7 +1233,7 @@ export default function PropertiesAdminClient() {
                             onClick={() => handleDeleteExistingImage(img)}
                             aria-label={`Remove property image ${index + 1}`}
                             title="Remove image"
-                            className="absolute inset-x-0 bottom-0 flex h-7 items-center justify-center bg-rose-700/95 text-xs font-semibold text-white transition-colors hover:bg-rose-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#003251]"
+                            className="absolute inset-x-0 bottom-0 flex h-7 items-center justify-center bg-rose-700/95 text-xs font-semibold text-white transition-colors hover:bg-rose-800 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[#003251]"
                           >
                             Remove
                           </button>

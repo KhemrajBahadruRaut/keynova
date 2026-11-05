@@ -36,6 +36,7 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import { phoneDigits } from "@/lib/phone";
 import { useFormValidation } from "@/lib/use-form-validation";
 import { CONTACT_FIELD_VALIDATORS } from "@/lib/validation";
+import OptimizedImage from "@/components/ui/OptimizedImage";
 
 const INQUIRY_FIELD_CLASS_NAME =
   "w-full border-b border-gray-300 pb-1.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#003251] focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500";
@@ -510,12 +511,17 @@ export default function PropertyDetailsPage({
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
           <div>
-            <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+            <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-gray-100">
               {galleryImages.length ? (
-                <img
+                <OptimizedImage
                   src={galleryImages[Math.min(activeImage, galleryImages.length - 1)]}
                   alt={property.title || property.address}
-                  className="block max-h-full max-w-full object-contain"
+                  fill
+                  sizes="(min-width: 1024px) 900px, 100vw"
+                  quality={90}
+                  loading="eager"
+                  fetchPriority="high"
+                  className="object-contain"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-400">
@@ -535,12 +541,14 @@ export default function PropertyDetailsPage({
                       activeImage === index ? "ring-2 ring-[#003251]" : ""
                     }`}
                   >
-                    <img
+                    <OptimizedImage
                       src={image}
                       alt={`${property.title || "Property"} view ${index + 1}`}
                       loading="lazy"
-                      decoding="async"
-                      className="block max-h-full max-w-full object-contain"
+                      fill
+                      sizes="(min-width: 640px) 220px, 50vw"
+                      quality={90}
+                      className="object-contain"
                     />
                   </button>
                 ))}
@@ -881,12 +889,15 @@ export default function PropertyDetailsPage({
                       href={`/details?id=${listing.id}&source=related`}
                       className="group text-left"
                     >
-                      <div className="aspect-7/5 overflow-hidden rounded-lg bg-gray-100">
+                      <div className="relative aspect-7/5 overflow-hidden rounded-lg bg-gray-100">
                         {imageUrl ? (
-                          <img
+                          <OptimizedImage
                             src={imageUrl}
                             alt={listing.title || listing.address}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            fill
+                            sizes="(min-width: 1024px) 400px, 100vw"
+                            quality={90}
+                            className="object-contain"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-sm text-gray-400">
@@ -950,12 +961,15 @@ export default function PropertyDetailsPage({
                       href={`/details?id=${listing.id}&source=related`}
                       className="group text-left"
                     >
-                      <div className="aspect-7/5 overflow-hidden rounded-lg bg-gray-100">
+                      <div className="relative aspect-7/5 overflow-hidden rounded-lg bg-gray-100">
                         {imageUrl ? (
-                          <img
+                          <OptimizedImage
                             src={imageUrl}
                             alt={listing.title || listing.address}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            fill
+                            sizes="(min-width: 640px) 400px, 100vw"
+                            quality={90}
+                            className="object-contain"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-sm text-gray-400">
