@@ -674,9 +674,17 @@ export default function PropertiesAdminClient() {
         router.refresh();
         return;
       }
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.status !== "success") {
+        throw new Error(result.message || "The image could not be removed.");
+      }
       setExistingImages((prev) => prev.filter((img) => img !== filename));
     } catch (err) {
       console.error("Failed to delete image", err);
+      setFormMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "The image could not be removed.",
+      });
     }
   };
 
@@ -1210,23 +1218,25 @@ export default function PropertiesAdminClient() {
                   </p>
                   {editProperty && existingImages.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {existingImages.map((img) => (
+                      {existingImages.map((img, index) => (
                         <div
                           key={img}
-                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200"
+                          className="relative h-24 w-24 overflow-hidden rounded-lg border border-gray-200"
                         >
                           <img
                             src={`${API}/uploads/${img}`}
-                            alt=""
+                            alt={`Property image ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
-                          <AdminButton
+                          <button
                             type="button"
                             onClick={() => handleDeleteExistingImage(img)}
-                            className="absolute top-0 right-0 bg-black/60 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl-md"
+                            aria-label={`Remove property image ${index + 1}`}
+                            title="Remove image"
+                            className="absolute inset-x-0 bottom-0 flex h-7 items-center justify-center bg-rose-700/95 text-xs font-semibold text-white transition-colors hover:bg-rose-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#003251]"
                           >
-                            ✕
-                          </AdminButton>
+                            Remove
+                          </button>
                         </div>
                       ))}
                     </div>
