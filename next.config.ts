@@ -5,7 +5,7 @@ const apiUrl = apiBase ? new URL(apiBase) : null;
 
 const nextConfig: NextConfig = {
   images: {
-    qualities: [75, 90],
+    qualities: [70, 75, 90],
     remotePatterns: [
       {
         protocol: "https",

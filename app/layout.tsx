@@ -17,7 +17,7 @@ export default function RootLayout({
       lang="en"
       className="h-full antialiased"
       data-coolstyles-extension="installed"
-      data-coolstyles-extension-version="1.9.0"
+      data-coolstyles-extension-version="1.9.2"
     >
       <body className="min-h-full flex flex-col">
         <FeedbackProvider>{children}</FeedbackProvider>

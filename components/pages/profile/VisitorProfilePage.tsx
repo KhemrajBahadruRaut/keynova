@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
+import Image, { type ImageLoaderProps } from "next/image";
 import { ToastNotice } from "@/components/ui/FeedbackProvider";
 import ImageCropModal from "@/components/ui/ImageCropModal";
 import PhoneInput from "@/components/ui/PhoneInput";
@@ -55,6 +56,15 @@ import {
 } from "@/lib/validation";
 
 type Notice = { kind: "success" | "error"; message: string } | null;
+
+// Keep profile photos on one optimized rendition so zooming cannot switch image variants.
+function profileImageLoader({ src }: ImageLoaderProps) {
+  return `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=70`;
+}
+
+function inquiryImageLoader({ src }: ImageLoaderProps) {
+  return `/_next/image?url=${encodeURIComponent(src)}&w=640&q=70`;
+}
 
 function messageFrom(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
@@ -371,18 +381,26 @@ export default function VisitorProfilePage() {
               <div
                 role={profileImageUrl ? "img" : undefined}
                 aria-label={profileImageUrl ? `${profile.visitor.name}'s profile` : undefined}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-white bg-cover bg-center text-lg font-bold text-[#003251] ring-4 ring-white/10"
-                style={
-                  profileImageUrl ? { backgroundImage: `url("${profileImageUrl}")` } : undefined
-                }
+                className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white text-lg font-bold text-[#003251] ring-4 ring-white/10"
               >
-                {!profileImageUrl &&
+                {profileImageUrl ? (
+                  <Image
+                    src={profileImageUrl}
+                    alt=""
+                    fill
+                    loader={profileImageLoader}
+                    quality={70}
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                ) : (
                   (profile.visitor.name
                     .split(/\s+/)
                     .slice(0, 2)
                     .map((part) => part[0])
                     .join("")
-                    .toUpperCase() || "K")}
+                    .toUpperCase() || "K")
+                )}
               </div>
               <label
                 className={`absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#003251] bg-white text-[#003251] shadow-md transition hover:bg-slate-100 ${
@@ -883,11 +901,14 @@ function SavedHomes({
                     className="block h-full"
                   >
                     {imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={imageUrl}
                         alt={property.title}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        fill
+                        loader={profileImageLoader}
+                        quality={70}
+                        sizes="(max-width: 640px) calc(100vw - 2rem), (max-width: 1024px) calc(50vw - 4rem), 576px"
+                        className="object-cover"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
@@ -936,7 +957,63 @@ function SavedHomes({
   );
 }
 
+function ViewedPropertyCard({ property }: { property: VisitorProfile["history"][number] }) {
+  const imageUrl = propertyUploadUrl(property.cover_image);
+
+  return (
+    <article className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg">
+      <Link
+        href={`/details?id=${property.id}&source=profile`}
+        className="block"
+        aria-label={`View ${property.title}`}
+      >
+        <div className="relative aspect-16/10 overflow-hidden bg-slate-200">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={property.title}
+              fill
+              loader={profileImageLoader}
+              quality={70}
+              sizes="(max-width: 640px) calc(100vw - 2rem), (max-width: 1024px) calc(50vw - 4rem), 576px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <Home className="h-10 w-10 text-slate-400" aria-hidden="true" />
+            </div>
+          )}
+          <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white wrap-anywhere">
+            {displayPrice(property.price)}
+          </span>
+        </div>
+        <div className="p-4">
+          <h3 className="text-base font-semibold leading-snug text-[#003251] wrap-anywhere">
+            {property.title}
+          </h3>
+          <p className="mt-2 flex items-start gap-1.5 text-sm leading-5 text-slate-500">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 wrap-anywhere">{property.address}</span>
+          </p>
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
+            <span className="min-w-0 wrap-anywhere">Viewed {formatDate(property.last_visited_at)}</span>
+            <ArrowRight
+              className="h-4 w-4 shrink-0 text-[#003251] transition-transform group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
 function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
+  const initialVisibleCount = 2;
+  const [showAll, setShowAll] = useState(false);
+  const initialHistory = history.slice(0, initialVisibleCount);
+  const additionalHistory = history.slice(initialVisibleCount);
+
   return (
     <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -968,63 +1045,127 @@ function VisitHistory({ history }: { history: VisitorProfile["history"] }) {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {history.map((property) => {
-            const imageUrl = propertyUploadUrl(property.cover_image);
-            return (
-              <article
-                key={property.id}
-                className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
+        <>
+          <div id="profile-recently-viewed-list" className="mt-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {initialHistory.map((property) => (
+                <ViewedPropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+            {additionalHistory.length > 0 && (
+              <div
+                aria-hidden={!showAll}
+                inert={!showAll}
+                className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
+                  showAll ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}
               >
-                <Link
-                  href={`/details?id=${property.id}&source=profile`}
-                  className="block"
-                  aria-label={`View ${property.title}`}
-                >
-                  <div className="relative aspect-16/10 overflow-hidden bg-slate-200">
-                    {imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={imageUrl}
-                        alt={property.title}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Home className="h-10 w-10 text-slate-400" aria-hidden="true" />
-                      </div>
-                    )}
-                    <span className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] bg-[#003251] px-3 py-1.5 text-sm font-bold text-white wrap-anywhere">
-                      {displayPrice(property.price)}
-                    </span>
+                <div className="min-h-0 overflow-hidden">
+                  <div className="grid gap-4 pt-4 sm:grid-cols-2">
+                    {additionalHistory.map((property) => (
+                      <ViewedPropertyCard key={property.id} property={property} />
+                    ))}
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-base font-semibold leading-snug text-[#003251] wrap-anywhere">
-                      {property.title}
-                    </h3>
-                    <p className="mt-2 flex items-start gap-1.5 text-sm leading-5 text-slate-500">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span className="min-w-0 wrap-anywhere">{property.address}</span>
-                    </p>
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
-                      <span className="min-w-0 wrap-anywhere">Viewed {formatDate(property.last_visited_at)}</span>
-                      <ArrowRight
-                        className="h-4 w-4 shrink-0 text-[#003251] transition-transform group-hover:translate-x-1"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </Link>
-              </article>
-            );
-          })}
-        </div>
+                </div>
+              </div>
+            )}
+          </div>
+          {additionalHistory.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAll((current) => !current)}
+              aria-expanded={showAll}
+              aria-controls="profile-recently-viewed-list"
+              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-[#003251] transition hover:bg-slate-50"
+            >
+              {showAll ? "Show less" : "Show more"}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-500 ${showAll ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+          )}
+        </>
       )}
     </section>
   );
 }
 
+function InquiryHistoryCard({ inquiry }: { inquiry: VisitorProfile["inquiries"][number] }) {
+  const imageUrl = propertyUploadUrl(inquiry.cover_image);
+
+  return (
+    <article className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-[#003251]/40 hover:shadow-md sm:flex-row sm:gap-4">
+      <div
+        className="relative aspect-16/10 w-full shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:aspect-auto sm:h-32 sm:w-52"
+        aria-hidden="true"
+      >
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            loader={inquiryImageLoader}
+            quality={70}
+            sizes="(max-width: 639px) calc(100vw - 5rem), 208px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Home className="h-7 w-7 text-slate-400" aria-hidden="true" />
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1 py-0.5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="min-w-0 font-semibold leading-snug text-[#003251] wrap-anywhere">
+            {inquiry.title}
+          </h3>
+          <time className="shrink-0 text-xs text-slate-400">
+            {formatDate(inquiry.created_at)}
+          </time>
+        </div>
+        {inquiry.address && (
+          <p className="mt-1 line-clamp-2 text-xs text-slate-500 wrap-anywhere">{inquiry.address}</p>
+        )}
+        <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600 wrap-anywhere">
+          â€œ{inquiry.message}â€
+        </p>
+        <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+          <Send className="h-3.5 w-3.5 shrink-0 text-[#003251]" aria-hidden="true" />
+          Inquiry contact
+          <span className="min-w-0 font-semibold text-slate-700 wrap-anywhere">
+            {inquiry.recipient_name}
+          </span>
+          {inquiry.recipient_email && (
+            <a
+              href={`mailto:${inquiry.recipient_email}`}
+              className="min-w-0 max-w-full text-[#003251] wrap-anywhere hover:underline"
+              onClick={(event) => event.stopPropagation()}
+            >
+              ({inquiry.recipient_email})
+            </a>
+          )}
+        </p>
+        {inquiry.property_id && (
+          <Link
+            href={`/details?id=${inquiry.property_id}&source=profile`}
+            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#003251] hover:underline"
+          >
+            View property <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        )}
+      </div>
+    </article>
+  );
+}
+
 function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] }) {
+  const initialVisibleCount = 2;
+  const [showAll, setShowAll] = useState(false);
+  const initialInquiries = inquiries.slice(0, initialVisibleCount);
+  const additionalInquiries = inquiries.slice(initialVisibleCount);
+
   return (
     <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -1050,71 +1191,47 @@ function InquiryHistory({ inquiries }: { inquiries: VisitorProfile["inquiries"] 
           </p>
         </div>
       ) : (
-        <div className="mt-6 space-y-3">
-          {inquiries.map((inquiry) => {
-            const imageUrl = propertyUploadUrl(inquiry.cover_image);
-            const content = (
-              <>
-                <div
-                  className="aspect-16/10 w-full shrink-0 rounded-lg bg-slate-200 bg-cover bg-center sm:aspect-auto sm:h-28 sm:w-36"
-                  style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : undefined}
-                  aria-hidden="true"
-                >
-                  {!imageUrl && (
-                    <div className="flex h-full items-center justify-center">
-                      <Home className="h-7 w-7 text-slate-400" aria-hidden="true" />
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1 py-0.5">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="min-w-0 font-semibold leading-snug text-[#003251] wrap-anywhere">{inquiry.title}</h3>
-                    <time className="shrink-0 text-xs text-slate-400">
-                      {formatDate(inquiry.created_at)}
-                    </time>
-                  </div>
-                  {inquiry.address && (
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-500 wrap-anywhere">{inquiry.address}</p>
-                  )}
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600 wrap-anywhere">
-                    “{inquiry.message}”
-                  </p>
-                  <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                    <Send className="h-3.5 w-3.5 shrink-0 text-[#003251]" aria-hidden="true" />
-                    Inquiry contact
-                    <span className="min-w-0 font-semibold text-slate-700 wrap-anywhere">{inquiry.recipient_name}</span>
-                    {inquiry.recipient_email && (
-                      <a
-                        href={`mailto:${inquiry.recipient_email}`}
-                        className="min-w-0 max-w-full text-[#003251] wrap-anywhere hover:underline"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        ({inquiry.recipient_email})
-                      </a>
-                    )}
-                  </p>
-                  {inquiry.property_id && (
-                    <Link
-                      href={`/details?id=${inquiry.property_id}&source=profile`}
-                      className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#003251] hover:underline"
-                    >
-                      View property <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
-                  )}
-                </div>
-              </>
-            );
-
-            return (
-              <article
-                key={inquiry.id}
-                className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-[#003251]/40 hover:shadow-md sm:flex-row sm:gap-4"
+        <>
+          <div id="profile-inquiries-list" className="mt-6">
+            <div className="space-y-3">
+              {initialInquiries.map((inquiry) => (
+                <InquiryHistoryCard key={inquiry.id} inquiry={inquiry} />
+              ))}
+            </div>
+            {additionalInquiries.length > 0 && (
+              <div
+                aria-hidden={!showAll}
+                inert={!showAll}
+                className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
+                  showAll ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}
               >
-                {content}
-              </article>
-            );
-          })}
-        </div>
+                <div className="min-h-0 overflow-hidden">
+                  <div className="space-y-3 pt-3">
+                    {additionalInquiries.map((inquiry) => (
+                      <InquiryHistoryCard key={inquiry.id} inquiry={inquiry} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          {inquiries.length > initialVisibleCount && (
+            <button
+              type="button"
+              onClick={() => setShowAll((current) => !current)}
+              aria-expanded={showAll}
+              aria-controls="profile-inquiries-list"
+              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-[#003251] transition hover:bg-slate-50"
+            >
+              {showAll ? "Show less" : "Show more"}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-500 ${showAll ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+          )}
+        </>
       )}
     </section>
   );
