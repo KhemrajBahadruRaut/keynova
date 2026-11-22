@@ -23,14 +23,12 @@ import {
   ExternalLink,
   ImagePlus,
   LoaderCircle,
-  RotateCcw,
   Save,
   Trash2,
 } from "lucide-react";
 
 
 import {
-  cloneHeroContent,
   resolveHeroImage,
   type HeroContent,
   type HeroSlide,
@@ -65,7 +63,7 @@ async function readPayload<T>(response: Response): Promise<ApiPayload<T>> {
 export default function HeroImagesAdminClient() {
   const router = useRouter();
   const { confirm, notify } = useFeedback();
-  const [content, setContent] = useState<HeroContent>(() => cloneHeroContent());
+  const [content, setContent] = useState<HeroContent>(() => ({ slides: [] }));
   const [baseline, setBaseline] = useState("");
   const [updatedAt, setUpdatedAt] = useState("");
   const [loading, setLoading] = useState(true);
@@ -109,7 +107,7 @@ export default function HeroImagesAdminClient() {
         throw new Error(payload.message || "Unable to load the hero images.");
       }
 
-      const nextContent = payload.data?.content || cloneHeroContent();
+      const nextContent = payload.data?.content || { slides: [] };
       setContent(nextContent);
       resetValidation();
       setUploadErrors({});
@@ -237,10 +235,6 @@ export default function HeroImagesAdminClient() {
   };
 
   const removeSlide = async (index: number) => {
-    if (content.slides.length === 1) {
-      setError("The homepage hero must keep at least one image.");
-      return;
-    }
     const confirmed = await confirm({
       title: "Remove hero image?",
       message: `Image ${index + 1} will be removed from this draft.`,
@@ -306,20 +300,6 @@ export default function HeroImagesAdminClient() {
     }
   };
 
-  const restoreDefaults = async () => {
-    const confirmed = await confirm({
-      title: "Restore original images?",
-      message: "Your current unpublished hero-image changes will be replaced.",
-      confirmLabel: "Restore originals",
-    });
-    if (!confirmed) return;
-    setContent(cloneHeroContent());
-    resetValidation();
-    setUploadErrors({});
-    setError("");
-    setNotice("Original hero images loaded. Publish changes to use them.");
-  };
-
   return (
     <section>
       <AdminCard className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
@@ -340,7 +320,7 @@ export default function HeroImagesAdminClient() {
                 ? "Unpublished changes"
                 : updatedAt
                   ? `Last published ${new Date(updatedAt.replace(" ", "T")).toLocaleString()}`
-                  : "Using original images"}
+                  : "No published images"}
             </p>
           </div>
 
@@ -354,15 +334,6 @@ export default function HeroImagesAdminClient() {
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               Preview homepage
             </Link>
-            <AdminButton
-              type="button"
-              onClick={restoreDefaults}
-              disabled={loading || saving}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-[#003251] hover:text-[#003251] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RotateCcw className="h-4 w-4" aria-hidden="true" />
-              Load originals
-            </AdminButton>
             <AdminButton
               type="button"
               onClick={saveContent}
@@ -408,7 +379,7 @@ export default function HeroImagesAdminClient() {
                   type="button"
                   danger
                   onClick={() => removeSlide(index)}
-                  disabled={content.slides.length === 1 || saving}
+                  disabled={saving}
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />

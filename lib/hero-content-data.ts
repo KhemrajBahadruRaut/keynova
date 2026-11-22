@@ -2,7 +2,6 @@ import "server-only";
 
 import { getBackendUrl } from "@/lib/auth/backend";
 import {
-  cloneHeroContent,
   type HeroContent,
   type HeroSlide,
 } from "@/lib/hero-content";
@@ -54,7 +53,7 @@ function normalizeContent(value: unknown): HeroContent | null {
 }
 
 export async function getHeroContent(): Promise<HeroContent> {
-  const fallback = cloneHeroContent();
+  const fallback: HeroContent = { slides: [] };
 
   try {
     const response = await fetch(
